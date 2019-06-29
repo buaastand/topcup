@@ -76,8 +76,12 @@ WSGI_APPLICATION = 'TopCup.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql', # 数据库引擎
+        'NAME': 'topcup', # 数据库名
+        'USER': 'test_account', # 账号
+        'PASSWORD': 'test_account123', # 密码
+        'HOST': '94.191.100.98', # HOST
+        'POST': 3306, # 端口
     }
 }
 
