@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>科技竞赛平台</title>
+    <!-- 引入vue.js -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+
+    <!-- 引入element.ui-->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+    <!-- 引入css-->
+    <link rel="stylesheet" href="../static/css/NavName.css">
+    <link rel="stylesheet" href="../static/css/CompetitionList.css" type="text/css">
+</head>
+
+<body style="margin: 0; background: #F5F7FA">
+    {% include 'NavMenu.html' %} 
+
+    <div id="CompetitionList" style="width: 100%">
+        <div class="DisplayArea">
+            <div class="TopArea">
+                <div style="float: left">
+                    <el-radio-group v-model="DisplayCompetition">
+                        <el-radio-button label='0'>全部比赛</el-radio-button>
+                        <el-radio-button label='1'>正在进行</el-radio-button>
+                        <el-radio-button label='2'>已结束</el-radio-button>
+                    </el-radio-group>
+                </div>
+                <div style="float: right; margin-top: 14px">
+                    <span style="margin-right: 10px; color: #909399; font-size: 14px">按</span>
+                    <el-dropdown @command="changeRank">
+                        <span style="color: #409EFF; font-size: 16px; cursor: pointer">
+                            {[ RankWay ]}<i class="el-icon-arrow-down el-icon--right"></i>
+                        </span>
+                        <el-dropdown-menu slot="dropdown">
+                            <el-dropdown-item command="最早开始时间">最早开始时间</el-dropdown-item>
+                            <el-dropdown-item command="最晚开始时间">最晚开始时间</el-dropdown-item>
+                            <el-dropdown-item command="最早结束时间">最早结束时间</el-dropdown-item>
+                            <el-dropdown-item command="最晚结束时间">最晚结束时间</el-dropdown-item>
+                        </el-dropdown-menu>
+                    </el-dropdown>
+                    <span style="margin-left: 10px; color: #909399; font-size: 14px">排序</span>
+                </div>
+            </div>
+
+            <div class="ListArea">
+
+                {% for i in list %}
+                {% if i.status < 5 %}
+                <a href="/competitiondetail?id={{i.id}}">
+                    <el-card class="OngoingCompetitionCard">
+                        <div class="WordBorder">
+                            <div class="ErectWord">正在进行</div>
+                        </div>
+                        <div style="float: left; width: 108px">
+                            <el-image
+                                style="width: 108px; height: 80px; margin: 0px auto 0px 10px"
+                                src="https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg"
+                                fit="cover">
+                                <div slot="error" class="image-slot">
+                                    <i class="el-icon-picture-outline"></i>
+                                </div>
+                            </el-image>
+                        </div>
+                        <div style="float: left; width: 730px; margin-left: 40px">
+                            <div style="font-size: 18px">{{ i.title }}</div>
+                            <div style="font-size: 14px; color: #1989FA; margin-top: 13px">
+                                <span><i class="el-icon-time"></i></span>&nbsp;
+                                <span>{{ i.init_date }}</span>&nbsp;
+                                <span>~</span>&nbsp; 
+                                <span>{{ i.finish_date }}</span>
+                            </div>
+                            <div class="Abstract">
+                                {{ i.abstract }}
+                            </div>
+                        </div>
+                    </el-card>
+                </a>
+
+                {% else %}
+                <a href="https://www.baidu.com">
+                    <el-card class="OutdatedCompetitionCard">
+                        <div class="WordBorder">
+                            <div class="ErectWord">已结束</div>
+                        </div>
+                        <div style="float: left; width: 108px">
+                            <el-image
+                                style="width: 108px; height: 80px; margin: 0px auto 0px 10px"
+                                src="https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg"
+                                fit="cover">
+                                <div slot="error" class="image-slot">
+                                    <i class="el-icon-picture-outline"></i>
+                                </div>
+                            </el-image>
+                        </div>
+                        <div style="float: left; width: 730px; margin-left: 40px">
+                            <div style="font-size: 18px; color: #909399">第二十八届冯如杯科技创新大赛</div>
+                            <div style="font-size: 14px; color: #909399; margin-top: 13px">
+                                <span><i class="el-icon-time"></i></span>&nbsp;
+                                <span>2018/06/28 16:00</span>&nbsp;
+                                <span>~</span>&nbsp; 
+                                <span>2018/07/02 18:00</span>
+                            </div>
+                            <div class="Abstract">
+                                冯如杯是北京航空航天大学“冯如杯”学生学术科技作品竞赛的简称，是由学校科学技术研究院、教务处、学生处、科协、团委共同主办，科协、团委承办，在学校各学院党政领导的大力支持下开展的具有导向性、示范性和群众性并独具北航特色、彰显北航气韵、践行素质教育、弘扬创新精神的大学生学术科技活动。
+                            </div>
+                        </div>
+                    </el-card>
+                </a>
+            </div>
+            {% endif %}
+            {% endfor %}
+
+            <div style="margin: 25px auto; text-align: center">
+                <el-pagination
+                    :current-page="1"
+                    :page-sizes="[6, 8, 10, 12]" 
+                    :page-size="6" 
+                    layout="total, sizes, prev, pager, next, jumper"
+                    :total="2">
+                </el-pagination>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#CompetitionList',
+            data: {
+                message: 'Hello Vue.js!',
+                DisplayCompetition: 0,
+                RankWay: '最早开始时间'
+            },
+            methods: {
+                changeRank(command) {
+                    this.RankWay = command;
+                    alert(this.RankWay);
+                },
+            },
+            delimiters: ["{[", "]}"]
+        })
+    </script>
+</body>
+
+</html>
