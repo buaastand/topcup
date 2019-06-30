@@ -1,0 +1,31 @@
+.allbody{
+    margin: 0px;
+    padding: 0px;
+}
+.navheader{
+    font-size: 25px;
+    margin-left: 26px;
+    border-bottom-color: #1989FA;
+}
+.nav{
+    background-color:#1989FA;
+    height: 60px;
+    width: 100%;
+    margin: 0px;
+    padding: 0px;   
+}
+.navmenu{
+    font-size: 20px;
+}
+.navright{
+    float: right;
+    height: 60px;
+
+}
+.navother{
+    font-size: 20px;
+    line-height: 60px;
+    color: white;
+    display: inline;
+    margin-right: 38px;
+}

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="../static/css/NavName.css">
+</head>
+
+<body class="allbody">
+<div id="page" style="text-align: center">
+    <div class="nav">
+        <el-menu :default-active="activeIndex2" class="el-menu-demo" mode="horizontal" @select="handleSelect"
+                 background-color="#1989FA" text-color="#fff" active-text-color="#A3D0FD">
+            <el-menu-item index="1" class="navheader">科技竞赛平台</el-menu-item>
+            <el-menu-item index="2" class="navmenu">竞赛</el-menu-item>
+            <div class="navright">
+                <div class="navother">用户邮箱</div>
+                <div class="navother">退出</div>
+            </div>
+        </el-menu>
+    </div>
+    {% block context %}
+
+    {% endblock context %}
+</div>
+</body>
+
+<script src="https://unpkg.com/vue/dist/vue.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script>
+    var NavMenu = new Vue({
+        el: '#page',
+    })
+</script>
+
+</html>
