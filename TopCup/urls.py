@@ -21,4 +21,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('competitiondetail/', cpt.CompetitionDetail),
     path('cptinit/', cpt.CompetitionInit),
+    path('cptformpost',cpt.CompetitionFormPost),
 ]
