@@ -14,8 +14,26 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path,re_path
+from django.views.static import serve
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.views.decorators.csrf import csrf_exempt
+
+from users.views import LoginView,LogoutView,UpdatePwdView,RegisterView
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('login/',LoginView.as_view(),name='login'),
+    path('logout/',LogoutView.as_view(),name='logout'),
+    path('register/',csrf_exempt(RegisterView.as_view()),name='register'),
+    path('update/pwd/',UpdatePwdView.as_view(),name='update_pwd'),
+    #re_path(r'^static/(?P<path>.*)$', serve, {"document_root":STATIC_ROOT}),
 ]
+
+#urlpatterns += staticfiles_urlpatterns()
+
+
+#全局404&500页面配置
+handler404 = 'users.views.page_not_found'
+handler500 = 'users.views.page_error'
