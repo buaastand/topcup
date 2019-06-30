@@ -48,3 +48,9 @@
     margin: auto;
     position: relative;
 }
+
+.cptdetailtext {
+    text-align: left;
+    margin-left: 20px;
+    color: #303133;
+}
