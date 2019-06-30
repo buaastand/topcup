@@ -15,9 +15,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-import competition.views as CptDetail
+import competition.views as cpt
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('competitiondetail/', CptDetail.CompetitionDetail)
+    path('competitiondetail/', cpt.CompetitionDetail),
+    path('cptinit/', cpt.CompetitionInit),
 ]

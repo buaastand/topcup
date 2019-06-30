@@ -20,7 +20,7 @@
 
 .boxCard {
     width: 1000px;
-    margin-top: 60px;
+    margin-top: 0px;
     margin-left: auto;
     margin-right: auto;
 }
@@ -46,9 +46,8 @@
 .previewPicUploaderIcon {
     font-size: 28px;
     color: #8c939d;
-    width: 178px;
-    height: 178px;
-    line-height: 178px;
+    width: 108px;
+    height: 80px;
     text-align: center;
 }
 
@@ -73,14 +72,18 @@
 .detailPicUploaderIcon {
     font-size: 28px;
     color: #8c939d;
-    width: 178px;
-    height: 178px;
-    line-height: 178px;
+    width: 500px;
+    height: 130px;
     text-align: center;
 }
 
 .detailPic {
     width: 1000px;
-    height: 300px;
+    height: 260px;
     display: block;
+}
+
+.el-icon-plus.previewPicUploaderIcon::before {
+    margin-top: auto;
+    margin-bottom: auto;
 }
