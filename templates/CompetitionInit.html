@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
     <script src="https://unpkg.com/element-ui/lib/index.js"></script>
 
+    <script src="https://cdn.staticfile.org/vue-resource/1.5.1/vue-resource.min.js"></script>
     <!-- 引入cpt_init.css-->
     <link rel="stylesheet" href="..\static\css\CompetitionInit.css" type="text/css"/>
 
@@ -172,10 +173,14 @@
                     return this.$confirm('确定移除 ${file.name} ？');
                 },
                 onSubmit() {
-                    console.log('submit!');
+                    this.$http.get('cptformpost/', FormData).then(function(res) {
+                        console.log("success");
+                    }, function(res) {
+                        console.log("failed");
+                    });
                 }
             }
-        })
+        });
     </script>
 </body>
 
