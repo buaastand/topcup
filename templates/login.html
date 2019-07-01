@@ -90,7 +90,7 @@
                             this.$alert('登陆成功');
                             window.location.href='/register/';
                         }else {
-                            this.$alert('登录失败');
+                            this.$alert('登录失败：'+res.data['detail']);
                         }
                     }
                     else {

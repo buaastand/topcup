@@ -122,6 +122,11 @@ class LoginView(View):
                 return JsonResponse(re_dict, safe=False, status=200)
             else:
                 re_dict['msg'] = False
+                user_num = BaseUser.objects.filter(username=username,type=user_type).count()
+                if user_num != 1:
+                    re_dict['detail'] = '用户不存在'
+                else:
+                    re_dict['detail'] = '密码错误'
                 return JsonResponse(re_dict,safe=False,status=200)
         else:
             re_dict['msg'] = False
