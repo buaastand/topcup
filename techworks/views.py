@@ -120,7 +120,20 @@ class TechWorkView(View):
                                     "degree": auth.degree,
                                     "phone": auth.phone,
                                     "email": auth.user.email})
-        return render(request, 'submit_techwork.html', {'work': work, 'company': company_ret})
+
+            filelist = Appendix.objects.filter(work__work_id=work.work_id)
+            file_docu = []
+            file_photo = []
+            file_video = []
+            for file in filelist:
+                if(file.appendix_type == 0):
+                    file_docu.append({"name": file.filename,"url": file.file.name})
+                if(file.appendix_type == 1):
+                    file_photo.append({"name": file.filename, "url": file.file.name})
+                if (file.appendix_type == 2):
+                    file_video.append({"name": file.filename, "url": file.file.name})
+
+        return render(request, 'submit_techwork.html', {'work': work, 'company': company_ret, 'docu': file_docu, 'photo': file_photo, 'video': file_video})
 
     def post(self, request):
         try:
