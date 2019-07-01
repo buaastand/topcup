@@ -175,7 +175,7 @@ def CompetitionFormPost(request):
     else :
         status = 2
     
-    
+
 
     try:
         new_competition = Competition(title = title, abstract = abstract,
