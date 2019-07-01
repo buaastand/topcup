@@ -5,7 +5,7 @@ from django.contrib.auth.models import AbstractUser
 # Create your models here.
 class BaseUser(AbstractUser):
     USER_TYPE = (
-        (1, "sturdent"),
+        (1, "student"),
         (2, "admin"),
         (3, "expert")
     )
@@ -57,7 +57,7 @@ class Expert(models.Model):
     user = models.OneToOneField(BaseUser, on_delete=models.CASCADE, primary_key=True)
     name = models.CharField(max_length=255, verbose_name="姓名")
     field = models.IntegerField(choices=FIELD_TYPE, verbose_name="专业领域")
-    actiavted = models.BooleanField(null=False, default=False, verbose_name="是否激活")
+    activated = models.BooleanField(null=False, default=False, verbose_name="是否激活")
 
     class Meta:
         verbose_name = "专家用户"
