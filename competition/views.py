@@ -19,50 +19,53 @@ from competition.models import Competition
 
 
 # Create your views here.
+def GetUserIdentitiy(request):
+    user_identity = 0
+    user_name = ' '
+    if request.user.is_authenticated:
+        if Expert.objects.filter(user__email=request.user.username):
+            user_identity = 1  # 专家
+            user_name = Expert.objects.get(user__email=request.user.username).user.email
+
+        elif Student.objects.filter(stu_id=request.user.username):
+            user_identity = 2  # 学生
+            user_name = Student.objects.get(stu_id=request.user.username).user.email
+        else:
+            user_identity = 3  # 校团委
+            user_name = '校团委'
+    else:
+        user_identity = 0  # 未登录
+    return user_name,user_identity
+
 def CompetitionDetail(request):
-    if 'id' in request.GET:
-        user_identity = 0
-        if request.user.is_authenticated:
-            if Expert.objects.filter(user__email=request.user.username):
-                user_identity = 1  # 专家
-                user_name = Expert.objects.get(user__email=request.user.username).user.email
+    user_name, user_identity = GetUserIdentitiy(request)
+    print(GetUserIdentitiy(request))
+    cptDetail=Competition.objects.get(id= request.GET['id'])
+    context = {'cptDetail':cptDetail}
+    temp=datetime.date.today()
+    now_time =temp
+    if now_time<cptDetail.init_date:
+        status_type="0"
+    elif now_time<cptDetail.submit_end_date:
+        status_type="1"
+    elif now_time<cptDetail.check_end_date:
+        status_type="2"
+    elif now_time<cptDetail.review_end_date:
+        status_type="3"
+    elif now_time<cptDetail.defense_end_date:
+        status_type="4"
+    else:
+        status_type="5"
 
-            elif Student.objects.filter(stu_id=request.user.username):
-                user_identity = 2  # 学生
-                user_name = Student.objects.get(stu_id=request.user.username).user.email
-            else:
-                user_identity = 3  # 校团委
-        else:
-            user_identity = 0  # 未登录
-
-        cptDetail=Competition.objects.get(id= request.GET['id'])
-        context = {'cptDetail':cptDetail}
-        temp=datetime.date.today()
-        now_time =temp
-        if now_time<cptDetail.init_date:
-            status_type="0"
-        elif now_time<cptDetail.submit_end_date:
-            status_type="1"
-        elif now_time<cptDetail.check_end_date:
-            status_type="2"
-        elif now_time<cptDetail.review_end_date:
-            status_type="3"
-        elif now_time<cptDetail.defense_end_date:
-            status_type="4"
-        else:
-            status_type="5"
-
-        context['status_type']=status_type
-        context['useridentity'] = user_identity
-        context['username'] = user_name
-        return render(request,"../templates/CompetitionDetail.html",context)
+    context['status_type']=status_type
+    context['useridentity'] = user_identity
+    context['username'] = user_name
+    return render(request,"../templates/CompetitionDetail.html",context)
 
 def CompetitionList(request):
-    order = 0
+    order = '0'
     selected = '0'
-    total = 0
-    user_identity = 0
-    user_name = 0
+    total = '0'
 
     if 'order' in request.GET:
         order = request.GET['order']
@@ -70,18 +73,7 @@ def CompetitionList(request):
         selected = request.GET['selected']
 
     #     身份判断
-    if request.user.is_authenticated:
-        if Expert.objects.filter(user__email=request.user.username):
-            user_identity = 1 #专家
-            user_name = Expert.objects.get(user__email=request.user.username).user.email
-
-        elif Student.objects.filter(stu_id=request.user.username):
-            user_identity = 2 #学生
-            user_name = Student.objects.get(stu_id=request.user.username).user.email
-        else:
-            user_identity = 3 #校团委
-    else:
-        user_identity = 0 #未登录
+    user_name, user_identity = GetUserIdentitiy(request)
 
     if selected == '1':
         cptList = Competition.objects.filter(status=1)
@@ -149,7 +141,11 @@ def DeleteCompetition(request):
 
 
 def CompetitionInit(request):
-    return render(request, "../templates/CompetitionInit.html")
+    user_name, user_identity = GetUserIdentitiy(request)
+    context ={}
+    context['useridentity'] = user_identity
+    context['username'] = user_name
+    return render(request, "../templates/CompetitionInit.html",context)
 
 @csrf_exempt
 def CompetitionFormPost(request):

@@ -22,10 +22,29 @@
             {% else %}
                 <div class="navright">
                     <a class="navother" style="color: white;text-decoration: none">{{ username }}</a>
-                    <a class="navother" style="color: white;text-decoration: none">退出</a>
+                    <a class="navother" style="color: white;text-decoration: none" @click="dialogFormVisible = true">修改密码</a>
+
+                    <a href="/logout/" class="navother" style="color: white;text-decoration: none">退出</a>
                 </div>
             {% endif %}
         </el-menu>
+            <el-dialog title="修改密码" :visible.sync="dialogFormVisible" width="450px" center>
+              <el-form :model="modifyForm" :rules="modifyRules" ref="modifyForm">
+                <el-form-item prop="old_password" label="原密码" :label-width="formLabelWidth">
+                  <el-input v-model="modifyForm.old_password" autocomplete="off" show-password></el-input>
+                </el-form-item>
+                <el-form-item prop="new_password" label="新密码" :label-width="formLabelWidth">
+                  <el-input v-model="modifyForm.new_password" autocomplete="off" show-password></el-input>
+                </el-form-item>
+                <el-form-item prop="new_password2" label="确认密码" :label-width="formLabelWidth">
+                  <el-input v-model="modifyForm.new_password2" autocomplete="off" show-password></el-input>
+                </el-form-item>
+              </el-form>
+              <div slot="footer" class="dialog-footer">
+                <el-button @click="dialogFormVisible = false">取 消</el-button>
+                <el-button type="primary" @click="Modify('modifyForm')">确 定</el-button>
+              </div>
+            </el-dialog>
     </div>
 </div>
 
@@ -33,7 +52,57 @@
     var NavMenu = new Vue({
         el: '#page',
         data:{
-            activeIndex:'2'
+            activeIndex:'2',
+            // 修改密码
+            dialogTableVisible: false,
+            dialogFormVisible: false,
+            modifyForm: {
+              old_password: '',
+              new_password: '',
+              new_password2: '',
+            },
+            formLabelWidth: '120px',
+            modifyRules:{
+                old_password:[{required:true, message:'请输入用户名',trigger:'blur'}],
+                new_password:[{required:true, message:'请输入用户名',trigger:'blur'}],
+                new_password2:[{required:true, message:'请输入用户名',trigger:'blur'}],
+            },
+        },
+        methods:{
+            Modify: function(formName) {
+           this.$refs[formName].validate((valid) => {
+               if (valid) {
+                   console.log(this.modifyForm);
+                   axios({
+                       url: '/update/pwd/',
+                       method: 'post',
+                       data: this.modifyForm,
+                       headers: {
+                           'Content-Type': 'application/json'
+                       }
+                   })
+                       .then(res => {
+                           console.log(res);
+                           if (res.status == 200) {
+                               this.$alert('注册成功', {
+                                   confirmButtonText: '确定'
+                               })
+                               window.location.href = '/login/'
+                           } else {
+                               this.$alert('注册失败', {
+                                   confirmButtonText: '确定'
+                               })
+                           }
+                       })
+                       .catch(err => {
+                           console.log(err);
+                       });
+               } else {
+                   console.log('error submit!!');
+                   return false;
+               }
+                });
+            },
         }
     })
 </script>

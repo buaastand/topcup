@@ -14,6 +14,7 @@ from django.views.generic.base import View
 from django.contrib.auth.hashers import make_password
 from django.http import HttpResponse,HttpResponseRedirect,JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.urls import reverse
 
 from .models import BaseUser,Student
 from .forms import RegisterForm,LoginForm,ModifyPwdForm
@@ -124,17 +125,23 @@ class LogoutView(View):
     """
     def get(self,request):
         logout(request)
-        return HttpResponseRedirect(reversed('index'))
+        #render(request,'CompetitionList.html')
+        return HttpResponseRedirect('/competitionlist/?selected=0')
 
 class UpdatePwdView(View):
     """
     用户在个人中心修改密码
     """
     def post(self,request):
-        modify_form = ModifyPwdForm(request.POST)
+        form2check = json.loads(request.body)
+        form2check = {
+            "pwd1":form2check["new_password"],
+            "pwd2":form2check["new_password2"]
+        }
+        modify_form = ModifyPwdForm(form2check)
         if modify_form.is_valid():
-           pwd1 = request.POST.get('pwd1','')
-           pwd2 = request.POST.get('pwd2','')
+           pwd1 = modify_form.data.get('pwd1','')
+           pwd2 = modify_form.data.get('pwd2','')
            if pwd1 != pwd2:
                return HttpResponse("{'status':'fail','msg':'密码不一致'}",content_type='application/json')
            user = request.user
@@ -188,7 +195,7 @@ class ExpertManage():
                         rowVlaues = table.row_values(i)
                         # major = models.Expert.objects.filter(name=rowVlaues[0]).first()
                         email = rowVlaues[0]
-                        user = models.BaseUser.objects.create(type=3, email=email, username=email, password=email)
+                        user = models.BaseUser.objects.create(type=3, email=email, username=email, password=make_password(email))
                         models.Expert.objects.create(user=user, name=rowVlaues[1], field=int(rowVlaues[2]))
                     except Exception as e:
                         print('解析excel文件或者数据插入错误')
