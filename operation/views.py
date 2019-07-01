@@ -7,6 +7,7 @@ from techworks.models import WorkInfo
 from .models import Review
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from users.models import Expert
 
 # Create your views here.
 class ReviewWorkListView(View):
@@ -49,17 +50,19 @@ class ExpertReviewView():
 
     @csrf_exempt
     def show(request):
+        user_name, user_identity = GetUserIdentitiy(request)
         work_id = request.GET.get('work_id')
-        expert_id = request.GET.get('expert_id')
+        expert_id = Expert.objects.get(user__email=request.user.username).user.id
+        # expert_id = request.GET.get('expert_id')
         try:
             review = Review.objects.get(work_id=work_id, expert_id=expert_id)
             if review.review_status == 0:  # 还没评过
-                return render(request, 'judgeWork.html', {'status': 0, 'expert_id':expert_id, 'work_id':work_id})
+                return render(request, 'judgeWork.html', {'status': 0, 'expert_id':expert_id, 'work_id':work_id,'useridentity':user_identity})
             else:  # 暂存或评价过
-                return render(request, 'judgeWork.html', {'status': review.review_status, 'score': review.score, 'comment': review.comment, 'expert_id':expert_id, 'work_id':work_id})
+                return render(request, 'judgeWork.html', {'status': review.review_status, 'score': review.score, 'comment': review.comment, 'expert_id':expert_id, 'work_id':work_id,'useridentity':user_identity})
         except:
             Review.objects.create(work_id=work_id, expert_id=expert_id, score=0, comment='', review_status=0, add_time='2019-07-02')
-            return render(request, 'judgeWork.html', {'status': 0, 'expert_id':expert_id, 'work_id':work_id})
+            return render(request, 'judgeWork.html', {'status': 0, 'expert_id':expert_id, 'work_id':work_id,'useridentity':user_identity})
 
     @csrf_exempt
     def judge(request):
