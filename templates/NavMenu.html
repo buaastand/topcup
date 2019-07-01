@@ -4,10 +4,27 @@
                  background-color="#1989FA" text-color="#fff" active-text-color="#A3D0FD">
             <el-menu-item index="1" class="navheader">科技竞赛平台</el-menu-item>
             <el-menu-item index="2" class="navmenu">竞赛</el-menu-item>
-            <div class="navright">
-                <div class="navother">用户邮箱</div>
-                <div class="navother">退出</div>
-            </div>
+{#            身份判断#}
+            {% if useridentity == 3 %}
+                <el-menu-item index="3" class="navmenu">创建比赛</el-menu-item>
+            {% endif %}
+            {% if useridentity == 1 %}
+                <el-menu-item index="3" class="navmenu">评价作品</el-menu-item>
+            {% endif %}
+
+{#            身份判断#}
+
+            {% if useridentity == 0 %}
+                <div class="navright">
+                    <div class="navother">注册</div>
+                    <div class="navother">登录</div>
+                </div>
+            {% else %}
+                <div class="navright">
+                    <div class="navother">用户邮箱</div>
+                    <div class="navother">退出</div>
+                </div>
+            {% endif %}
         </el-menu>
     </div>
 </div>

@@ -3,6 +3,12 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 import datetime
 from .models import Competition
+from users.models import Expert
+from users.models import Student
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+
+
 # Create your views here.
 def CompetitionDetail(request):
     if 'id' in request.GET:
@@ -29,10 +35,21 @@ def CompetitionList(request):
     order = 0
     selected = 0
     total = 0
+    user_identity = 0
+
     if 'order' in request.GET:
         order = request.GET['order']
     if 'selected' in request.GET:
         selected = request.GET['selected']
+    if request.user.is_authenticated:
+        if Expert.objects.filter(name=request.user.username):
+            user_identity = 1 #专家
+        elif Student.objects.filter(name=request.user.username):
+            user_identity = 2 #学生
+        else:
+            user_identity = 3 #校团委
+    else:
+        user_identity = 0 #未登录
 
     if selected == '1':
         cptList = Competition.objects.filter(status=1)
@@ -69,4 +86,20 @@ def CompetitionList(request):
     context['selected'] = selected
     context['order'] = order
     context['total'] = total
+    context['useridentity'] = user_identity
     return render(request,"../templates/CompetitionList.html", context)
+
+@csrf_exempt
+def DeleteCompetition(request):
+    if request.method == 'POST':
+        id = request.POST.get('id')
+        # id= int(temp)
+        print(request)
+        print(id,type(id))
+        try:
+            Competition.objects.get(id=id).delete()
+        except:
+            return JsonResponse({'Message': 0})
+        return JsonResponse({'Message': 1})
+    return JsonResponse({'Message': "删除比赛信息"})
+

@@ -80,3 +80,7 @@
 .OutdatedCompetitionCard .Abstract {
     color: #909399;
 }
+
+.CloseCompetitionCard{
+    float: right;
+}

@@ -4,8 +4,10 @@
 <head>
     <meta charset="utf-8">
     <title>科技竞赛平台</title>
-    <!-- 引入vue.js -->
+    <!-- 引入vue.js,axios.js -->
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.staticfile.org/vue-resource/1.5.1/vue-resource.min.js"></script>
 
     <!-- 引入element.ui-->
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
@@ -51,8 +53,14 @@
                 {% for i in contacts %}
                 {% if i.status == 1 %}
                 {% if selected == '0' or selected == '1' %}
-                <a href="/competitiondetail?id={{i.id}}">
                     <el-card class="OngoingCompetitionCard">
+{#                        身份判断#}
+{#                        删除#}
+                        {% if useridentity == 3 %}
+                        <div class="CloseCompetitionCard">
+                            <i class="el-icon-close" @click="DeleteCpt({{i.id}})"></i>
+                        </div>
+                        {% endif %}
                         <div class="WordBorder">
                             <div class="ErectWord">正在进行</div>
                         </div>
@@ -67,7 +75,7 @@
                             </el-image>
                         </div>
                         <div style="float: left; width: 730px; margin-left: 40px">
-                            <div style="font-size: 18px">{{ i.title }}</div>
+                                <a href="/competitiondetail?id={{i.id}}" style="color: #303133; text-decoration: none"><div style="font-size: 18px">{{ i.title }}</div></a>
                             <div style="font-size: 14px; color: #1989FA; margin-top: 13px">
                                 <span><i class="el-icon-time"></i></span>&nbsp;
                                 <span>{{ i.init_date|date:"Y年m月d日" }}</span>&nbsp;
@@ -79,13 +87,18 @@
                             </div>
                         </div>
                     </el-card>
-                </a>
                 {% endif %}
 
                 {% elif i.status == 2 %}
                 {% if selected == '0' or selected == '2' %}
-                <a href="/competitiondetail?id={{i.id}}">
+
                     <el-card class="OutdatedCompetitionCard">
+{#                        身份判断#}
+                        {% if useridentity == 3 %}
+                        <div class="CloseCompetitionCard">
+                            <i class="el-icon-close" @click="DeleteCpt({{i.id}})"></i>
+                        </div>
+                        {% endif %}
                         <div class="WordBorder">
                             <div class="ErectWord">已结束</div>
                         </div>
@@ -100,7 +113,7 @@
                             </el-image>
                         </div>
                         <div style="float: left; width: 730px; margin-left: 40px">
-                            <div style="font-size: 18px; color: #909399">{{ i.title }}</div>
+                            <a href="/competitiondetail?id={{i.id}}" style="color: #909399; text-decoration: none"><div style="font-size: 18px; color: #909399">{{ i.title }}</div></a>
                             <div style="font-size: 14px; color: #909399; margin-top: 13px">
                                 <span><i class="el-icon-time"></i></span>&nbsp;
                                 <span>{{ i.init_date|date:"Y年m月d日" }}</span>&nbsp;
@@ -112,7 +125,7 @@
                             </div>
                         </div>
                     </el-card>
-                </a>
+
                 {% endif %}
 
                 {% endif %}
@@ -170,6 +183,33 @@
                 },
                 handleCurrentChange(val){
                     window.open("/competitionlist?order="+this.order+"&selected="+CptList.selected+"&page="+val,"_self");
+                },
+                DeleteCpt(val)
+                {
+                    console.log(val);
+                    this.$http
+                        .post('../deletecpt/',
+                            {
+                                id:val,
+                            }, {
+                                emulateJSON:true
+                            })
+                        .then(res=>{
+                            console.log(res);
+                            if(res.status==200 && res.body.Message == 1){
+                                this.$message({
+                                    type:'info',
+                                    message:'删除成功！'
+                                });
+                                location.reload();
+                            }
+                            else{
+                                this.$message.info("删除失败！");
+                            }
+                        })
+                        .catch(err => {
+                        console.error(err);
+                        });
                 }
             },
             delimiters: ["{[", "]}"]
