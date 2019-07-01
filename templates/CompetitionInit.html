@@ -134,6 +134,78 @@
         var CptInit = new Vue ({
             el: '#app',
             data() {
+                var initValidator = (rule, value, callback) => {
+                    if (value == '') {
+                        callback(new Error('不能为空'));
+                    } else {
+                        callback();
+                    }
+                };
+                var submitValidator = (rule, value, callback) => {
+                    if (!(this.form.init_date == '')) {
+                        if (value == '') {
+                            callback(new Error('不能为空'));
+                        } else {
+                            if (value < this.form.init_date) {
+                                callback(new Error('提交截止日期不能早于开始日期'));
+                            } else {
+                                callback();
+                            }
+                        }
+                    }
+                };
+                var checkValidator = (rule, value, callback) => {
+                    if (!(this.form.submit_end_date == '')) {
+                        if (value == '') {
+                            callback(new Error('不能为空'));
+                        } else {
+                            if (value < this.form.submit_end_date) {
+                                callback(new Error('初审截止日期不能早于提交截止日期'));
+                            } else {
+                                callback();
+                            }
+                        }
+                    }
+                };
+                var reviewValidator = (rule, value, callback) => {
+                    if (!(this.form.check_end_date == '')) {
+                        if (value == '') {
+                            callback(new Error('不能为空'));
+                        } else {
+                            if (value < this.form.check_end_date) {
+                                callback(new Error('初评截止日期不能早于初审截止日期'));
+                            } else {
+                                callback();
+                            }
+                        }
+                    }
+                };
+                var defenseValidator = (rule, value, callback) => {
+                    if (!(this.form.review_end_date == '')) {
+                        if (value == '') {
+                            callback(new Error('不能为空'));
+                        } else {
+                            if (value < this.form.review_end_date) {
+                                callback(new Error('答辩截止日期不能早于初评截止日期'));
+                            } else {
+                                callback();
+                            }
+                        }
+                    }
+                };
+                var finishValidator = (rule, value, callback) => {
+                    if (!(this.form.defense_end_date == '')) {
+                        if (value == '') {
+                            callback(new Error('不能为空'));
+                        } else {
+                            if (value < this.form.defense_end_date) {
+                                callback(new Error('结束日期不能早于答辩截止日期日期'));
+                            } else {
+                                callback();
+                            }
+                        }
+                    }
+                };
                 return {
                     labelPosition: 'left',
 
@@ -157,6 +229,7 @@
                         file: null,
 
                         fileList: '',
+
                     },
 
                     rules: {
@@ -174,22 +247,22 @@
                             {required: true, message: '不能为空', trigger: 'blur'},
                         ],
                         init_date: [
-                            {type: 'date', required: true, message: '不能为空', trigger: 'change'},
+                            {type: 'date', required: true, validator: initValidator, trigger: 'blur'},
                         ],
                         submit_end_date: [
-                            {type: 'date', required: true, message: '不能为空', trigger: 'change'},
+                            {type: 'date', required: true, validator: submitValidator, trigger: 'blur'},
                         ],
                         check_end_date: [
-                            {type: 'date', required: true, message: '不能为空', trigger: 'change'},
+                            {type: 'date', required: true, validator: checkValidator, trigger: 'blur'},
                         ],
                         review_end_date: [
-                            {type: 'date', required: true, message: '不能为空', trigger: 'change'},
+                            {type: 'date', required: true, validator: reviewValidator, trigger: 'blur'},
                         ],
                         defense_end_date: [
-                            {type: 'date', required: true, message: '不能为空', trigger: 'change'},
+                            {type: 'date', required: true, validator: defenseValidator, trigger: 'blur'},
                         ],
                         finish_date: [
-                            {type: 'date', required: true, message: '不能为空', trigger: 'change'},
+                            {type: 'date', required: true, validator: finishValidator, trigger: 'blur'},
                         ],
                     }
                 };
