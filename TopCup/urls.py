@@ -42,6 +42,7 @@ urlpatterns = [
     path('update/pwd/',UpdatePwdView.as_view(),name='update_pwd'),
     path('cptinit/', Cpt.CompetitionInit),
     path('cptinit/cptformpost/',Cpt.CompetitionFormPost),
+    path('cptchange/', Cpt.CompetitionChange),
 ]
 
 #urlpatterns += staticfiles_urlpatterns()

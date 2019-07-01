@@ -198,3 +198,6 @@ def CompetitionFormPost(request):
     except:
         return JsonResponse({'Message': 0})
     return JsonResponse({'Message': 1})
+
+def CompetitionChange(request):
+    return render(request,'../templates/CompetitionChange.html')
