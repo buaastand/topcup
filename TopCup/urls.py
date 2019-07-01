@@ -23,6 +23,8 @@ from users.views import LoginView,LogoutView,UpdatePwdView,RegisterView
 
 from users.views import ExpertManage
 
+from operation.views import ExpertReviewView
+
 import competition.views as Cpt
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -37,7 +39,12 @@ urlpatterns = [
     path('logout/',LogoutView.as_view(),name='logout'),
     path('register/',csrf_exempt(RegisterView.as_view()),name='register'),
     path('update/pwd/',UpdatePwdView.as_view(),name='update_pwd'),
-    path('expertReview/',expertReviewView.as_view(),name='expertReview_View'),
+    # path('expert_review/',ExpertReviewView.as_view(),name='expertReview_View'),
+
+    path('judge_work/', ExpertReviewView.show),
+    path('judge/', ExpertReviewView.judge),
+
+    path('work_list/', ExpertReviewView.list),
     #re_path(r'^static/(?P<path>.*)$', serve, {"document_root":STATIC_ROOT}),
 ]
 
