@@ -20,14 +20,14 @@
     margin-top: 25px;
 }
 
-.OngoingCompetitionCard, .OutdatedCompetitionCard {
+.OngoingCompetitionCard, .OutdatedCompetitionCard, .UpcomeCompetitionCard {
     margin-left: 0;
     margin-bottom: 20px;
     width: 1000px;
     height: 120px;
 }
 
-.OngoingCompetitionCard:hover, .OutdatedCompetitionCard:hover {
+.OngoingCompetitionCard:hover, .OutdatedCompetitionCard:hover, .UpcomeCompetitionCard:hover {
     border-color: #1989FA;
 }
 
@@ -84,3 +84,18 @@
 .CloseCompetitionCard{
     float: right;
 }
+
+.UpcomeompetitionCard {
+    border-color: rgb(253, 226, 226);
+}
+
+.UpcomeCompetitionCard .WordBorder {
+    background: rgb(253, 226, 226);
+    border: 1px solid #F56C6C;
+}
+
+.UpcomeCompetitionCard .ErectWord {
+    color: #F56C6C;
+    margin-top: 15px;
+}
+

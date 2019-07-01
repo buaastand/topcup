@@ -28,7 +28,10 @@
                     <el-radio-group v-model="selected">
                         <el-radio-button label='0' onclick="window.open('/competitionlist?selected=0&order='+CptList.order, '_self')">全部比赛</el-radio-button>
                         <el-radio-button label='1' onclick="window.open('/competitionlist?selected=1&order='+CptList.order, '_self')">正在进行</el-radio-button>
-                        <el-radio-button label='2' onclick="window.open('/competitionlist?selected=2&order='+CptList.order, '_self')">已结束</el-radio-button></a>
+                        <el-radio-button label='2' onclick="window.open('/competitionlist?selected=2&order='+CptList.order, '_self')">已结束</el-radio-button>
+                        {% if useridentity == 3 %}
+                        <el-radio-button label='3' onclick="window.open('/competitionlist?selected=3&order='+CptList.order, '_self')">未开始</el-radio-button>
+                        {% endif %}
                     </el-radio-group>
                 </div>
                 <div style="float: right; margin-top: 14px">
@@ -51,7 +54,46 @@
             <div class="ListArea">
 
                 {% for i in contacts %}
-                {% if i.status == 1 %}
+                {% if i.status == 0 %}
+                {% if selected == '0' or selected == '3' %}
+                {% if useridentity == 3 %}
+                <el-card class="UpcomeCompetitionCard">
+                    {#                        身份判断#}
+                    {#                        删除#}
+                    {% if useridentity == 3 %}
+                    <div class="CloseCompetitionCard">
+                        <i class="el-icon-close" @click="DeleteCpt({{i.id}})"></i>
+                    </div>
+                    {% endif %}
+                    <div class="WordBorder">
+                        <div class="ErectWord">未开始</div>
+                    </div>
+                    <div style="float: left; width: 108px">
+                        <el-image style="width: 108px; height: 80px; margin: 0px auto 0px 10px"
+                            src="https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg" fit="cover">
+                            <div slot="error" class="image-slot">
+                                <i class="el-icon-picture-outline"></i>
+                            </div>
+                        </el-image>
+                    </div>
+                    <div style="float: left; width: 730px; margin-left: 40px">
+                        <a href="/competitiondetail?id={{i.id}}" style="color: #303133; text-decoration: none">
+                            <div style="font-size: 18px">{{ i.title }}</div>
+                        </a>
+                        <div style="font-size: 14px; color: #F56C6C; margin-top: 13px">
+                            <span><i class="el-icon-time"></i></span>&nbsp;
+                            <span>{{ i.init_date|date:"Y年m月d日" }}</span>&nbsp;
+                            <span>~</span>&nbsp;
+                            <span>{{ i.finish_date|date:"Y年m月d日" }}</span>
+                        </div>
+                        <div class="Abstract">
+                            {{ i.abstract }}
+                        </div>
+                    </div>
+                </el-card>
+                {% endif %}
+                {% endif %}
+                {% elif i.status == 1 %}
                 {% if selected == '0' or selected == '1' %}
                     <el-card class="OngoingCompetitionCard">
 {#                        身份判断#}

@@ -71,6 +71,7 @@ def CompetitionList(request):
         order = request.GET['order']
     if 'selected' in request.GET:
         selected = request.GET['selected']
+
     #     身份判断
     user_name, user_identity = GetUserIdentitiy(request)
 
@@ -78,6 +79,10 @@ def CompetitionList(request):
         cptList = Competition.objects.filter(status=1)
     elif selected == '2':
         cptList = Competition.objects.filter(status=2)
+    elif selected == '3':
+        cptList = Competition.objects.filter(status=0)
+    elif user_identity == 3:
+        cptList = Competition.objects.all()
     else:
         cptList = Competition.objects.filter(status__gt=0)
 
@@ -164,6 +169,17 @@ def CompetitionFormPost(request):
     detail_img = request.FILES.get('detail_img')
     start_appendix = request.FILES.get('start_appendix')
 
+    now_time = datetime.date.today().strftime('%Y-%m-%d')
+    status = 0
+
+    if (now_time < init_date) :
+        status = 0
+    elif (now_time < finish_date) :
+        status = 1
+    else :
+        status = 2
+
+    print(status)
 
     try:
         new_competition = Competition(title = title, abstract = abstract,
@@ -177,10 +193,13 @@ def CompetitionFormPost(request):
                                                 preview_img = preview_img,
                                                 detail_img = detail_img,
                                                 start_appendix = start_appendix,
-                                                status = 0,
+                                                status = status,
                                                 )
 
         new_competition.save()
     except:
         return JsonResponse({'Message': 0})
     return JsonResponse({'Message': 1})
+
+def CompetitionChange(request):
+    return render(request,'../templates/CompetitionChange.html')
