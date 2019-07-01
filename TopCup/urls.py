@@ -16,8 +16,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 import competition.views as Cpt
+import techworks.views as Tch
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('competitiondetail/', Cpt.CompetitionDetail),
-    path('competitionlist/', Cpt.CompetitionList)
+    path('competitionlist/', Cpt.CompetitionList),
+    path('techworklist/', Tch.TechWorkListView.as_view()),
+    path('techworksubmit/', Tch.TechWorkView.as_view())
 ]
