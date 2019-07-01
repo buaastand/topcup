@@ -55,28 +55,40 @@ class RegisterView(View):
             password = dataPOST.get('password','')
 
             #创建BaseUser对象
-            baseuser = BaseUser()
-            baseuser.username = dataPOST.get('stu_id','')
-            baseuser.password = make_password(password)
-            baseuser.type = 1
-            baseuser.email = email
-            baseuser.save()
+            try:
+                baseuser = BaseUser()
+                baseuser.username = dataPOST.get('stu_id', '')
+                baseuser.password = make_password(password)
+                baseuser.type = 1
+                baseuser.email = email
+                baseuser.save()
+            except Exception as e:
+                # if isinstance(e,IntegrityError):
+                re_dict['msg'] = False
+                re_dict['detail'] = '该学号已注册'
+                JsonResponse(re_dict,safe=False)
+
+
 
             #创建Student对象
-            student = Student()
-            student.user = baseuser
-            student.stu_id = dataPOST.get('stu_id','')
-            student.name = dataPOST.get('name','')
-            student.department = dataPOST.get('department','')
-            student.major = dataPOST.get('major','')
-            student.enroll_time = dataPOST.get('enroll_time','')
-            student.phone = dataPOST.get('phone','')
-            student.birthdate = dataPOST.get('birthdate','')
-            student.degree = dataPOST.get('degree','')
-            student.address = dataPOST.get('address','')
-            student.save()
-            re_dict['msg'] = True
-            return JsonResponse(re_dict, safe=False, status=200)
+            try:
+                student = Student()
+                student.user = baseuser
+                student.stu_id = dataPOST.get('stu_id','')
+                student.name = dataPOST.get('name','')
+                student.department = dataPOST.get('department','')
+                student.major = dataPOST.get('major','')
+                student.enroll_time = dataPOST.get('enroll_time','')
+                student.phone = dataPOST.get('phone','')
+                student.birthdate = dataPOST.get('birthdate','')
+                student.degree = dataPOST.get('degree','')
+                student.address = dataPOST.get('address','')
+                student.save()
+                re_dict['msg'] = True
+                return JsonResponse(re_dict, safe=False, status=200)
+            except Exception as e:
+                re_dict['msg'] = False
+                return JsonResponse(re_dict,safe=False)
             # return HttpResponse(status=200)
             # return render(request,'login.html')
 
