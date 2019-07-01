@@ -9,6 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script src="https://unpkg.com/element-ui/lib/index.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token }}">
 
 </head>
 <body>
@@ -33,20 +34,19 @@
         </el-form-item>
         <el-form-item prop="type" style="margin-top: 0" label="用户类型">
             <el-radio-group v-model="loginForm.type">
-                <el-radio label="学生"></el-radio>
-                <el-radio label="专家"></el-radio>
-                <el-radio label="校团委"></el-radio>
+                <el-radio label="1">学生</el-radio>
+                <el-radio label="3">专家</el-radio>
+                <el-radio label="2">校团委</el-radio>
             </el-radio-group>
         </el-form-item>
         <el-form-item>
                 <el-button type="primary" @click="onSubmit('loginForm')" style="width:80%">登录</el-button>
         </el-form-item>
-        {% csrf_token %}
     </el-form>
         </el-main>
         <el-footer>
                 <div style="margin:0 auto; width: 70%;">
-    <a href="" style="float: left">注册</a>
+    <a href="/register/" style="float: left">注册</a>
     <a href="" style="float: right">忘记密码？</a>
     </div>
         </el-footer>
@@ -77,19 +77,27 @@
        onSubmit: function(formName) {
        this.$refs[formName].validate((valid) => {
           if (valid) {
-              axios
-                .post('/login/',this.loginForm)
-                .then(res => {
+                axios
+                .post(
+                    '/login/',
+                    this.loginForm,
+                    {headers: {'X-CSRFtoken': document.getElementsByTagName('meta')['csrf-token'].getAttribute('content')}},
+                )
+                .then(res =>{
                     console.log(res);
-                    if (res.state == 200) {
-                        this.$alert('登录成功', {
-                            confirmButtonText: '确定'
-                        })
-                    };
+                    if(res.status == 200){
+                        if(res.data['msg'] == true){
+                            this.$alert('登陆成功');
+                            window.location.href='/register/';
+                        }else {
+                            this.$alert('登录失败');
+                        }
+                    }
+                    else {
+                        this.$alert('登录失败');
+                    }
                 })
-                  .catch(err =>{
-                  console.log(err);
-              });
+                .catch(err => {console.log(err)})
           } else {
             console.log('error submit!!');
             return false;

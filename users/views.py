@@ -10,6 +10,7 @@ from django.views.generic.base import View
 from django.contrib.auth.hashers import make_password
 from django.http import HttpResponse,HttpResponseRedirect,JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.urls import reverse
 
 from .models import BaseUser,Student
 from .forms import RegisterForm,LoginForm,ModifyPwdForm
@@ -36,7 +37,7 @@ class RegisterView(View):
         return render(request,"register.html",{'register_form':register_form})
 
     def post(self,request):
-        #register_form = RegisterForm(request.POST)
+        re_dict = dict()
         dataPOST = json.loads(request.body)
         dataPOST['birthdate'] = dataPOST['birthdate'][0:10]
         dataPOST['enroll_time'] = dataPOST['enroll_time'][0:10]
@@ -44,7 +45,10 @@ class RegisterView(View):
         if register_form.is_valid():
             email = dataPOST.get('email','')
             if Student.objects.filter(user__email=email):
-                return render(request, "register.html",{"register_form": register_form, "msg": "该邮箱已注册"})
+                re_dict['msg'] = False
+                re_dict['detail'] = '该邮箱已注册'
+                return JsonResponse(re_dict,safe=False)
+                # return render(request, "register.html",{"register_form": register_form, "msg": "该邮箱已注册"})
             password = dataPOST.get('password','')
 
             #创建BaseUser对象
@@ -68,12 +72,19 @@ class RegisterView(View):
             student.degree = dataPOST.get('degree','')
             student.address = dataPOST.get('address','')
             student.save()
-            return HttpResponse(status=200)
+            re_dict['msg'] = True
+            return JsonResponse(re_dict, safe=False, status=200)
+            # return HttpResponse(status=200)
             # return render(request,'login.html')
 
         else:
+            re_dict['msg'] = False
+            re_dict['detail'] = '表单验证失败'
+            return JsonResponse(re_dict,safe=False,status=200)
             # return render(request,'register.html',{"register_form":register_form})
-            return HttpResponse(status=403)
+            # return HttpResponse(status=403)
+
+
 class LoginView(View):
     """
     用户登录
@@ -82,19 +93,26 @@ class LoginView(View):
         return render(request,'login.html',{})
 
     def post(self,request):
-        login_form = LoginForm(request.POST)
+        dataPOST = json.loads(request.body)
+        login_form = LoginForm(dataPOST)
+        re_dict = dict()
         if login_form.is_valid():
-            username = request.POST.get('username','')
-            password = request.POST.get('password','')
-            user_type = request.POST.get('type','')
+            username = dataPOST.get('username','')
+            password = dataPOST.get('password','')
+            user_type = dataPOST.get('type','')
             user = authenticate(username=username,password=password,user_type=user_type)
             if user is not None:
                 login(request,user)
-                return HttpResponseRedirect(reversed('index'))
+                re_dict['msg'] = True
+                return JsonResponse(re_dict, safe=False, status=200)
             else:
-                return render(request,'login.html',{'msg':'用户名或密码或用户类型错误！'})
+                re_dict['msg'] = False
+                return JsonResponse(re_dict,safe=False,status=200)
         else:
-            return render(request,'login.html',{'login_form':login_form})
+            re_dict['msg'] = False
+            return JsonResponse(re_dict, safe=False, status=200)
+            # return HttpResponse(status=400)
+            # return render(request,'login.html',{'login_form':login_form})
 
 
 class LogoutView(View):

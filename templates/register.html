@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script src="https://unpkg.com/element-ui/lib/index.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token }}">
 
 </head>
 <body>
@@ -76,7 +77,6 @@
                     <el-input name="password" v-model="registerForm.password" type="password" style="width: 80%"></el-input>
                 </el-form-item>
                 <el-form-item label="确认密码" prop="password2">
-                    <el-input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}"></el-input>
                     <el-input name="password2" v-model="registerForm.password2" type="password" style="width: 80%"></el-input>
                 </el-form-item>
                 <el-form-item>
@@ -90,7 +90,7 @@
             </el-form>
         </el-main>
         <el-footer>
-            <a href="" style="float:right">已有账户，直接登录？</a>
+            <a href="/login/" style="float:right">已有账户，直接登录？</a>
         </el-footer>
     </el-container>
 </div>
@@ -131,8 +131,7 @@
         },
         rules:{
         stu_id:[
-            {required:true, message:'请输入学号',trigger:'blur'},
-            {min:8, max:8, message:'请确保学号格式正确(8位)',trigger:'blur'}],
+            {required:true, message:'请输入学号',trigger:'blur'},],
         name:[
             {required:true, message:'请输入姓名',trigger:'blur'}],
         department:[
@@ -153,34 +152,35 @@
         email:[
             {required:true, message:'请输入邮箱',trigger:'blur'}],
         password:[
-            {required:true, message:'请输入密码',trigger:'blur'}],
+            {required:true, message:'请输入密码',trigger:'blur'},
+            {min:8, message:'密码最短为8位',trigger:'blur'}],
         password2:[
-            {required:true, message:'请再次密码',trigger:'blur'}],
+            {required:true, message:'请再次密码',trigger:'blur'},
+            {min:8, message:'密码最短为8位',trigger:'blur'}],
         },
     },
     methods:{
        onSubmit: function(formName) {
        this.$refs[formName].validate((valid) => {
           if (valid) {
-              {#this.$refs[formName].target="/register/";#}
-              {#this.$refs[formName].method="post";#}
-              {#this.$refs[formName].submit.apply();#}
               console.log(this.registerForm);
                 axios({
-                  url: '/register/',
-                  method: 'post',
-                  data:this.registerForm,
-                  headers: {
+                    url: '/register/',
+                    method: 'post',
+                    data:this.registerForm,
+                    headers: {
                       'Content-Type': 'application/json'
-                  }
-                 })
+                    }
+                })
                 .then(res => {
                     console.log(res);
                     if (res.status == 200) {
-                        this.$alert('注册成功', {
-                            confirmButtonText: '确定'
-                        })
-                        window.location.href='/login/'
+                        if(res.data['msg'] == true){
+                            this.$alert('注册成功');
+                            window.location.href='/login/';
+                        }else {
+                            this.$alert('注册失败：'+res.data['detail']);
+                        }
                     }
                     else{
                         this.$alert('注册失败', {
