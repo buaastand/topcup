@@ -59,7 +59,7 @@ def CompetitionDetail(request):
 
 def CompetitionList(request):
     order = 0
-    selected = 0
+    selected = '0'
     total = 0
     user_identity = 0
     user_name = 0
@@ -68,6 +68,7 @@ def CompetitionList(request):
         order = request.GET['order']
     if 'selected' in request.GET:
         selected = request.GET['selected']
+
     #     身份判断
     if request.user.is_authenticated:
         if Expert.objects.filter(user__email=request.user.username):
@@ -87,7 +88,7 @@ def CompetitionList(request):
     elif selected == '2':
         cptList = Competition.objects.filter(status=2)
     else:
-        cptList = Competition.objects.filter(status__gt=0)
+        cptList = Competition.objects.all()
 
     total = len(cptList)
     if order == '1':
