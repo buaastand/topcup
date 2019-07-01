@@ -1,0 +1,79 @@
+<html>
+<head>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="../static/css/NavName.css">
+    <link rel="stylesheet" href="../static/css/CompetitionDetail.css">
+    <script src="https://unpkg.com/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <title>比赛详情</title>
+</head>
+
+<body style="margin: 0">
+{% include "NavMenu.html" %}
+<div id="cptdetail" class="cptdetail">
+
+    <div class="cptdetailimg">
+        {#            左右渐变#}
+        <div class="beauty-left" style="float: left"></div>
+        <div class="beauty-right" style="float: right"></div>
+        {#            竞赛标题#}
+        <div class="cptdetailtitle">{{ cptDetail.title }}</div>
+    </div>
+    {#            进度条#}
+    <div class="cptdetailsteps">
+        <el-steps :space="200" :active="{{ cptDetail.COMPETITION_STATUS_TYPE }}" finish-status="success" align-center>
+            <el-step title="报名与提交"></el-step>
+            <el-step title="初审"></el-step>
+            <el-step title="初评"></el-step>
+            <el-step title="现场答辩"></el-step>
+            <el-step title="比赛结束"></el-step>
+        </el-steps>
+    </div>
+    {#    卡片#}
+    <div class="cptdetailmain">
+        <div style="left:0;position: absolute;width: 100%">
+            <el-tabs type="border-card">
+                <el-tab-pane label="大赛首页">
+                    <div class="cptdetailtext">
+                        {{ cptDetail.detail }}<br>
+                        <a href="{{ cptDetail.start_appendix }}">附件下载</a>
+                    </div>
+                </el-tab-pane>
+                <el-tab-pane label="赛程安排">
+                    <div class="cptdetailtext">
+                        竞赛开始时间：{{ cptDetail.init_date|date:"Y年m月d日" }}<br><br>
+                        报名与提交：{{ cptDetail.init_date|date:"Y年m月d日" }}-{{ cptDetail.submit_end_date|date:"Y年m月d日" }}<br><br>
+                        初审：{{ cptDetail.submit_end_date|date:"Y年m月d日" }}-{{ cptDetail.check_end_date|date:"Y年m月d日" }}<br><br>
+                        初评：{{ cptDetail.check_end_date|date:"Y年m月d日" }}-{{ cptDetail.review_end_date|date:"Y年m月d日" }}<br><br>
+                        现场答辩：{{ cptDetail.review_end_date|date:"Y年m月d日" }}-{{ cptDetail.defense_end_date|date:"Y年m月d日" }}<br><br>
+                        结果公布时间：{{ cptDetail.finish_date|date:"Y年m月d日" }}<br>
+                    </div>
+                </el-tab-pane>
+                <el-tab-pane label="赛事规则">
+                    <div class="cptdetailtext">{{ cptDetail.rule }}</div>
+                </el-tab-pane>
+                <el-tab-pane label="初审名单">
+                    <div class="cptdetailtext">定时任务补偿</div>
+                </el-tab-pane>
+                <el-tab-pane label="答辩名单">
+                    <div class="cptdetailtext">定时任务补偿</div>
+                </el-tab-pane>
+                <el-tab-pane label="比赛结果">
+                    <div class="cptdetailtext">{{ cptDetail.result_details }}</div>
+                </el-tab-pane>
+            </el-tabs>
+        </div>
+        <div style="right:10px;position: absolute;margin-top:2px">
+            <el-button type="text" style="text-decoration:underline">我要报名</el-button>
+        </div>
+    </div>
+</div>
+</body>
+
+
+<script>
+    var CptDetail = new Vue({
+        el: '#cptdetail',
+    })
+</script>
+</html>

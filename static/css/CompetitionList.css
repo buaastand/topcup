@@ -1,0 +1,78 @@
+.DisplayArea {
+    width: 1000px;
+    height: 100px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.DisplayArea .TopArea {
+    width: 100%;
+    height: 36px;
+    margin-top: 15px;
+}
+
+.DisplayArea .TopArea .el-radio-button__inner {
+    padding: 10px 20px;
+}
+
+.ListArea {
+    width: 1000px;
+    margin-top: 25px;
+}
+
+.OngoingCompetitionCard, .OutdatedCompetitionCard {
+    margin-left: 0;
+    margin-bottom: 20px;
+    width: 1000px;
+    height: 120px;
+}
+
+.OngoingCompetitionCard {
+    border-color: #1989FA;
+}
+
+.WordBorder {
+    width:35px;
+    height:78px;
+    background:rgba(230,241,252,1);
+    border:1px solid rgba(163,208,253,1);
+    margin-left: 5px;
+    float: left;
+}
+
+.ErectWord {
+    width: 16px;
+    color: #1989FA; 
+    line-height: 16px; 
+    font-size: 16px;
+    margin: 8px auto 8px 10px;
+}
+
+.Abstract {
+    width: 730px; 
+    white-space: nowrap; 
+    overflow: hidden;  
+    font-size: 14px; 
+    color: #606266; 
+    margin-top: 2px; 
+    text-overflow: ellipsis; 
+    overflow: hidden;
+}
+
+.OutdatedCompetitionCard {
+    border-color: #DCDFE6;
+}
+
+.OutdatedCompetitionCard .WordBorder {
+    background: rgba(245,247,250,1);
+    border: 1px solid rgba(220,223,230,1);
+}
+
+.OutdatedCompetitionCard .ErectWord {
+    color: #C0C4CC;
+    margin-top: 15px;
+}
+
+.OutdatedCompetitionCard .Abstract {
+    color: #909399;
+}
