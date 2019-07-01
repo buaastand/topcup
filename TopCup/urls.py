@@ -29,7 +29,6 @@ urlpatterns = [
     path('competitiondetail/', Cpt.CompetitionDetail),
     path('competitionlist/', Cpt.CompetitionList),
     path('deletecpt/',Cpt.DeleteCompetition),
-    path('competitionlist/', Cpt.CompetitionList),
     path('expert/', ExpertManage.list),
     path('expert_detail/', ExpertManage.expert_detail),
     path('expert_change/', ExpertManage.change),
@@ -39,7 +38,8 @@ urlpatterns = [
     path('logout/',LogoutView.as_view(),name='logout'),
     path('register/',csrf_exempt(RegisterView.as_view()),name='register'),
     path('update/pwd/',UpdatePwdView.as_view(),name='update_pwd'),
-    #re_path(r'^static/(?P<path>.*)$', serve, {"document_root":STATIC_ROOT}),
+    path('cptinit/', Cpt.CompetitionInit),
+    path('cptinit/cptformpost/',Cpt.CompetitionFormPost),
 ]
 
 #urlpatterns += staticfiles_urlpatterns()

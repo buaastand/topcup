@@ -64,7 +64,7 @@
             </el-tabs>
         </div>
         <div style="right:10px;position: absolute;margin-top:2px">
-            <el-button type="text" style="text-decoration:underline">我要报名</el-button>
+            <el-button type="text" style="text-decoration:underline" @click="techworksubmit({{ cptDetail.id }})">我要报名</el-button>
 {#            <el-button type="text" style="text-decoration:underline">管理作品</el-button>#}
 
         </div>
@@ -76,6 +76,11 @@
 <script>
     var CptDetail = new Vue({
         el: '#cptdetail',
+        methods:{
+            techworksubmit(val){
+                window.open('/techworksubmit/?cptid='+val,"_self")
+            }
+        }
     })
 </script>
 </html>
