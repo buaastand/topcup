@@ -98,6 +98,7 @@
                             :limit="1"
                             ref="uploadFile"
                             :show-file-list="true"
+                            :on-change="handleSuccess"
                             :on-preview="handlePreview"
                             :on-remove="handleRemove"
                             :before-remove="beforeRemove"
@@ -290,8 +291,10 @@
                     }
                     return isJPG;
                 },
-                handleSuccess(response, file) {
+                handleSuccess(file) {
                     this.form.file = file.raw;
+                    console.log("1");
+                    console.log(this.form.file);
                 },
                 handleRemove(file) {
                     console.log(file);

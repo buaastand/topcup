@@ -15,9 +15,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.views.decorators.csrf import csrf_exempt
-
+from django.views.static import serve
 from users.views import LoginView,LogoutView,UpdatePwdView,RegisterView
-
+from TopCup import settings
 from users.views import ExpertManage
 
 from django.urls import path,re_path
@@ -25,6 +25,7 @@ import competition.views as Cpt
 import techworks.views as Tch
 from django.views.generic import RedirectView
 urlpatterns = [
+    re_path(r'^media/(?P<path>.*)$', serve, {'document_root':settings.MEDIA_ROOT}),
     path('admin/', admin.site.urls),
     path('competitiondetail/', Cpt.CompetitionDetail),
     path('index/', Cpt.CompetitionList),

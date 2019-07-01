@@ -11,6 +11,7 @@ from users.models import Expert
 from users.models import Student
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
+from django import forms
 
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -178,8 +179,8 @@ def CompetitionFormPost(request):
         status = 1
     else :
         status = 2
+    
 
-    print(status)
 
     try:
         new_competition = Competition(title = title, abstract = abstract,
@@ -197,6 +198,8 @@ def CompetitionFormPost(request):
                                                 )
 
         new_competition.save()
+
+        print(new_competition.start_appendix)
     except:
         return JsonResponse({'Message': 0})
     return JsonResponse({'Message': 1})
