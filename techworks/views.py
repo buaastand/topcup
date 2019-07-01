@@ -1,4 +1,5 @@
 from django.shortcuts import render, HttpResponse
+from django.http.response import JsonResponse
 from django.views import View
 from django.contrib.auth.decorators import login_required
 from .models import WorkInfo, Appendix
@@ -11,8 +12,23 @@ import json
 
 
 # Create your views here.
-def test(request):
-    request.user.username
+def searchstu(request):
+    DEGREE_MAP = {
+            1: "大专",
+            2: "大学本科",
+            3: "硕士研究生",
+            4: "博士研究生",
+    }
+    stuid = request.GET.get('stu_id')
+    student = Student.objects.get(stu_id=stuid)
+    ret = {"student":{
+                    "stu_id":student.stu_id,
+                    "name":student.name,
+                    "degree":DEGREE_MAP[student.degree],
+                    "phone":student.phone,
+                    "email":student.user.email
+                    }}
+    return JsonResponse(ret)
 
 
 # @login_required(login_url='/login/')
@@ -112,6 +128,24 @@ class TechWorkView(View):
                 work_id = int(request.POST.get('work_id'))
                 work = WorkInfo.objects.get(work_id=work_id)
                 registration = work.registration
+                AUTH_MAP = {
+                    0: registration.second_auth,
+                    1: registration.third_auth,
+                    2: registration.forth_auth,
+                    3: registration.fifth_auth
+                }
+                team = json.loads(request.POST.get("company_table",[]))
+                if len(team):
+                    for id,stu in enumerate(team):
+                        if id==0:
+                            registration.second_auth = Student.objects.get(stu_id=stu["stu_id"])
+                        if id==1:
+                            registration.third_auth = Student.objects.get(stu_id=stu["stu_id"])
+                        if id==2:
+                            registration.forth_auth = Student.objects.get(stu_id=stu["stu_id"])
+                        if id==3:
+                            registration.fifth_auth = Student.objects.get(stu_id=stu["stu_id"])
+
                 work.title = request.POST.get('title', work.title)
                 work.detail = request.POST.get('detail', work.detail)
                 work.innovation = request.POST.get('innovation', work.innovation)
@@ -124,26 +158,22 @@ class TechWorkView(View):
                     "photo": 1,
                     "video": 2
                 }
-                for k, file in request.FILES.items():
-                    # file = file[0]
-                    filename = file._name
-                    filedata = file
-                    filetype = FILE_TYLE_MAP[file.field_name.split('_')[0]]
-                    filedate = datetime.date.today()
-                    Appendix.objects.create(filename=filename, appendix_type=filetype, upload_date=filedate,
-                                            file=filedata, work=work)
+                if len(request.FILES) > 0:
+                    for k, file in request.FILES.items():
+                        # file = file[0]
+                        filename = file._name
+                        filedata = file
+                        filetype = FILE_TYLE_MAP[file.field_name.split('_')[0]]
+                        filedate = datetime.date.today()
+                        Appendix.objects.create(filename=filename, appendix_type=filetype, upload_date=filedate,
+                                                file=filedata, work=work)
 
-                team = json.loads(request.POST.get('company_table')) if request.POST.get(
-                    'company_table') != "" else None
-                AUTH_MAP = {
-                    0: registration.second_auth,
-                    1: registration.third_auth,
-                    2: registration.forth_auth,
-                    3: registration.fifth_auth
-                }
-                if team:
-                    for order, auth in enumerate(team):
-                        AUTH_MAP[order] = Student.objects.get(stu_id=auth['stu_id'])
+                # team = json.loads(request.POST.get('company_table')) if request.POST.get(
+                #     'company_table') != "" else None
+                #
+                # if team:
+                #     for order, auth in enumerate(team):
+                #         AUTH_MAP[order] = Student.objects.get(stu_id=auth['stu_id'])
 
                 registration.save()
                 work.save()

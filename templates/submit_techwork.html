@@ -220,7 +220,7 @@
         techworkForm:{
             first_author:'{{ work.registration.first_auth.name }}',
             company_search:'',
-            company_table:{{ company }},
+            company_table:{{ company|safe }},
             title:'{{ work.title | default_if_none:'' }}',
             work_type:'{{ work.work_type }}',
             field:{{ work.field }},
@@ -286,7 +286,8 @@
                 formData.append('work_id', {{ work.work_id }});
                 // 创建了 FormData 对象的时候传入了表单但是读不出来表单数据，不知道哪里的问题。所以下面用 append 方法添加参数，想打印出来看看的话可以 formData.get('id')
                 formData.append('first_author', this.techworkForm.first_author);
-                formData.append('company_table', this.techworkForm.company_table);
+                console.log(this.techworkForm.company_table);
+                formData.append('company_table', JSON.stringify(this.techworkForm.company_table));
                 formData.append('title', this.techworkForm.title);
                 formData.append('work_type', this.techworkForm.work_type);
                 formData.append('field', this.techworkForm.field);
@@ -352,7 +353,8 @@
                 formData.append('work_id', {{ work.work_id }});
                 // 创建了 FormData 对象的时候传入了表单但是读不出来表单数据，不知道哪里的问题。所以下面用 append 方法添加参数，想打印出来看看的话可以 formData.get('id')
                 formData.append('first_author', this.techworkForm.first_author);
-                formData.append('company_table', this.techworkForm.company_table);
+                console.log(this.techworkForm.company_table);
+                formData.append('company_table', JSON.stringify(this.techworkForm.company_table));
                 formData.append('title', this.techworkForm.title);
                 formData.append('work_type', this.techworkForm.work_type);
                 formData.append('field', this.techworkForm.field);
@@ -417,17 +419,20 @@
           }
 
           else{     // 调用函数查找合作者信息
-              this.$alert(search, {
-                  confirmButtonText: '确定'
+              axios.get('/stusearch/',{params:{stu_id:search,}})
+              .then(response=>{
+                  console.log(response)
+                  //let stu = JSON.parse(response.data);
+                  this.techworkForm.company_table.push(response.data['student'])
               })
+              .catch(function (error) {
+                console.log(error);
+              });
+              {#this.$alert(search, {#}
+              {#    confirmButtonText: '确定'#}
+              {# })#}
 
-          this.techworkForm.company_table.push({
-                stu_id:'16231048',
-                name:'施源',
-                degree:'本科',
-                phone:'15652588700',
-                email:'506178614@qq.com'
-          })}
+          }
       },
       deleteCompany(n) {    // 删除合作者者
           if (n == -2) {

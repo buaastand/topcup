@@ -24,5 +24,6 @@ urlpatterns = [
     path('competitionlist/', Cpt.CompetitionList),
     path('techworklist/', Tch.TechWorkListView.as_view()),
     path('techworksubmit/', Tch.TechWorkView.as_view()),
+    path('stusearch/',Tch.searchstu),
     re_path(r'^favicon.ico',RedirectView.as_view(url=r'/static/favicon.ico')),
 ]
