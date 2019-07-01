@@ -35,23 +35,23 @@ def CompetitionList(request):
         selected = request.GET['selected']
 
     if selected == '1':
-        list = Competition.objects.filter(status=1)
+        cptList = Competition.objects.filter(status=1)
     elif selected == '2':
-        list = Competition.objects.filter(status=2)
+        cptList = Competition.objects.filter(status=2)
     else:
-        list = Competition.objects.filter(status__gt=0)
+        cptList = Competition.objects.filter(status__gt=0)
 
-    total = len(list)
+    total = len(cptList)
     if order == '1':
-        list.order_by("start_date")
+        cptList = cptList.order_by("-init_date")
     elif order == '2':
-        list.order_by("-finish_date")
+        cptList = cptList.order_by("finish_date")
     elif order == '3':
-        list.order_by("finish_date")
+        cptList = cptList.order_by("-finish_date")
     else:
-        list.order_by("-start_date")
+        cptList = cptList.order_by("init_date")
 
-    paginator = Paginator(list, 6) # 每页6条
+    paginator = Paginator(cptList, 6) # 每页6条
 
     page = request.GET.get('page')
     contacts = paginator.page(1)
