@@ -9,6 +9,7 @@
     <script src="https://unpkg.com/element-ui/lib/index.js"></script>
 
     <script src="https://cdn.staticfile.org/vue-resource/1.5.1/vue-resource.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <!-- 引入cpt_init.css-->
     <link rel="stylesheet" href="..\static\css\CompetitionInit.css" type="text/css"/>
 
@@ -20,47 +21,47 @@
     <div id="app">
         <el-card class="boxCard">
             <div class="formArea">
-                <el-form label-width="100px" label-position='labelPosition'>
-                    <el-form-item label="竞赛名称">
-                        <el-input v-model="title"></el-input>
+                <el-form ref="form" :model="form" :rules="rules" hide-required-asterisk label-width="100px" label-position='labelPosition'>
+                    <el-form-item label="竞赛名称" prop="title">
+                        <el-input v-model="form.title"></el-input>
                     </el-form-item>
-                    <el-form-item label="竞赛摘要">
-                        <el-input type="textarea" v-model="abstract"></el-input>
+                    <el-form-item label="竞赛摘要" prop="abstract">
+                        <el-input type="textarea" v-model="form.abstract"></el-input>
                     </el-form-item>
-                    <el-form-item label="竞赛详细信息">
-                        <el-input type="textarea" v-model="detail"></el-input>
+                    <el-form-item label="竞赛详细信息" prop="detail">
+                        <el-input type="textarea" v-model="form.detail"></el-input>
                     </el-form-item>
-                    <el-form-item label="竞赛规则">
-                        <el-input type="textarea" v-model="rule"></el-input>
+                    <el-form-item label="竞赛规则" prop="rule">
+                        <el-input type="textarea" v-model="form.rule"></el-input>
                     </el-form-item>
-                    <el-form-item label="竞赛开始时间">
+                    <el-form-item label="竞赛开始时间" prop="init_date">
                         <el-col :span="11">
-                        <el-date-picker type="date" placeholder="选择日期" v-model="init_date" style="width: 100%;"></el-date-picker>
+                            <el-date-picker type="date" placeholder="选择日期" v-model="form.init_date" style="width: 100%;"></el-date-picker>
                         </el-col>
                     </el-form-item>
-                    <el-form-item label="提交截止时间">
+                    <el-form-item label="提交截止时间" prop="submit_end_date">
                         <el-col :span="11">
-                        <el-date-picker type="date" placeholder="选择日期" v-model="submit_end_date" style="width: 100%;"></el-date-picker>
+                            <el-date-picker type="date" placeholder="选择日期" v-model="form.submit_end_date" style="width: 100%;"></el-date-picker>
                         </el-col>
                     </el-form-item>
-                    <el-form-item label="初审截止时间">
+                    <el-form-item label="初审截止时间" prop="check_end_date">
                         <el-col :span="11">
-                        <el-date-picker type="date" placeholder="选择日期" v-model="check_end_date" style="width: 100%;"></el-date-picker>
+                            <el-date-picker type="date" placeholder="选择日期" v-model="form.check_end_date" style="width: 100%;"></el-date-picker>
                         </el-col>
                     </el-form-item>
-                    <el-form-item label="初评截止时间">
+                    <el-form-item label="初评截止时间" prop="review_end_date">
                         <el-col :span="11">
-                        <el-date-picker type="date" placeholder="选择日期" v-model="review_end_date" style="width: 100%;"></el-date-picker>
+                            <el-date-picker type="date" placeholder="选择日期" v-model="form.review_end_date" style="width: 100%;"></el-date-picker>
                         </el-col>
                     </el-form-item>
-                    <el-form-item label="答辩结束时间">
+                    <el-form-item label="答辩结束时间" prop="defense_end_date">
                         <el-col :span="11">
-                        <el-date-picker type="date" placeholder="选择日期" v-model="defense_end_date" style="width: 100%;"></el-date-picker>
+                            <el-date-picker type="date" placeholder="选择日期" v-model="form.defense_end_date" style="width: 100%;"></el-date-picker>
                         </el-col>
                     </el-form-item>
-                    <el-form-item label="竞赛终止时间">
+                    <el-form-item label="竞赛终止时间" prop="finish_date">
                         <el-col :span="11">
-                        <el-date-picker type="date" placeholder="选择日期" v-model="finish_date" style="width: 100%;"></el-date-picker>
+                            <el-date-picker type="date" placeholder="选择日期" v-model="form.finish_date" style="width: 100%;"></el-date-picker>
                         </el-col>
                     </el-form-item>
                     <el-form-item label="上传缩略图">
@@ -69,8 +70,9 @@
                             action=""
                             :show-file-list="false"
                             :on-success="handlePreviewPicSuccess"
-                            :before-upload="beforePreviewPicUpload">
-                            <img v-if="previewPicUrl" :src="previewPicUrl" class="previewPic">
+                            :before-upload="beforePreviewPicUpload"
+                            :auto-upload="false">
+                            <img v-if="form.previewPicUrl" :src="form.previewPicUrl" class="previewPic">
                             <i v-else style="line-height: 80px" class="el-icon-plus previewPicUploaderIcon"></i>
                         </el-upload>
                     </el-form-item>
@@ -80,21 +82,24 @@
                             action=""
                             :show-file-list="false"
                             :on-success="handleDetailPicSuccess"
-                            :before-upload="beforeDetailPicUpload">
-                            <img v-if="detailPicUrl" :src="detailPicUrl" class="detailPic">
+                            :before-upload="beforeDetailPicUpload"
+                            :auto-upload="false">
+                            <img v-if="form.detailPicUrl" :src="form.detailPicUrl" class="detailPic">
                             <i v-else style="line-height: 130px" class="el-icon-plus detailPicUploaderIcon"></i>
                         </el-upload>
                     </el-form-item>
                     <el-form-item label="上传附件">
                         <el-upload
                             action=""
-                            :limit="fileLimit"
-                            :show-file-list="showFileList"
+                            :limit="1"
+                            ref="uploadFile"
+                            :show-file-list="true"
                             :on-preview="handlePreview"
                             :on-remove="handleRemove"
                             :before-remove="beforeRemove"
                             :on-exceed="handleExceed"
-                            :file-list="fileList">
+                            :file-list="form.fileList"
+                            :auto-upload="false">
                             <el-tooltip content="请上传1个文件或压缩包" placement="right">
                                 <el-button type="primary">点击上传</el-button>
                             </el-tooltip>
@@ -115,27 +120,60 @@
             data() {
                 return {
                     labelPosition: 'left',
-                    
-                    title: '',
-                    abstract: '',
-                    detail: '',
-                    rule: '',
-                    status: '',
-                    init_date: '',
-                    submit_end_date: '',
-                    check_end_date: '',
-                    review_end_date: '',
-                    defense_end_date: '',
-                    finish_date: '',
 
-                    previewPicUrl: '',
-                    detailPicUrl: '',
-                    previewlPicList: [],
-                    detailPicList: [],
+                    form: {
+                        title: '',
+                        abstract: '',
+                        detail: '',
+                        rule: '',
+                        status: '',
+                        init_date: '',
+                        submit_end_date: '',
+                        check_end_date: '',
+                        review_end_date: '',
+                        defense_end_date: '',
+                        finish_date: '',
 
-                    fileLimit: 1,
-                    showFileList: true,
-                    fileList: [],
+                        previewPicUrl: '',
+                        detailPicUrl: '',
+                        previewlPicList: [],
+                        detailPicList: [],
+                        fileList: [],
+                    },
+
+                    rules: {
+                        title: [
+                            {required: true, message: '不能为空', trigger: 'blur'},
+                            {min: 1, max: 255, message:'长度小于255字符',trigger: 'blur'},
+                        ],
+                        abstract: [
+                            {required: true, message: '不能为空', trigger: 'blur'},
+                        ],
+                        detail: [
+                            {required: true, message: '不能为空', trigger: 'blur'},
+                        ],
+                        rule: [
+                            {required: true, message: '不能为空', trigger: 'blur'},
+                        ],
+                        init_date: [
+                            {type: 'date', required: true, message: '不能为空', trigger: 'change'},
+                        ],
+                        submit_end_date: [
+                            {type: 'date', required: true, message: '不能为空', trigger: 'change'},
+                        ],
+                        check_end_date: [
+                            {type: 'date', required: true, message: '不能为空', trigger: 'change'},
+                        ],
+                        review_end_date: [
+                            {type: 'date', required: true, message: '不能为空', trigger: 'change'},
+                        ],
+                        defense_end_date: [
+                            {type: 'date', required: true, message: '不能为空', trigger: 'change'},
+                        ],
+                        finish_date: [
+                            {type: 'date', required: true, message: '不能为空', trigger: 'change'},
+                        ]
+                    }
                 };
             },
             methods: {
@@ -159,6 +197,9 @@
                     }
                     return isJPG;
                 },
+                handleSuccess(response, file, fileList) {
+                    this.fileList = fileList;
+                },
                 handleRemove(file, fileList) {
                     console.log(file, fileList);
                 },
@@ -166,34 +207,23 @@
                     console.log(file);
                 },
                 handleExceed(files, fileList) {
-                    this.$message.warning('当前限制选择 1 个文件，本次共选择了 ${files.length + files.length} 个文件')
+                    this.$message.warning('当前限制选择 1 个文件');
                 },
                 beforeRemove(file, fileList) {
-                    return this.$confirm('确定移除 ${file.name} ？');
+                    return this.$confirm('确定移除 ${ file.name } ？');
                 },
                 onSubmit() {
-                    this.$http.post("cptformpost/", data, {emulateJSON: true}).then(function(res) {
-                        console.log(res);
-                    },function(res) {
-                        console.log(res.status);
-                    });
-                    $.ajax({
-                        url: "cptformpost/",
-                        data: {
-                            'title': title,
-                            'abstract': abstract,
-                            'detail': detail,
-                            'rule': rule,
-                            'init_date': init_date,
-                            'submit_end_date': submit_end_date,
-                            'check_end_date': check_end_date,
-                            'review_end_date': review_end_date,
-                            'defense_end_date': defense_end_date,
-                            'finish_date': finish_date,
-                            },
-                        type: "POST",
-                        dataType: "json",
-                    });
+                    axios
+                        .post("/cptformpost/", this.form)
+                        .then(res => {
+                            console.log(res);
+                            if (res.status == 200) {
+                                this.$message.info("成功！");
+                            }
+                        }).catch(err => {
+                            console.log(err);
+                        })
+                    this.$refs.uploadFile.submit();
                 },
             }
         });
