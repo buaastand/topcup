@@ -27,8 +27,12 @@
     height: 120px;
 }
 
-.OngoingCompetitionCard {
+.OngoingCompetitionCard:hover, .OutdatedCompetitionCard:hover {
     border-color: #1989FA;
+}
+
+.OngoingCompetitionCard {
+    border-color: #E6F1FC;
 }
 
 .WordBorder {
@@ -75,4 +79,8 @@
 
 .OutdatedCompetitionCard .Abstract {
     color: #909399;
+}
+
+.CloseCompetitionCard{
+    float: right;
 }

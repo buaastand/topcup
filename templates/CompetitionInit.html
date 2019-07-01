@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- 引入vue.js -->
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+    <!-- 引入Element -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+    <script src="https://cdn.staticfile.org/vue-resource/1.5.1/vue-resource.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <!-- 引入cpt_init.css-->
+    <link rel="stylesheet" href="..\static\css\CompetitionInit.css" type="text/css"/>
+    <link rel="stylesheet" href="../static/css/NavName.css">
+
+    <meta charset="UTF-8">
+    <title>添加竞赛</title>
+</head>
+<body style="margin: 0; background: #F5F7FA">
+    {%include 'NavMenu.html'%}
+    <div id="app">
+        <el-card class="boxCard">
+            <div class="formArea">
+                <el-form ref="form" :model="form" :rules="rules" hide-required-asterisk label-width="100px" label-position='labelPosition'>
+                    {% csrf_token %}
+                    <el-form-item label="竞赛名称" prop="title">
+                        <el-input v-model="form.title"></el-input>
+                    </el-form-item>
+                    <el-form-item label="竞赛摘要" prop="abstract">
+                        <el-input type="textarea" v-model="form.abstract"></el-input>
+                    </el-form-item>
+                    <el-form-item label="竞赛详细信息" prop="detail">
+                        <el-input type="textarea" v-model="form.detail"></el-input>
+                    </el-form-item>
+                    <el-form-item label="竞赛规则" prop="rule">
+                        <el-input type="textarea" v-model="form.rule"></el-input>
+                    </el-form-item>
+                    <el-form-item label="竞赛开始时间" prop="init_date">
+                        <el-col :span="11">
+                            <el-date-picker type="date" placeholder="选择日期" v-model="form.init_date" style="width: 100%;"></el-date-picker>
+                        </el-col>
+                    </el-form-item>
+                    <el-form-item label="提交截止时间" prop="submit_end_date">
+                        <el-col :span="11">
+                            <el-date-picker type="date" placeholder="选择日期" v-model="form.submit_end_date" style="width: 100%;"></el-date-picker>
+                        </el-col>
+                    </el-form-item>
+                    <el-form-item label="初审截止时间" prop="check_end_date">
+                        <el-col :span="11">
+                            <el-date-picker type="date" placeholder="选择日期" v-model="form.check_end_date" style="width: 100%;"></el-date-picker>
+                        </el-col>
+                    </el-form-item>
+                    <el-form-item label="初评截止时间" prop="review_end_date">
+                        <el-col :span="11">
+                            <el-date-picker type="date" placeholder="选择日期" v-model="form.review_end_date" style="width: 100%;"></el-date-picker>
+                        </el-col>
+                    </el-form-item>
+                    <el-form-item label="答辩结束时间" prop="defense_end_date">
+                        <el-col :span="11">
+                            <el-date-picker type="date" placeholder="选择日期" v-model="form.defense_end_date" style="width: 100%;"></el-date-picker>
+                        </el-col>
+                    </el-form-item>
+                    <el-form-item label="竞赛终止时间" prop="finish_date">
+                        <el-col :span="11">
+                            <el-date-picker type="date" placeholder="选择日期" v-model="form.finish_date" style="width: 100%;"></el-date-picker>
+                        </el-col>
+                    </el-form-item>
+                    <el-form-item label="上传缩略图">
+                        <el-upload
+                            class="previewPicUploader"
+                            ref="uploadPreviewPic"
+                            action=""
+                            :show-file-list="false"
+                            :on-change="handlePreviewPicSuccess"
+                            :before-upload="beforePreviewPicUpload"
+                            :auto-upload="false">
+                            <img v-if="form.previewPicUrl" :src="form.previewPicUrl" class="previewPic">
+                            <i v-else style="line-height: 80px" class="el-icon-plus previewPicUploaderIcon"></i>
+                        </el-upload>
+                    </el-form-item>
+                    <el-form-item label="上传详情图">
+                        <el-upload
+                            class="detailPicUploader"
+                            ref="uploadDetailPic"
+                            action=""
+                            :show-file-list="false"
+                            :on-change="handleDetailPicSuccess"
+                            :before-upload="beforeDetailPicUpload"
+                            :auto-upload="false">
+                            <img v-if="form.detailPicUrl" :src="form.detailPicUrl" class="detailPic">
+                            <i v-else style="line-height: 130px" class="el-icon-plus detailPicUploaderIcon"></i>
+                        </el-upload>
+                    </el-form-item>
+                    <el-form-item label="上传附件">
+                        <el-upload
+                            action=""
+                            :limit="1"
+                            ref="uploadFile"
+                            :show-file-list="true"
+                            :on-preview="handlePreview"
+                            :on-remove="handleRemove"
+                            :before-remove="beforeRemove"
+                            :on-exceed="handleExceed"
+                            :auto-upload="false">
+                            <el-tooltip content="请上传1个文件或压缩包" placement="right">
+                                <el-button type="primary">点击上传</el-button>
+                            </el-tooltip>
+                        </el-upload>
+                    </el-form-item>
+                    <div class="buttonArea">
+                        <el-button>暂存</el-button>
+                        <el-button type="primary" @click="onSubmit('form')">创建</el-button>
+                    </div>
+                </el-form>
+            </div>
+        </el-card>
+    </div>
+
+    <script>
+
+        Date.prototype.Format = function (fmt) {
+            var o = {
+                "M+": this.getMonth() + 1, //月份
+                "d+": this.getDate(), //日
+
+            };
+            if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+            for (var k in o)
+                if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+            return fmt;
+        }
+
+        var CptInit = new Vue ({
+            el: '#app',
+            data() {
+                var initValidator = (rule, value, callback) => {
+                    if (value == '') {
+                        callback(new Error('不能为空'));
+                    } else {
+                        callback();
+                    }
+                };
+                var submitValidator = (rule, value, callback) => {
+                    if (!(this.form.init_date == '')) {
+                        if (value == '') {
+                            callback(new Error('不能为空'));
+                        } else {
+                            if (value < this.form.init_date) {
+                                callback(new Error('提交截止日期不能早于开始日期'));
+                            } else {
+                                callback();
+                            }
+                        }
+                    }
+                };
+                var checkValidator = (rule, value, callback) => {
+                    if (!(this.form.submit_end_date == '')) {
+                        if (value == '') {
+                            callback(new Error('不能为空'));
+                        } else {
+                            if (value < this.form.submit_end_date) {
+                                callback(new Error('初审截止日期不能早于提交截止日期'));
+                            } else {
+                                callback();
+                            }
+                        }
+                    }
+                };
+                var reviewValidator = (rule, value, callback) => {
+                    if (!(this.form.check_end_date == '')) {
+                        if (value == '') {
+                            callback(new Error('不能为空'));
+                        } else {
+                            if (value < this.form.check_end_date) {
+                                callback(new Error('初评截止日期不能早于初审截止日期'));
+                            } else {
+                                callback();
+                            }
+                        }
+                    }
+                };
+                var defenseValidator = (rule, value, callback) => {
+                    if (!(this.form.review_end_date == '')) {
+                        if (value == '') {
+                            callback(new Error('不能为空'));
+                        } else {
+                            if (value < this.form.review_end_date) {
+                                callback(new Error('答辩截止日期不能早于初评截止日期'));
+                            } else {
+                                callback();
+                            }
+                        }
+                    }
+                };
+                var finishValidator = (rule, value, callback) => {
+                    if (!(this.form.defense_end_date == '')) {
+                        if (value == '') {
+                            callback(new Error('不能为空'));
+                        } else {
+                            if (value < this.form.defense_end_date) {
+                                callback(new Error('结束日期不能早于答辩截止日期日期'));
+                            } else {
+                                callback();
+                            }
+                        }
+                    }
+                };
+                return {
+                    labelPosition: 'left',
+
+                    form: {
+                        title: '',
+                        abstract: '',
+                        detail: '',
+                        rule: '',
+                        status: '',
+                        init_date: '',
+                        submit_end_date: '',
+                        check_end_date: '',
+                        review_end_date: '',
+                        defense_end_date: '',
+                        finish_date: '',
+
+                        previewPicUrl: '',
+                        detailPicUrl: '',
+                        previewPic: null,
+                        detailPic: null,
+                        file: null,
+
+                        fileList: '',
+
+                    },
+
+                    rules: {
+                        title: [
+                            {required: true, message: '不能为空', trigger: 'blur'},
+                            {min: 1, max: 255, message:'长度小于255字符',trigger: 'blur'},
+                        ],
+                        abstract: [
+                            {required: true, message: '不能为空', trigger: 'blur'},
+                        ],
+                        detail: [
+                            {required: true, message: '不能为空', trigger: 'blur'},
+                        ],
+                        rule: [
+                            {required: true, message: '不能为空', trigger: 'blur'},
+                        ],
+                        init_date: [
+                            {type: 'date', required: true, validator: initValidator, trigger: 'blur'},
+                        ],
+                        submit_end_date: [
+                            {type: 'date', required: true, validator: submitValidator, trigger: 'blur'},
+                        ],
+                        check_end_date: [
+                            {type: 'date', required: true, validator: checkValidator, trigger: 'blur'},
+                        ],
+                        review_end_date: [
+                            {type: 'date', required: true, validator: reviewValidator, trigger: 'blur'},
+                        ],
+                        defense_end_date: [
+                            {type: 'date', required: true, validator: defenseValidator, trigger: 'blur'},
+                        ],
+                        finish_date: [
+                            {type: 'date', required: true, validator: finishValidator, trigger: 'blur'},
+                        ],
+                    }
+                };
+            },
+            methods: {
+                handlePreviewPicSuccess(file) {
+                    this.form.previewPicUrl = URL.createObjectURL(file.raw);
+                    this.form.previewPic = file.raw;
+                },
+                beforePreviewPicUpload(file) {
+                    const isJPG = file.type === 'image/jpeg';
+                    if(!isJPG) {
+                        this.$message.error('上传只能是 JPG 格式！')
+                    }
+                    return isJPG;
+                },
+                handleDetailPicSuccess(file) {
+                    this.form.detailPicUrl = URL.createObjectURL(file.raw);
+                    this.form.detailPic = file.raw;
+                },
+                beforeDetailPicUpload(file) {
+                    const isJPG = file.type === 'image/jpeg';
+                    if(!isJPG) {
+                        this.$message.error('上传只能是 JPG 格式！')
+                    }
+                    return isJPG;
+                },
+                handleSuccess(response, file) {
+                    this.form.file = file.raw;
+                },
+                handleRemove(file) {
+                    console.log(file);
+                },
+                handlePreview(file) {
+                    console.log(file);
+                },
+                handleExceed(files) {
+                    this.$message.warning('当前限制选择 1 个文件');
+                },
+                beforeRemove(file) {
+                    return this.$confirm('确定移除 ${ file.name } ？');
+                },
+                onSubmit(formName) {
+
+                    this.$refs[formName].validate((valid) => {
+                        if(valid) {
+                            var formFile = new FormData();
+
+                            formFile.append('title', this.form.title);
+                            formFile.append('abstract', this.form.abstract);
+                            formFile.append('detail', this.form.detail);
+                            formFile.append('rule', this.form.rule);
+                            formFile.append('init_date', this.form.init_date.Format("yyyy-MM-dd"));
+                            formFile.append('submit_end_date', this.form.submit_end_date.Format("yyyy-MM-dd"));
+                            formFile.append('check_end_date', this.form.check_end_date.Format("yyyy-MM-dd"));
+                            formFile.append('review_end_date', this.form.review_end_date.Format("yyyy-MM-dd"));
+                            formFile.append('defense_end_date', this.form.defense_end_date.Format("yyyy-MM-dd"));
+                            formFile.append('finish_date', this.form.finish_date.Format("yyyy-MM-dd"));
+                            formFile.append('preview_img', this.form.previewPic);
+                            formFile.append('detail_img', this.form.detailPic);
+                            formFile.append('start_appendix', this.form.file);
+                            
+
+                            axios
+                                .post('../cptinit/cptformpost/', formFile)
+                                .then(res=> {
+                                    if(res.status == 200 && res.data.Message == 1){
+                                        CptInit.$message({
+                                        type:'info',
+                                        message:'创建成功！'
+                                        });
+                                        window.open("/competitionlist/?selected=0","_self")
+                                    }
+                                    else{
+                                        CptInit.$message({
+                                        type:'info',
+                                        message:'创建失败！'
+                                        });
+                                    }
+                                })
+                                .catch(function(error) {
+                                    CptInit.$message({
+                                        type:'info',
+                                        message:'创建失败！'
+                                        });
+                                })
+                        } else {
+                            return false;
+                        }
+                    })
+                    
+                },
+            }
+        });
+
+    
+    </script>
+</body>
+
+</html>
