@@ -5,7 +5,7 @@ from django.contrib.auth.models import AbstractUser
 # Create your models here.
 class BaseUser(AbstractUser):
     USER_TYPE = (
-        (1, "sturdent"),
+        (1, "student"),
         (2, "admin"),
         (3, "expert")
     )
