@@ -81,8 +81,10 @@ def CompetitionList(request):
         cptList = Competition.objects.filter(status=2)
     elif selected == '3':
         cptList = Competition.objects.filter(status=0)
-    else:
+    elif user_identity == 3:
         cptList = Competition.objects.all()
+    else:
+        cptList = Competition.objects.filter(status__gt=0)
 
     total = len(cptList)
     if order == '1':
