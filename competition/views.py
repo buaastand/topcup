@@ -164,6 +164,17 @@ def CompetitionFormPost(request):
     detail_img = request.FILES.get('detail_img')
     start_appendix = request.FILES.get('start_appendix')
 
+    now_time = datetime.date.today().strftime('%Y-%m-%d')
+    status = 0
+
+    if (now_time < init_date) :
+        status = 0
+    elif (now_time < finish_date) :
+        status = 1
+    else :
+        status = 2
+
+    print(status)
 
     try:
         new_competition = Competition(title = title, abstract = abstract,
@@ -177,7 +188,7 @@ def CompetitionFormPost(request):
                                                 preview_img = preview_img,
                                                 detail_img = detail_img,
                                                 start_appendix = start_appendix,
-                                                status = 0,
+                                                status = status,
                                                 )
 
         new_competition.save()
