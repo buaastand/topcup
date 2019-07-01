@@ -23,10 +23,10 @@
         <div class="DisplayArea">
             <div class="TopArea">
                 <div style="float: left">
-                    <el-radio-group v-model="DisplayCompetition">
-                        <el-radio-button label='0'>全部比赛</el-radio-button>
-                        <el-radio-button label='1'>正在进行</el-radio-button>
-                        <el-radio-button label='2'>已结束</el-radio-button>
+                    <el-radio-group v-model="selected">
+                        <el-radio-button label='0' onclick="window.open('/competitionlist?selected=0&order='+CptList.order, '_self')">全部比赛</el-radio-button>
+                        <el-radio-button label='1' onclick="window.open('/competitionlist?selected=1&order='+CptList.order, '_self')">正在进行</el-radio-button>
+                        <el-radio-button label='2' onclick="window.open('/competitionlist?selected=2&order='+CptList.order, '_self')">已结束</el-radio-button></a>
                     </el-radio-group>
                 </div>
                 <div style="float: right; margin-top: 14px">
@@ -36,10 +36,10 @@
                             {[ RankWay ]}<i class="el-icon-arrow-down el-icon--right"></i>
                         </span>
                         <el-dropdown-menu slot="dropdown">
-                            <el-dropdown-item command="最早开始时间">最早开始时间</el-dropdown-item>
-                            <el-dropdown-item command="最晚开始时间">最晚开始时间</el-dropdown-item>
-                            <el-dropdown-item command="最早结束时间">最早结束时间</el-dropdown-item>
-                            <el-dropdown-item command="最晚结束时间">最晚结束时间</el-dropdown-item>
+                            <el-dropdown-item command="最早开始时间" onclick="window.open('/competitionlist?order=0&selected='+CptList.selected, '_self')">最早开始时间</el-dropdown-item>
+                            <el-dropdown-item command="最晚开始时间" onclick="window.open('/competitionlist?order=1&selected='+CptList.selected, '_self')">最晚开始时间</el-dropdown-item>
+                            <el-dropdown-item command="最早结束时间" onclick="window.open('/competitionlist?order=2&selected='+CptList.selected, '_self')">最早结束时间</el-dropdown-item>
+                            <el-dropdown-item command="最晚结束时间" onclick="window.open('/competitionlist?order=3&selected='+CptList.selected, '_self')">最晚结束时间</el-dropdown-item>
                         </el-dropdown-menu>
                     </el-dropdown>
                     <span style="margin-left: 10px; color: #909399; font-size: 14px">排序</span>
@@ -48,8 +48,9 @@
 
             <div class="ListArea">
 
-                {% for i in list %}
-                {% if i.status < 5 %}
+                {% for i in contacts %}
+                {% if i.status == 1 %}
+                {% if selected == '0' or selected == '1' %}
                 <a href="/competitiondetail?id={{i.id}}">
                     <el-card class="OngoingCompetitionCard">
                         <div class="WordBorder">
@@ -69,9 +70,9 @@
                             <div style="font-size: 18px">{{ i.title }}</div>
                             <div style="font-size: 14px; color: #1989FA; margin-top: 13px">
                                 <span><i class="el-icon-time"></i></span>&nbsp;
-                                <span>{{ i.init_date }}</span>&nbsp;
+                                <span>{{ i.init_date|date:"Y年m月d日" }}</span>&nbsp;
                                 <span>~</span>&nbsp; 
-                                <span>{{ i.finish_date }}</span>
+                                <span>{{ i.finish_date|date:"Y年m月d日" }}</span>
                             </div>
                             <div class="Abstract">
                                 {{ i.abstract }}
@@ -79,8 +80,10 @@
                         </div>
                     </el-card>
                 </a>
+                {% endif %}
 
-                {% else %}
+                {% elif i.status == 2 %}
+                {% if selected == '0' or selected == '2' %}
                 <a href="https://www.baidu.com">
                     <el-card class="OutdatedCompetitionCard">
                         <div class="WordBorder">
@@ -97,48 +100,77 @@
                             </el-image>
                         </div>
                         <div style="float: left; width: 730px; margin-left: 40px">
-                            <div style="font-size: 18px; color: #909399">第二十八届冯如杯科技创新大赛</div>
+                            <div style="font-size: 18px; color: #909399">{{ i.title }}</div>
                             <div style="font-size: 14px; color: #909399; margin-top: 13px">
                                 <span><i class="el-icon-time"></i></span>&nbsp;
-                                <span>2018/06/28 16:00</span>&nbsp;
+                                <span>{{ i.init_date|date:"Y年m月d日" }}</span>&nbsp;
                                 <span>~</span>&nbsp; 
-                                <span>2018/07/02 18:00</span>
+                                <span>{{ i.finish_date|date:"Y年m月d日" }}</span>
                             </div>
                             <div class="Abstract">
-                                冯如杯是北京航空航天大学“冯如杯”学生学术科技作品竞赛的简称，是由学校科学技术研究院、教务处、学生处、科协、团委共同主办，科协、团委承办，在学校各学院党政领导的大力支持下开展的具有导向性、示范性和群众性并独具北航特色、彰显北航气韵、践行素质教育、弘扬创新精神的大学生学术科技活动。
+                                {{ i.abstract }}
                             </div>
                         </div>
                     </el-card>
                 </a>
+                {% endif %}
+
+                {% endif %}
+                {% endfor %}
             </div>
-            {% endif %}
-            {% endfor %}
 
             <div style="margin: 25px auto; text-align: center">
                 <el-pagination
-                    :current-page="1"
-                    :page-sizes="[6, 8, 10, 12]" 
+                    @current-change="handleCurrentChange"
+                    :current-page={{contacts.number}}
                     :page-size="6" 
-                    layout="total, sizes, prev, pager, next, jumper"
-                    :total="2">
+                    layout="total, prev, pager, next, jumper"
+                    :total={{total}}>
                 </el-pagination>
             </div>
         </div>
     </div>
 
     <script>
-        new Vue({
+        function getQueryVariable(variable) {
+            var query = window.location.search.substring(1);
+            var vars = query.split("&");
+            for (var i=0;i<vars.length;i++) {
+                    var pair = vars[i].split("=");
+                    if(pair[0] == variable){return pair[1];}
+            }
+            return(0);
+        }
+
+        function NUM_TO_TEXT(order) {
+            if (order == 1) {
+                return '最晚开始时间';
+            }
+            else if (order == 2) {
+                return '最早结束时间';
+            }
+            else if (order == 3) {
+                return '最晚结束时间';
+            }
+            else {
+                return '最早开始时间';
+            }
+        } 
+
+        var CptList = new Vue({
             el: '#CompetitionList',
             data: {
-                message: 'Hello Vue.js!',
-                DisplayCompetition: 0,
-                RankWay: '最早开始时间'
+                selected: getQueryVariable('selected'),
+                order: getQueryVariable('order'),
+                RankWay: NUM_TO_TEXT(getQueryVariable('order'))
             },
             methods: {
                 changeRank(command) {
                     this.RankWay = command;
-                    alert(this.RankWay);
                 },
+                handleCurrentChange(val){
+                    window.open("/competitionlist?order="+this.order+"&selected="+CptList.selected+"&page="+val,"_self");
+                }
             },
             delimiters: ["{[", "]}"]
         })
