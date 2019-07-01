@@ -21,7 +21,6 @@ from django.views.decorators.csrf import csrf_exempt
 
 from users.views import LoginView,LogoutView,UpdatePwdView,RegisterView
 
-from django.urls import path
 from users.views import ExpertManage
 
 import competition.views as Cpt

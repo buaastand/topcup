@@ -1,12 +1,8 @@
 
 import json
 
-from django.shortcuts import render
 from users.models import Expert
-from django.views.decorators.csrf import csrf_exempt
-from django.db import transaction
 from users import models
-from django.http import JsonResponse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 import xlrd #excel读工具
 # Create your views here.
@@ -18,7 +14,6 @@ from django.views.generic.base import View
 from django.contrib.auth.hashers import make_password
 from django.http import HttpResponse,HttpResponseRedirect,JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.urls import reverse
 
 from .models import BaseUser,Student
 from .forms import RegisterForm,LoginForm,ModifyPwdForm
