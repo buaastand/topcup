@@ -143,6 +143,7 @@
                           accept=".pdf"
                           :limit="3"
                           :on-exceed="handleExceed"
+                          :on-change="document_path_file"
                           :file-list="techworkForm.document_list"
                           :before-upload="beforeDocumentUpload">
                           <el-button type="info" round>文档+</el-button>
@@ -158,6 +159,7 @@
                           accept=".jpg, .png"
                           :limit="5"
                           :on-exceed="handleExceed"
+                          :on-change="photo_path_file"
                           :file-list="techworkForm.photo_list"
                           :before-upload="beforeImageUpload">
                           <el-button type="info" round>图片+</el-button>
@@ -173,6 +175,7 @@
                           accept=".mp4"
                           :limit="1"
                           :on-exceed="handleExceed"
+                          :on-change="video_path_file"
                           :file-list="techworkForm.video_list"
                           :before-upload="beforeVideoUpload">
                           <el-button type="info" round>视频+</el-button>
@@ -199,6 +202,18 @@
 </body>
 
 <script>
+
+    function formm (url, data, config, success, fail) {
+                  axios.post(url, data, config).then(function (response) {
+                    return success(response);
+                  }).catch(function (res) {
+                    return fail(res);
+                  });
+                }
+    function toRaw(f) {
+        return f.raw
+    }
+
     var app = new Vue({
     el: '#submit_techwork',
     data: {
@@ -242,30 +257,85 @@
             photo_list:[],
             video_list:[],
             },
+        photo_path:[],
+        document_path:[],
+        video_path:[]
     },
     methods: {
+        video_path_file (file, fileList) {
+
+      this.video_path = fileList.map(toRaw);
+    }
+        ,
+
+        photo_path_file (file, fileList) {
+      // 秘钥上传组件 on-change 事件
+      this.photo_path = fileList.map(toRaw);
+    },
+        document_path_file (file, fileList) {
+      // 秘钥上传组件 on-change 事件
+      this.document_path = fileList.map(toRaw);
+    },
       onPreserve(formName) {     //  暂存
           this.$refs[formName].validate((valid) => {
               if (valid) {
-                  axios({
-                      url: '/preserve/',
-                      method: 'post',
-                      data: this.techworkForm,
-                      headers: {
-                          'Content-Type': 'application/x-www-form-urlencoded'
+                  let form = this.$refs[formName];
+                // 创建 FormData 对象
+                  url = "/techworksubmit/";
+                let formData = new FormData();
+                formData.append('work_id', {{ work.work_id }});
+                // 创建了 FormData 对象的时候传入了表单但是读不出来表单数据，不知道哪里的问题。所以下面用 append 方法添加参数，想打印出来看看的话可以 formData.get('id')
+                formData.append('first_author', this.techworkForm.first_author);
+                formData.append('company_table', this.techworkForm.company_table);
+                formData.append('title', this.techworkForm.title);
+                formData.append('work_type', this.techworkForm.work_type);
+                formData.append('field', this.techworkForm.field);
+                formData.append('detail', this.techworkForm.detail);
+                formData.append('innovation', this.techworkForm.innovation);
+                formData.append('keywords', this.techworkForm.keywords);
+                // 这里文件上传的字段一定要设置文件列表中的 raw 参数 this.cert_path[0].raw
+                  if(this.document_path[0]){
+                      let doc;
+                      let cnt=0;
+                      for (doc in this.document_path){
+                          cnt+=1;
+                          formData.append('document_list_'+cnt, this.document_path[doc]);
                       }
-                  })
-                      .then(res => {
-                          console.log(res);
-                          if (res.status == 200) {
-                              this.$alert('保存成功', {
-                                  confirmButtonText: '确定'
-                              })
-                          }
-                      })
-                      .catch(err => {
-                          console.log(err);
-                      });
+
+                  }
+                {#formData.append('document_list', this.document_path[0] ? this.document_path: '');#}
+                  if(this.photo_path[0]){
+                      let photo;
+                      let cnt=0;
+                      for (photo in this.photo_path){
+                          cnt+=1;
+                          formData.append('photo_list_'+cnt, this.photo_path[photo]);
+                      }
+
+                  }
+                {#formData.append('photo_list', this.photo_path[0] ? this.photo_path : '');#}
+                formData.append('video_list', this.video_path[0] ? this.video_path : '');
+                formData.append('submitted',0);
+                formData.append('csrfmiddlewaretoken',"{{ csrf_token }}")
+                console.log(formData.get('first_author'));
+                // 记得配置请求头中 Content-Type 为'multipart/form-data'
+                let config = {
+                  headers: {
+                    'Content-Type': 'multipart/form-data'
+                  }
+                };
+                formm(url, formData, config, response => {
+                   console.log(response.data);
+                  this.loading = false;
+                  if (response.status == 200) {
+                    this.$message('暂存完成');
+                  } else {
+                    this.$message.error(response.msg);
+                  }
+                }, () => {
+                  this.$message.error('网络错误');
+                  this.loading = false;
+                });
               } else {
                   console.log("error submit");
                   return false;
@@ -273,7 +343,70 @@
           });
       },
       onSubmit(formName){   // 提交
+            this.$refs[formName].validate((valid) => {
+              if (valid) {
+                  let form = this.$refs[formName];
+                // 创建 FormData 对象
+                  url = "/techworksubmit/";
+                let formData = new FormData();
+                formData.append('work_id', {{ work.work_id }});
+                // 创建了 FormData 对象的时候传入了表单但是读不出来表单数据，不知道哪里的问题。所以下面用 append 方法添加参数，想打印出来看看的话可以 formData.get('id')
+                formData.append('first_author', this.techworkForm.first_author);
+                formData.append('company_table', this.techworkForm.company_table);
+                formData.append('title', this.techworkForm.title);
+                formData.append('work_type', this.techworkForm.work_type);
+                formData.append('field', this.techworkForm.field);
+                formData.append('detail', this.techworkForm.detail);
+                formData.append('innovation', this.techworkForm.innovation);
+                formData.append('keywords', this.techworkForm.keywords);
+                // 这里文件上传的字段一定要设置文件列表中的 raw 参数 this.cert_path[0].raw
+                  if(this.document_path[0]){
+                      let doc;
+                      let cnt=0;
+                      for (doc in this.document_path){
+                          cnt+=1;
+                          formData.append('document_list_'+cnt, this.document_path[doc]);
+                      }
 
+                  }
+                {#formData.append('document_list', this.document_path[0] ? this.document_path: '');#}
+                  if(this.photo_path[0]){
+                      let photo;
+                      let cnt=0;
+                      for (photo in this.photo_path){
+                          cnt+=1;
+                          formData.append('photo_list_'+cnt, this.photo_path[photo]);
+                      }
+
+                  }
+                {#formData.append('photo_list', this.photo_path[0] ? this.photo_path : '');#}
+                formData.append('video_list', this.video_path[0] ? this.video_path : '');
+                formData.append('submitted',1);
+                formData.append('csrfmiddlewaretoken',"{{ csrf_token }}")
+                console.log(formData.get('first_author'));
+                // 记得配置请求头中 Content-Type 为'multipart/form-data'
+                let config = {
+                  headers: {
+                    'Content-Type': 'multipart/form-data'
+                  }
+                };
+                formm(url, formData, config, response => {
+                   console.log(response.data);
+                  this.loading = false;
+                  if (response.status == 200) {
+                    this.$message('暂存完成');
+                  } else {
+                    this.$message.error(response.msg);
+                  }
+                }, () => {
+                  this.$message.error('网络错误');
+                  this.loading = false;
+                });
+              } else {
+                  console.log("error submit");
+                  return false;
+              }
+          });
     },
 
       addCompany(search){   //添加合作者，search 为合作者学号

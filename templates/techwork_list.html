@@ -56,7 +56,7 @@
     var app = new Vue({
     el: '#techwork_list',
     data: {
-        techworkList: {{ worklist }},
+        techworkList: {{ worklist | safe }},
     },
     methods: {
         deleteWork(n) {    // 删除
@@ -68,7 +68,7 @@
             }
         },
         editWork(n) {    // 删除
-            window.location="/techworksubmit/?workid={0}".format(this.techworkList[n].work_id);
+            window.location="/techworksubmit/?workid="+this.techworkList[n].work_id;
         },
     }
 })
