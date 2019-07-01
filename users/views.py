@@ -188,7 +188,7 @@ class ExpertManage():
                         rowVlaues = table.row_values(i)
                         # major = models.Expert.objects.filter(name=rowVlaues[0]).first()
                         email = rowVlaues[0]
-                        user = models.BaseUser.objects.create(type=3, email=email, username=email, password=email)
+                        user = models.BaseUser.objects.create(type=3, email=email, username=email, password=make_password(email))
                         models.Expert.objects.create(user=user, name=rowVlaues[1], field=int(rowVlaues[2]))
                     except Exception as e:
                         print('解析excel文件或者数据插入错误')
