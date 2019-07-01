@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 
+
     <!-- 引入样式 -->
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
     <link rel="stylesheet" type="text/css" href="css/loader.css">
@@ -10,53 +11,19 @@
       <script src="https://unpkg.com/vue/dist/vue.js"></script>
       <script src="https://unpkg.com/element-ui/lib/index.js"></script>
       <script src="https://cdn.staticfile.org/vue-resource/1.5.1/vue-resource.min.js"></script>
+ <link rel="stylesheet" href="../static/css/NavName.css">
 
     <meta charset="UTF-8">
     <title>Title</title>
 </head>
-<body style="margin: 0px;font-size:14px;color: #606266;">
+<body style="margin: 0px;font-size: 14px;color: #606266;">
+{% include "NavMenu.html" %}
 <div id="app" style="margin-top: 0px;margin-left: 0px">
-    
-<el-menu
-  :default-active="activeIndex2"
-  class="el-menu-demo"
-  mode="horizontal"
-  @select="handleSelect"
-  background-color="#545c64"
-  text-color="#fff"
-  active-text-color="#ffd04b">
-  <el-menu-item index="1">处理中心</el-menu-item>
-  <el-submenu index="2">
-    <template slot="title">我的工作台</template>
-    <el-menu-item index="2-1">选项1</el-menu-item>
-    <el-menu-item index="2-2">选项2</el-menu-item>
-    <el-menu-item index="2-3">选项3</el-menu-item>
-  </el-submenu>
-  <el-menu-item index="3">订单管理</el-menu-item>
-</el-menu>
-
-
-
-
-
 <div style="text-align: center;width: 140vh;margin: auto; box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);padding: 30px">
 <div style="height: 170px; width:100%">
 <div style="font-size: 24px; float:left;margin-left:9%;margin-top: 2%"><i class="el-icon-setting" style="margin-right: 5px; border-right: 1px solid #909399;padding-right: 5px;padding-bottom: 2px"></i>专家信息管理</div>
         <el-button type="primary" size="medium" @click="dialogTableVisible = true" style="float: right;margin-right: 6%;margin-top: 6.5%">上传专家信息</el-button>
         <el-dialog title="上传专家信息" :visible.sync="dialogTableVisible">
-{#                <el-upload#}
-{#                  class="upload-demo"#}
-{#                  ref="upload"#}
-{#                  :action="uploadURL"#}
-{#                  :on-preview="handlePreview"#}
-{#                  :on-remove="handleRemove"#}
-{#                  :file-list="fileList"#}
-{#                  :headers="header"#}
-{#                  :auto-upload="false">#}
-{#                  <el-button slot="trigger" size="small" type="primary">选取文件</el-button>#}
-{#                  <div slot="tip" class="el-upload__tip">只能上传xls/xlsx文件</div>#}
-{#                    <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload">确认</el-button>#}
-{#                </el-upload>#}
                 <el-upload
                 class="upload-demo"
                 ref="upload"
@@ -146,7 +113,15 @@
           </el-row>
     </div>
 {% endfor %}
-
+            <div style="margin: 25px auto; text-align: center">
+                <el-pagination
+                    @current-change="handleCurrentChange"
+                    :current-page={{data.number}}
+                    :page-size="15"
+                    layout="total, prev, pager, next, jumper"
+                    :total={{total}}>
+                </el-pagination>
+            </div>
 
 
 </div>
@@ -218,13 +193,6 @@
       change_click(expert_id){
           this.dialogTableVisible1 = true;
           this.expertid = expert_id;
-          {#this.$http.post('../expert_detail/',{id:expert_id},{emulateJSON:true}).then(function(res){#}
-          {#          console.log(res);#}
-          {#          _this.changeForm.email = res.data.email;#}
-          {#          _this.changeForm.field = res.data.field;#}
-          {#          _this.changeForm.name =res.data.name;#}
-          {#          _this.expertid = expert_id;#}
-          {#      }).catch(function (response) {});#}
       },
       change_info() {
         this.$http.post('../expert_change/',{id:this.expertid, changed_name:this.changeForm.name, changed_field:this.changeForm.field},{emulateJSON:true}).then(function(res){
@@ -266,6 +234,9 @@
       },
       resetForm(formName) {
         this.$refs[formName].resetFields();
+      },
+      handleCurrentChange(val){
+         window.open("/expert?page="+val,"_self");
       },
 
     }

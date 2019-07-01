@@ -21,7 +21,7 @@ import competition.views as Cpt
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('competitiondetail/', Cpt.CompetitionDetail),
-    path('competitionlist/', Cpt.CompetitionList)
+    path('competitionlist/', Cpt.CompetitionList),
     path('expert/', ExpertManage.list),
     path('expert_detail/', ExpertManage.expert_detail),
     path('expert_change/', ExpertManage.change),

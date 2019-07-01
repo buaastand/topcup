@@ -4,6 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from users import models
 from django.http import JsonResponse
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 import xlrd #excel读工具
 # Create your views here.
 class ExpertManage():
@@ -11,6 +12,19 @@ class ExpertManage():
     # 展示专家列表，允许上传文件添加专家，当和数据库中的专家邮箱重复时跳过
     def list(request):
         experts = Expert.objects.all()
+        total = len(experts)
+        paginator = Paginator(experts, 15)  # 每页15条
+        list = paginator.page(1)
+        page = request.GET.get('page')
+        try:
+            list = paginator.page(page)  # list为Page对象！
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            list = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            list = paginator.page(paginator.num_pages)
+
         if request.method == 'POST':
             f = request.FILES.get('file')
             excel_type = f.name.split('.')[1]
@@ -36,7 +50,7 @@ class ExpertManage():
             else:
                 print('上传文件类型错误！')
                 return render(request, 'expert-manage.html', {'message': '导入失败'})
-        return render(request, "expert-manage.html", {'data': experts})
+        return render(request, "expert-manage.html", {'data': list, 'total':total})
 
     @csrf_exempt
     def expert_detail(request):
