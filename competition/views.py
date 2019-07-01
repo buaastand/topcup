@@ -79,6 +79,8 @@ def CompetitionList(request):
         cptList = Competition.objects.filter(status=1)
     elif selected == '2':
         cptList = Competition.objects.filter(status=2)
+    elif selected == '3':
+        cptList = Competition.objects.filter(status=0)
     else:
         cptList = Competition.objects.all()
 
