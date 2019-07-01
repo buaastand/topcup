@@ -37,6 +37,7 @@ urlpatterns = [
     path('logout/',LogoutView.as_view(),name='logout'),
     path('register/',csrf_exempt(RegisterView.as_view()),name='register'),
     path('update/pwd/',UpdatePwdView.as_view(),name='update_pwd'),
+    path('expertReview/',expertReviewView.as_view(),name='expertReview_View'),
     #re_path(r'^static/(?P<path>.*)$', serve, {"document_root":STATIC_ROOT}),
 ]
 

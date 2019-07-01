@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" type="text/css" href="css/loader.css">
+
+         <!-- 引入组件库 -->
+      <script src="https://unpkg.com/vue/dist/vue.js"></script>
+      <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+      <script src="https://cdn.staticfile.org/vue-resource/1.5.1/vue-resource.min.js"></script>
+    <link rel="stylesheet" href="../static/css/NavName.css">
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body style="margin: 0px;font-size:14px;color: #606266;">
+<div id="app" style="margin-top: 0px;margin-left: 0px">
+{% include "NavMenu.html" %}
+
+<div style="text-align: center;width: 140vh;margin: auto; box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);padding: 30px">
+<div style="height: 20vh; width:100%">
+<div style="font-size: 24px; float:left;margin-left:12%;margin-top: 2%">
+    <i class="el-icon-edit" style="margin-right: 5px; border-right: 1px solid #909399;padding-right: 5px;padding-bottom: 2px"></i>
+    作品评价
+    </div>
+</div>
+
+    <div v-if="{{expert.status}} == '1'">
+<el-form  :model="rateForm" :rules="rules" ref="rateForm" style="width: 70%;margin-left:15%">
+    <el-form-item label="作品评分" prop="score">
+      <el-slider
+      v-model="rateForm.score"
+      style="width: 75%; float: right;margin-right: 6.9%"
+      show-input>
+    </el-slider>
+    </el-form-item>
+    <el-form-item label="评审意见" prop="suggestion">
+            <el-input
+            placeholder="请输入评审意见"
+            type="textarea"
+            rows="8"
+            v-model="rateForm.suggestion"
+            maxlength="200"
+            show-word-limit
+            style="width: 75%; margin-top: 1.5%"
+          >
+          </el-input>
+    </el-form-item>
+
+    <el-form-item>
+        <el-button type="primary" @click="submitForm1('rateForm')">暂存</el-button>
+        <el-button @click="submitForm2('rateForm')">提交</el-button>
+      </el-form-item>
+  </el-form>
+</div>
+
+
+    <div v-else>
+<el-form  :model="rateForm" :rules="rules" ref="rateForm" style="width: 70%;margin-left:15%">
+    <el-form-item label="作品评分" prop="score">
+      <el-slider
+       disabled
+      v-model="rateForm.score"
+      style="width: 75%; float: right;margin-right: 6.9%"
+      show-input>
+    </el-slider>
+    </el-form-item>
+    <el-form-item label="评审意见" prop="suggestion">
+            <el-input
+             disabled
+            placeholder="请输入评审意见"
+            type="textarea"
+            rows="8"
+            v-model="rateForm.suggestion"
+            maxlength="200"
+            show-word-limit
+            style="width: 75%; margin-top: 1.5%"
+          >
+          </el-input>
+    </el-form-item>
+  </el-form>
+</div>
+
+
+</div>
+</div>
+
+
+</body>
+
+<script>
+  var Main ={
+    data() {
+      return {
+
+
+
+        rateForm: {
+          score: 0,
+          suggestion: '',
+          status:''
+        },
+
+        rules: {
+          score:[
+            { required: true, message: '请进行评分', trigger: 'blur' },
+          ],
+          suggestion: [
+            { required: true, message: '请输入评审意见', trigger: 'blur' },
+          ],
+        },
+
+      };
+    },
+    methods: {
+
+      submitForm1(formName) {
+        this.$refs[formName].validate((valid) => {
+            this.rateForm.status=1;
+          if (valid && (this.rateForm.score)-0 != 0) {
+            console.log(this.rateForm);
+            alert('暂存成功!');
+          }else if((this.rateForm.score-0) == '0')
+          {
+            console.log(this.rateForm);
+            alert('暂存失败，请进行评分且评分不能为0!');
+          }
+          else {
+            console.log('错误提交!');
+            return false;
+          }
+        });
+      },
+      submitForm2(formName) {
+        this.$refs[formName].validate((valid) => {
+            this.rateForm.status=2;
+          if (valid && (this.rateForm.score)-0 != 0) {
+            console.log(this.rateForm);
+            alert('提交成功!');
+          }else if((this.rateForm.score-0) == '0')
+          {
+            console.log(this.rateForm);
+            alert('提交失败，请进行评分且评分不能为0!');
+          }
+          else {
+            console.log('错误提交!');
+            return false;
+          }
+        });
+      },
+
+
+    }
+  }
+
+var Ctor = Vue.extend(Main)
+new Ctor().$mount('#app')
+</script>
+
+</html>
