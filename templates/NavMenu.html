@@ -16,13 +16,13 @@
 
             {% if useridentity == 0 %}
                 <div class="navright">
-                    <div class="navother">注册</div>
-                    <div class="navother">登录</div>
+                    <a href="/register" class="navother" style="color: white;text-decoration: none">注册</a>
+                    <a href="/login" class="navother" style="color: white;text-decoration: none">登录</a>
                 </div>
             {% else %}
                 <div class="navright">
-                    <div class="navother">用户邮箱</div>
-                    <div class="navother">退出</div>
+                    <a class="navother" style="color: white;text-decoration: none">{{ username }}</a>
+                    <a class="navother" style="color: white;text-decoration: none">退出</a>
                 </div>
             {% endif %}
         </el-menu>

@@ -12,6 +12,20 @@ from django.http import JsonResponse
 # Create your views here.
 def CompetitionDetail(request):
     if 'id' in request.GET:
+        user_identity = 0
+        if request.user.is_authenticated:
+            if Expert.objects.filter(user__email=request.user.username):
+                user_identity = 1  # 专家
+                user_name = Expert.objects.get(user__email=request.user.username).user.email
+
+            elif Student.objects.filter(stu_id=request.user.username):
+                user_identity = 2  # 学生
+                user_name = Student.objects.get(stu_id=request.user.username).user.email
+            else:
+                user_identity = 3  # 校团委
+        else:
+            user_identity = 0  # 未登录
+
         cptDetail=Competition.objects.get(id= request.GET['id'])
         context = {'cptDetail':cptDetail}
         temp=datetime.date.today()
@@ -28,7 +42,10 @@ def CompetitionDetail(request):
             status_type="4"
         else:
             status_type="5"
+
         context['status_type']=status_type
+        context['useridentity'] = user_identity
+        context['username'] = user_name
         return render(request,"../templates/CompetitionDetail.html",context)
 
 def CompetitionList(request):
@@ -36,16 +53,21 @@ def CompetitionList(request):
     selected = 0
     total = 0
     user_identity = 0
+    user_name = 0
 
     if 'order' in request.GET:
         order = request.GET['order']
     if 'selected' in request.GET:
         selected = request.GET['selected']
+    #     身份判断
     if request.user.is_authenticated:
-        if Expert.objects.filter(name=request.user.username):
+        if Expert.objects.filter(user__email=request.user.username):
             user_identity = 1 #专家
-        elif Student.objects.filter(name=request.user.username):
+            user_name = Expert.objects.get(user__email=request.user.username).user.email
+
+        elif Student.objects.filter(stu_id=request.user.username):
             user_identity = 2 #学生
+            user_name = Student.objects.get(stu_id=request.user.username).user.email
         else:
             user_identity = 3 #校团委
     else:
@@ -69,7 +91,6 @@ def CompetitionList(request):
         cptList = cptList.order_by("init_date")
 
     paginator = Paginator(cptList, 6) # 每页6条
-
     page = request.GET.get('page')
     contacts = paginator.page(1)
     try:
@@ -87,6 +108,7 @@ def CompetitionList(request):
     context['order'] = order
     context['total'] = total
     context['useridentity'] = user_identity
+    context['username'] = user_name
     return render(request,"../templates/CompetitionList.html", context)
 
 @csrf_exempt
