@@ -22,6 +22,7 @@
         <el-card class="boxCard">
             <div class="formArea">
                 <el-form ref="form" :model="form" :rules="rules" hide-required-asterisk label-width="100px" label-position='labelPosition'>
+                    {% csrf_token %}
                     <el-form-item label="竞赛名称" prop="title">
                         <el-input v-model="form.title"></el-input>
                     </el-form-item>
@@ -67,9 +68,10 @@
                     <el-form-item label="上传缩略图">
                         <el-upload
                             class="previewPicUploader"
+                            ref="uploadPreviewPic"
                             action=""
                             :show-file-list="false"
-                            :on-success="handlePreviewPicSuccess"
+                            :on-change="handlePreviewPicSuccess"
                             :before-upload="beforePreviewPicUpload"
                             :auto-upload="false">
                             <img v-if="form.previewPicUrl" :src="form.previewPicUrl" class="previewPic">
@@ -79,9 +81,10 @@
                     <el-form-item label="上传详情图">
                         <el-upload
                             class="detailPicUploader"
+                            ref="uploadDetailPic"
                             action=""
                             :show-file-list="false"
-                            :on-success="handleDetailPicSuccess"
+                            :on-change="handleDetailPicSuccess"
                             :before-upload="beforeDetailPicUpload"
                             :auto-upload="false">
                             <img v-if="form.detailPicUrl" :src="form.detailPicUrl" class="detailPic">
@@ -98,7 +101,6 @@
                             :on-remove="handleRemove"
                             :before-remove="beforeRemove"
                             :on-exceed="handleExceed"
-                            :file-list="form.fileList"
                             :auto-upload="false">
                             <el-tooltip content="请上传1个文件或压缩包" placement="right">
                                 <el-button type="primary">点击上传</el-button>
@@ -107,7 +109,7 @@
                     </el-form-item>
                     <div class="buttonArea">
                         <el-button>暂存</el-button>
-                        <el-button type="primary" @click="onSubmit">创建</el-button>
+                        <el-button type="primary" @click="onSubmit('form')">创建</el-button>
                     </div>
                 </el-form>
             </div>
@@ -115,6 +117,19 @@
     </div>
 
     <script>
+
+        Date.prototype.Format = function (fmt) {
+            var o = {
+                "M+": this.getMonth() + 1, //月份
+                "d+": this.getDate(), //日
+
+            };
+            if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+            for (var k in o)
+                if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+            return fmt;
+        }
+
         new Vue ({
             el: app,
             data() {
@@ -136,9 +151,11 @@
 
                         previewPicUrl: '',
                         detailPicUrl: '',
-                        previewlPicList: [],
-                        detailPicList: [],
-                        fileList: [],
+                        previewPic: null,
+                        detailPic: null,
+                        file: null,
+
+                        fileList: '',
                     },
 
                     rules: {
@@ -172,13 +189,14 @@
                         ],
                         finish_date: [
                             {type: 'date', required: true, message: '不能为空', trigger: 'change'},
-                        ]
+                        ],
                     }
                 };
             },
             methods: {
-                handlePreviewPicSuccess(res, file) {
-                    this.previewPicUrl = URL.createObjectURL(file.raw);
+                handlePreviewPicSuccess(file) {
+                    this.form.previewPicUrl = URL.createObjectURL(file.raw);
+                    this.form.previewPic = file.raw;
                 },
                 beforePreviewPicUpload(file) {
                     const isJPG = file.type === 'image/jpeg';
@@ -187,8 +205,9 @@
                     }
                     return isJPG;
                 },
-                handleDetailPicSuccess(res, file) {
-                    this.detailPicUrl = URL.createObjectURL(file.raw);
+                handleDetailPicSuccess(file) {
+                    this.form.detailPicUrl = URL.createObjectURL(file.raw);
+                    this.form.detailPic = file.raw;
                 },
                 beforeDetailPicUpload(file) {
                     const isJPG = file.type === 'image/jpeg';
@@ -197,33 +216,55 @@
                     }
                     return isJPG;
                 },
-                handleSuccess(response, file, fileList) {
-                    this.fileList = fileList;
+                handleSuccess(response, file) {
+                    this.form.file = file.raw;
                 },
-                handleRemove(file, fileList) {
-                    console.log(file, fileList);
+                handleRemove(file) {
+                    console.log(file);
                 },
                 handlePreview(file) {
                     console.log(file);
                 },
-                handleExceed(files, fileList) {
+                handleExceed(files) {
                     this.$message.warning('当前限制选择 1 个文件');
                 },
-                beforeRemove(file, fileList) {
+                beforeRemove(file) {
                     return this.$confirm('确定移除 ${ file.name } ？');
                 },
-                onSubmit() {
-                    axios
-                        .post("/cptformpost/", this.form)
-                        .then(res => {
-                            console.log(res);
-                            if (res.status == 200) {
-                                this.$message.info("成功！");
-                            }
-                        }).catch(err => {
-                            console.log(err);
-                        })
-                    this.$refs.uploadFile.submit();
+                onSubmit(formName) {
+
+                    this.$refs[formName].validate((valid) => {
+                        if(valid) {
+                            var formFile = new FormData();
+
+                            formFile.append('title', this.form.title);
+                            formFile.append('abstract', this.form.abstract);
+                            formFile.append('detail', this.form.detail);
+                            formFile.append('rule', this.form.rule);
+                            formFile.append('init_date', this.form.init_date.Format("yyyy-MM-dd"));
+                            formFile.append('submit_end_date', this.form.submit_end_date.Format("yyyy-MM-dd"));
+                            formFile.append('check_end_date', this.form.check_end_date.Format("yyyy-MM-dd"));
+                            formFile.append('review_end_date', this.form.review_end_date.Format("yyyy-MM-dd"));
+                            formFile.append('defense_end_date', this.form.defense_end_date.Format("yyyy-MM-dd"));
+                            formFile.append('finish_date', this.form.finish_date.Format("yyyy-MM-dd"));
+                            formFile.append('preview_img', this.form.previewPic);
+                            formFile.append('detail_img', this.form.detailPic);
+                            formFile.append('start_appendix', this.form.file);
+                            
+
+                            axios
+                                .post('../cptinit/cptformpost/', formFile)
+                                .then(function(response) {
+                                    console.log(response);
+                                }).catch(function(error) {
+                                    console.log(error);
+                                })
+                        } else {
+                            console.log("false!");
+                            return false;
+                        }
+                    })
+                    
                 },
             }
         });
