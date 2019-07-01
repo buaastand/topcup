@@ -28,6 +28,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('competitiondetail/', Cpt.CompetitionDetail),
     path('competitionlist/', Cpt.CompetitionList),
+    path('competitionlist/?selected=0', Cpt.CompetitionList,name='competitionlist'),
     path('deletecpt/',Cpt.DeleteCompetition),
     path('expert/', ExpertManage.list),
     path('expert_detail/', ExpertManage.expert_detail),
