@@ -1,13 +1,13 @@
-from django.shortcuts import render
-from django.views import View
-from techworks.models import WorkInfo
-from competition.views import GetUserIdentitiy
-from django.views.generic.base import View
-from techworks.models import WorkInfo
-from .models import Review
 from django.http import JsonResponse
+from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
+from django.views.generic.base import View
+
+from competition.views import GetUserIdentitiy
+from techworks.models import WorkInfo
 from users.models import Expert
+from .models import Review
+
 
 # Create your views here.
 class ReviewWorkListView(View):
@@ -15,7 +15,7 @@ class ReviewWorkListView(View):
     def get(self, request):
         # if request.GET.get('workid', None) is None:
         #     WorkInfo.objects.create()
-        worklist_origin = WorkInfo.objects.all()
+        worklist_origin = WorkInfo.objects.all()[:10]
         # work = WorkInfo.objects.get(work_id='1').wo
         WORKTYPE_MAP = {
             1: "科技发明制作",
@@ -52,18 +52,31 @@ class ExpertReviewView():
     def show(request):
         user_name, user_identity = GetUserIdentitiy(request)
         work_id = request.GET.get('work_id')
-        expert_id = Expert.objects.get(user__email=request.user.username).user.id
+        work = WorkInfo.objects.get(work_id=work_id)
+        expert = Expert.objects.get(user__email=request.user.username)
+        expert_id = expert.user.id
         # expert_id = request.GET.get('expert_id')
         try:
-            review = Review.objects.get(work_id=work_id, expert_id=expert_id)
-            if review.review_status == 0:  # 还没评过
-                return render(request, 'judgeWork.html', {'status': 0, 'expert_id':expert_id, 'work_id':work_id,'useridentity':user_identity})
-            else:  # 暂存或评价过
-                return render(request, 'judgeWork.html', {'status': review.review_status, 'score': review.score, 'comment': review.comment, 'expert_id':expert_id, 'work_id':work_id,'useridentity':user_identity})
-        except:
-            Review.objects.create(work_id=work_id, expert_id=expert_id, score=0, comment='', review_status=0, add_time='2019-07-02')
-            return render(request, 'judgeWork.html', {'status': 0, 'expert_id':expert_id, 'work_id':work_id,'useridentity':user_identity})
-
+            review = Review.objects.filter(work=work, expert=expert)
+            if len(review) > 0:
+                review = review[0]
+                if review.review_status == 0:  # 还没评过
+                    return render(request, 'judgeWork.html',
+                                  {'status': 0, 'score': 50, 'expert_id': expert_id, 'work_id': work_id,
+                                   'useridentity': user_identity})
+                else:  # 暂存或评价过
+                    return render(request, 'judgeWork.html',
+                                  {'status': review.review_status, 'score': review.score, 'comment': review.comment,
+                                   'expert_id': expert_id, 'work_id': work_id, 'useridentity': user_identity})
+            else:
+                Review.objects.create(work=work, expert=expert, score=50, comment='', review_status=0,
+                                      add_time='2019-07-02')
+                return render(request, 'judgeWork.html',
+                              {'status': 50, 'score': 0, 'expert_id': expert_id, 'work_id': work_id,
+                               'useridentity': user_identity})
+        except Exception as e:
+            print(e)
+            pass
     @csrf_exempt
     def judge(request):
         if request.method == 'POST':
@@ -74,7 +87,9 @@ class ExpertReviewView():
                 score = request.POST.get('score')
                 comment = request.POST.get('comment')
                 status = request.POST.get('status')
-                review = Review.objects.get(expert_id=expert_id, work_id=work_id)
+                expert = Expert.objects.get(user__email=request.user.username)
+                work = WorkInfo.objects.get(work_id=work_id)
+                review = Review.objects.get(expert=expert, work=work)
                 review.score = score
                 review.comment = comment
                 review.review_status = status

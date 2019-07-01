@@ -4,7 +4,7 @@
 
     <!-- 引入样式 -->
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
-    <link rel="stylesheet" type="text/css" href="css/loader.css">
+    <link rel="stylesheet" type="text/css" href="../static/css/loader.css">
 
          <!-- 引入组件库 -->
       <script src="https://unpkg.com/vue/dist/vue.js"></script>
@@ -97,8 +97,8 @@
           work_id:{{ work_id }},
 
         rateForm: {
-          score: {{ score }},
-          suggestion: {{ comment }},
+            score: {{ score|default_if_none:50 }},
+            suggestion: "{{ comment|default_if_none:'' }}",
           status:{{ status }}
         },
 
