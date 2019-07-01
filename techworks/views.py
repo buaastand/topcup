@@ -149,16 +149,19 @@ class TechWorkView(View):
                     3: registration.fifth_auth
                 }
                 team = json.loads(request.POST.get("company_table",[]))
-                if len(team):
-                    for id,stu in enumerate(team):
-                        if id==0:
-                            registration.second_auth = Student.objects.get(stu_id=stu["stu_id"])
-                        if id==1:
-                            registration.third_auth = Student.objects.get(stu_id=stu["stu_id"])
-                        if id==2:
-                            registration.forth_auth = Student.objects.get(stu_id=stu["stu_id"])
-                        if id==3:
-                            registration.fifth_auth = Student.objects.get(stu_id=stu["stu_id"])
+                for id in range(0,4):
+                    if len(team) > id:
+                        stu = team[id]
+                    else:
+                        stu = None
+                    if id==0:
+                        registration.second_auth = Student.objects.get(stu_id=stu["stu_id"]) if stu else None
+                    if id==1:
+                        registration.third_auth = Student.objects.get(stu_id=stu["stu_id"]) if stu else None
+                    if id==2:
+                        registration.forth_auth = Student.objects.get(stu_id=stu["stu_id"]) if stu else None
+                    if id==3:
+                        registration.fifth_auth = Student.objects.get(stu_id=stu["stu_id"]) if stu else None
 
                 work.title = request.POST.get('title', work.title)
                 work.detail = request.POST.get('detail', work.detail)
