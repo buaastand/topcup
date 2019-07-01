@@ -14,9 +14,6 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path,re_path
-from django.views.static import serve
-from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.decorators.csrf import csrf_exempt
 
 from users.views import LoginView,LogoutView,UpdatePwdView,RegisterView
@@ -30,12 +27,12 @@ from django.views.generic import RedirectView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('competitiondetail/', Cpt.CompetitionDetail),
+    path('index/', Cpt.CompetitionList),
     path('competitionlist/', Cpt.CompetitionList),
     path('techworklist/', Tch.TechWorkListView.as_view()),
     path('techworksubmit/', Tch.TechWorkView.as_view()),
     path('stusearch/',Tch.searchstu),
     re_path(r'^favicon.ico',RedirectView.as_view(url=r'/static/favicon.ico')),
-    path('competitionlist/', Cpt.CompetitionList),
     path('competitionlist/?selected=0', Cpt.CompetitionList,name='competitionlist'),
     path('deletecpt/',Cpt.DeleteCompetition),
     path('expert/', ExpertManage.list),

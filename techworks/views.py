@@ -85,6 +85,9 @@ class TechWorkView(View):
             username = "16211086"
         work = None
         company_ret = []
+        file_docu = []
+        file_photo = []
+        file_video = []
         if work_id is None:
             if comptition_id is not None:
                 registration = CompetitionRegistration.objects.create(
@@ -122,9 +125,7 @@ class TechWorkView(View):
                                     "email": auth.user.email})
 
             filelist = Appendix.objects.filter(work__work_id=work.work_id)
-            file_docu = []
-            file_photo = []
-            file_video = []
+
             for file in filelist:
                 if(file.appendix_type == 0):
                     file_docu.append({"name": file.filename,"url": file.file.name})
