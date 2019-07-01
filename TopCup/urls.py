@@ -23,6 +23,7 @@ from users.views import ExpertManage
 from django.urls import path,re_path
 import competition.views as Cpt
 import techworks.views as Tch
+from operation.views import ReviewWorkListView
 from django.views.generic import RedirectView
 urlpatterns = [
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root':settings.MEDIA_ROOT}),
@@ -31,6 +32,7 @@ urlpatterns = [
     path('index/', Cpt.CompetitionList),
     path('competitionlist/', Cpt.CompetitionList),
     path('techworklist/', Tch.TechWorkListView.as_view()),
+    path('reviewworklist/', ReviewWorkListView.as_view()),
     path('techworksubmit/', Tch.TechWorkView.as_view()),
     path('stusearch/',Tch.searchstu),
     re_path(r'^favicon.ico',RedirectView.as_view(url=r'/static/favicon.ico')),

@@ -11,6 +11,9 @@
             {% if useridentity == 2 %}
                 <el-menu-item index="3" class="navmenu"><a href= "/techworklist/" style="text-decoration: none">查看作品</a></el-menu-item>
             {% endif %}
+            {% if useridentity == 1 %}
+                <el-menu-item index="3" class="navmenu"><a href= "/reviewworklist/" style="text-decoration: none">待评作品</a></el-menu-item>
+            {% endif %}
 
 {#            身份判断#}
 
