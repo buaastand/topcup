@@ -99,6 +99,16 @@ def CompetitionList(request):
     else:
         cptList = cptList.order_by("init_date")
 
+    now_time = datetime.date.today()
+    for i in cptList:
+        if now_time < i.init_date:
+            i.status = 0
+        elif now_time < i.finish_date:
+            i.status = 1
+        else:
+            i.status = 2
+        i.save()
+
     paginator = Paginator(cptList, 6) # 每页6条
     page = request.GET.get('page')
     contacts = paginator.page(1)
