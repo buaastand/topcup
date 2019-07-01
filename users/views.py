@@ -133,10 +133,15 @@ class UpdatePwdView(View):
     用户在个人中心修改密码
     """
     def post(self,request):
-        modify_form = ModifyPwdForm(request.POST)
+        form2check = json.loads(request.body)
+        form2check = {
+            "pwd1":form2check["new_password"],
+            "pwd2":form2check["new_password2"]
+        }
+        modify_form = ModifyPwdForm(form2check)
         if modify_form.is_valid():
-           pwd1 = request.POST.get('pwd1','')
-           pwd2 = request.POST.get('pwd2','')
+           pwd1 = modify_form.data.get('pwd1','')
+           pwd2 = modify_form.data.get('pwd2','')
            if pwd1 != pwd2:
                return HttpResponse("{'status':'fail','msg':'密码不一致'}",content_type='application/json')
            user = request.user

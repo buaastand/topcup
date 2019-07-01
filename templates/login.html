@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <title>Login</title>
+
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
     <link rel="stylesheet" href="../static/css/login.css">
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script src="https://unpkg.com/element-ui/lib/index.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token }}">
 
 </head>
 <body>
@@ -32,72 +34,32 @@
         </el-form-item>
         <el-form-item prop="type" style="margin-top: 0" label="用户类型">
             <el-radio-group v-model="loginForm.type">
-                <el-radio label="学生" ></el-radio>
-                <el-radio label="专家"></el-radio>
-                <el-radio label="校团委"></el-radio>
+                <el-radio label="1">学生</el-radio>
+                <el-radio label="3">专家</el-radio>
+                <el-radio label="2">校团委</el-radio>
             </el-radio-group>
         </el-form-item>
         <el-form-item>
                 <el-button type="primary" @click="onSubmit('loginForm')" style="width:80%">登录</el-button>
         </el-form-item>
-        {% csrf_token %}
     </el-form>
         </el-main>
         <el-footer>
                 <div style="margin:0 auto; width: 70%;">
-    <a href="" style="float: left">注册</a>
+    <a href="/register/" style="float: left">注册</a>
     <a href="" style="float: right">忘记密码？</a>
     </div>
         </el-footer>
     </el-container>
 
 
-    <el-button type="primary" @click="dialogFormVisible = true">修改密码</el-button>
-        <el-dialog title="修改密码" :visible.sync="dialogFormVisible" width="450px" center>
-          <el-form :model="modifyForm" :rules="modifyRules" ref="modifyForm">
-            <el-form-item prop="old_password" label="原密码" :label-width="formLabelWidth">
-              <el-input v-model="modifyForm.old_password" autocomplete="off" show-password></el-input>
-            </el-form-item>
-            <el-form-item prop="new_password" label="新密码" :label-width="formLabelWidth">
-              <el-input v-model="modifyForm.new_password" autocomplete="off" show-password></el-input>
-            </el-form-item>
-            <el-form-item prop="new_password2" label="确认密码" :label-width="formLabelWidth">
-              <el-input v-model="modifyForm.new_password2" autocomplete="off" show-password></el-input>
-            </el-form-item>
-          </el-form>
-          <div slot="footer" class="dialog-footer">
-            <el-button @click="dialogFormVisible = false">取 消</el-button>
-            <el-button type="primary" @click="Modify('modifyForm')">确 定</el-button>
-          </div>
-        </el-dialog>
 </div>
-
-
-
-
 
 </body>
 <script>
     var app = new Vue({
     el: '#Login_page',
     data: {
-        // 修改密码
-        dialogTableVisible: false,
-        dialogFormVisible: false,
-        modifyForm: {
-          old_password: '',
-          new_password: '',
-          new_password2: '',
-        },
-        formLabelWidth: '120px',
-        modifyRules:{
-            old_password:[{required:true, message:'请输入用户名',trigger:'blur'}],
-            new_password:[{required:true, message:'请输入用户名',trigger:'blur'}],
-            new_password2:[{required:true, message:'请输入用户名',trigger:'blur'}],
-        },
-
-
-        // 登录
         loginForm:{
         username: '',
         password: '',
@@ -112,68 +74,36 @@
         },
     },
     methods:{
-        // 修改密码
-       Modify: function(formName) {
-           this.$refs[formName].validate((valid) => {
-               if (valid) {
-                   console.log(this.modifyForm);
-                   axios({
-                       url: '/modify/',
-                       method: 'post',
-                       data: this.modifyForm,
-                       headers: {
-                           'Content-Type': 'application/json'
-                       }
-                   })
-                       .then(res => {
-                           console.log(res);
-                           if (res.status == 200) {
-                               this.$alert('注册成功', {
-                                   confirmButtonText: '确定'
-                               })
-                               window.location.href = '/login/'
-                           } else {
-                               this.$alert('注册失败', {
-                                   confirmButtonText: '确定'
-                               })
-                           }
-                       })
-                       .catch(err => {
-                           console.log(err);
-                       });
-               } else {
-                   console.log('error submit!!');
-                   return false;
-               }
-           });
-       },
-
-
-
-        // 登录
        onSubmit: function(formName) {
-           this.$refs[formName].validate((valid) => {
-               if (valid) {
-                   axios
-                       .post('/login/', formName)
-                       .then(res => {
-                           console.log(res);
-                           if (res.state == 200) {
-                               this.$alert('登录成功', {
-                                   confirmButtonText: '确定'
-                               })
-                           }
-                           ;
-                       })
-                       .catch(err => {
-                           console.log(err);
-                       });
-               } else {
-                   console.log('error submit!!');
-                   return false;
-               }
-           });
-       }
+       this.$refs[formName].validate((valid) => {
+          if (valid) {
+                axios
+                .post(
+                    '/login/',
+                    this.loginForm,
+                    {headers: {'X-CSRFtoken': document.getElementsByTagName('meta')['csrf-token'].getAttribute('content')}},
+                )
+                .then(res =>{
+                    console.log(res);
+                    if(res.status == 200){
+                        if(res.data['msg'] == true){
+                            this.$alert('登陆成功');
+                            window.location.href='/competitionlist/?selected=0';
+                        }else {
+                            this.$alert('登录失败');
+                        }
+                    }
+                    else {
+                        this.$alert('登录失败');
+                    }
+                })
+                .catch(err => {console.log(err)})
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
+        }
     }
 })
 
