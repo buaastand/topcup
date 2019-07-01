@@ -7,6 +7,7 @@ from django.db.models import Q
 from competition.models import CompetitionRegistration, Competition
 from users.models import Student
 from django.db import transaction
+from competition.views import GetUserIdentitiy
 import datetime
 import json
 
@@ -73,7 +74,8 @@ class TechWorkListView(View):
                 'submitted': "已提交" if work.submitted else "暂存",
             })
 
-        return render(request, 'techwork_list.html', {'worklist': worklist_ret})
+        user_name, user_identity = GetUserIdentitiy(request)
+        return render(request, 'techwork_list.html', {'worklist': worklist_ret,'useridentity':user_identity})
 
 
 class TechWorkView(View):
@@ -134,7 +136,8 @@ class TechWorkView(View):
                 if (file.appendix_type == 2):
                     file_video.append({"name": file.filename, "url": file.file.name})
 
-        return render(request, 'submit_techwork.html', {'work': work, 'company': company_ret, 'docu': file_docu, 'photo': file_photo, 'video': file_video})
+        user_name, user_identity = GetUserIdentitiy(request)
+        return render(request, 'submit_techwork.html', {'work': work, 'company': company_ret, 'docu': file_docu, 'photo': file_photo, 'video': file_video,'useridentity':user_identity})
 
     def post(self, request):
         try:
