@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
     <link rel="stylesheet" href="../static/css/submit_techwork.css">
     <link rel="stylesheet" href="../static/css/NavName.css">
-
+    <link rel="icon" href="../static/images/favicon.ico" type="image/x-icon"/>
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script src="https://unpkg.com/element-ui/lib/index.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
@@ -203,15 +203,15 @@
     el: '#submit_techwork',
     data: {
         techworkForm:{
-            first_author:'',
+            first_author:'{{ work.registration.first_auth.name }}',
             company_search:'',
-            company_table:[],
-            title:'',
-            work_type:'',
-            field:'',
-            detail:'',
-            innovation:'',
-            keywords:'',
+            company_table:{{ company }},
+            title:'{{ work.title | default_if_none:'' }}',
+            work_type:'{{ work.work_type }}',
+            field:{{ work.field }},
+            detail:'{{ work.detail | default_if_none:'' }}',
+            innovation:'{{ work.innovation | default_if_none:'' }}',
+            keywords:'{{ work.keywords | default_if_none:'' }}',
             options1:[{
                 value:'1',
                 label:'科技发明制作'
