@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" type="text/css" href="css/loader.css">
+
+         <!-- 引入组件库 -->
+      <script src="https://unpkg.com/vue/dist/vue.js"></script>
+      <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+      <script src="https://cdn.staticfile.org/vue-resource/1.5.1/vue-resource.min.js"></script>
+
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body style="margin: 0px;font-size:14px;color: #606266;">
+<div id="app" style="margin-top: 0px;margin-left: 0px">
+    
+<el-menu
+  :default-active="activeIndex2"
+  class="el-menu-demo"
+  mode="horizontal"
+  @select="handleSelect"
+  background-color="#545c64"
+  text-color="#fff"
+  active-text-color="#ffd04b">
+  <el-menu-item index="1">处理中心</el-menu-item>
+  <el-submenu index="2">
+    <template slot="title">我的工作台</template>
+    <el-menu-item index="2-1">选项1</el-menu-item>
+    <el-menu-item index="2-2">选项2</el-menu-item>
+    <el-menu-item index="2-3">选项3</el-menu-item>
+  </el-submenu>
+  <el-menu-item index="3">订单管理</el-menu-item>
+</el-menu>
+
+
+
+
+
+<div style="text-align: center;width: 140vh;margin: auto; box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);padding: 30px">
+<div style="height: 170px; width:100%">
+<div style="font-size: 24px; float:left;margin-left:9%;margin-top: 2%"><i class="el-icon-setting" style="margin-right: 5px; border-right: 1px solid #909399;padding-right: 5px;padding-bottom: 2px"></i>专家信息管理</div>
+        <el-button type="primary" size="medium" @click="dialogTableVisible = true" style="float: right;margin-right: 6%;margin-top: 6.5%">上传专家信息</el-button>
+        <el-dialog title="上传专家信息" :visible.sync="dialogTableVisible">
+{#                <el-upload#}
+{#                  class="upload-demo"#}
+{#                  ref="upload"#}
+{#                  :action="uploadURL"#}
+{#                  :on-preview="handlePreview"#}
+{#                  :on-remove="handleRemove"#}
+{#                  :file-list="fileList"#}
+{#                  :headers="header"#}
+{#                  :auto-upload="false">#}
+{#                  <el-button slot="trigger" size="small" type="primary">选取文件</el-button>#}
+{#                  <div slot="tip" class="el-upload__tip">只能上传xls/xlsx文件</div>#}
+{#                    <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload">确认</el-button>#}
+{#                </el-upload>#}
+                <el-upload
+                class="upload-demo"
+                ref="upload"
+                action=""
+                :on-preview="handlePreview"
+                :on-remove="handleRemove"
+                :before-remove="beforeRemove"
+                multiple
+                :limit="3"
+                :on-exceed="handleExceed"
+                :file-list="fileList"
+                :auto-upload="false">
+                <el-button slot="trigger" size="small" type="primary">选择上传</el-button>
+                <div slot="tip" class="el-upload__tip">只能上传xls/xlsx文件</div>
+                <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload">确认</el-button>
+              </el-upload>
+        </el-dialog>
+
+</div>
+
+<div style="width: 100%;height: 35px;">
+        <el-row style="height:100%;">
+
+                <el-col :span="7" style="height:100%;border-right: 1px solid #DCDFE6;border-bottom: 1px solid #DCDFE6;"><div style="margin-top: 5px">专家邮箱</div></el-col>
+                <el-col :span="5" style="height:100%;border-right: 1px solid #DCDFE6;border-bottom: 1px solid #DCDFE6;"><div style="margin-top: 5px">专家姓名</div></el-col>
+                <el-col :span="7" style="height:100%;border-right: 1px solid #DCDFE6;border-bottom: 1px solid #DCDFE6;"><div style="margin-top: 5px">专业领域</div></el-col>
+                <el-col :span="5" style="height:100%;border-bottom: 1px solid #DCDFE6;"><div style="margin-top: 5px">操作</div></el-col>
+              </el-row>
+</div>
+
+
+{% for i in data %}
+    <div style="width: 100%;height: 35px">
+
+        <el-row style="height:100%;">
+            <el-col :span="7" style="height:100%;border-right: 1px solid #DCDFE6;border-bottom: 1px solid #DCDFE6;"><div style="margin-top: 10px">{{ i.user.email }}</div></el-col>
+            <el-col :span="5" style="height:100%;border-right: 1px solid #DCDFE6;border-bottom: 1px solid #DCDFE6;"><div style="margin-top: 10px">{{ i.name }}</div></el-col>
+            <el-col :span="7" style="height:100%;border-right: 1px solid #DCDFE6;border-bottom: 1px solid #DCDFE6;">
+                <div style="margin-top: 10px" v-if="{{i.field}} == '1'">领域一</div>
+                <div style="margin-top: 10px" v-else-if="{{i.field}} == '2'">领域二</div>
+                <div style="margin-top: 10px" v-else-if="{{i.field}} == '3'">领域三</div>
+                <div style="margin-top: 10px" v-else-if="{{i.field}} == '4'">领域四</div>
+                <div style="margin-top: 10px" v-else-if="{{i.field}} == '5'">领域五</div>
+                <div style="margin-top: 10px" v-else="{{i.field}} == '6'">领域六</div>
+            </el-col>
+            <el-col :span="5" style="height:100%;border-bottom: 1px solid #DCDFE6;">
+              <div style="margin-top: 5px">
+              <el-button type="primary" size="mini" style="margin-right: 30px" @click="change_click({{ i.user.id }})" >修改</el-button>
+              <el-dialog title="修改专家信息" :visible.sync="dialogTableVisible1" width = 60vh>
+                <el-form  :model="changeForm" :rules="rules" ref="changeForm">
+                  <el-form-item label="专家邮箱" prop="email">
+                    <el-input v-model="changeForm.email" placeholder="请输入专家邮箱" style="width: 75%"></el-input>
+                  </el-form-item>
+                  <el-form-item label="专家姓名" prop="name">
+                    <el-input v-model="changeForm.name" placeholder="请输入专家姓名" style="width: 75%"></el-input>
+                  </el-form-item>
+                  <el-form-item label="专业领域" prop="field">
+                      <el-select v-model="changeForm.field" placeholder="请选择专业领域" style="width: 75%">
+                        <el-option label="领域一" value="1"></el-option>
+                        <el-option label="领域二" value="2"></el-option>
+                        <el-option label="领域三" value="3"></el-option>
+                        <el-option label="领域四" value="4"></el-option>
+                        <el-option label="领域五" value="5"></el-option>
+                        <el-option label="领域六" value="6"></el-option>
+                      </el-select>
+                  </el-form-item>
+                  <el-form-item>
+                      <el-button type="primary" @click="submitForm('changeForm')">提交</el-button>
+                      <el-button @click="resetForm('changeForm')">重置</el-button>
+                    </el-form-item>
+                </el-form>
+              </el-dialog>
+              <el-button type="danger" size="mini" @click="delete_click({{ i.user_id }})">删除</el-button>
+              <el-dialog
+                title="提示"
+                :visible.sync="dialogDeleteVisible"
+                width="50vh"
+                :before-close="handleClose">
+                <span>确定要删除么？</span>
+                <span slot="footer" class="dialog-footer">
+                  <el-button @click="dialogVisible = false">取 消</el-button>
+                  <el-button type="primary" @click="delete_info()">确 定</el-button>
+                </span>
+              </el-dialog>
+
+            </div></el-col>
+          </el-row>
+    </div>
+{% endfor %}
+
+
+
+</div>
+</div>
+
+
+</body>
+
+<script>
+{#import Axios from 'axios'#}
+  var Main ={
+    data() {
+      return {
+        activeIndex: '1',
+        activeIndex2: '1',
+        fileList:[''],
+        dialogTableVisible: false,
+        dialogTableVisible1: false,
+        dialogDeleteVisible: false,
+          input_email:'',
+          input_name:'',
+          input_field:'',
+          expertid:0,
+          expert_delete_name:'',
+          changeForm: {
+          email: '',
+          name: '',
+          field: '',
+        },
+
+        rules: {
+          email:[
+            { required: true, message: '请输入邮箱地址', trigger: 'blur' },
+            { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur,change' }
+            ],
+          name: [
+            { required: true, message: '请输入专家名称', trigger: 'blur' },
+          ],
+          field: [
+            { required: true, message: '请选择专家领域', trigger: 'change' }
+          ],
+        },
+
+      };
+    },
+    methods: {
+        submitUpload() {
+        this.$refs.upload.submit();
+        this.dialogTableVisible = false;
+        setTimeout(function () {
+                    window.location.reload();
+                }, 500);
+      },
+      handleSelect(key, keyPath) {
+        console.log(key, keyPath);
+      },
+      handleRemove(file, fileList) {
+        console.log(file, fileList);
+      },
+      handlePreview(file) {
+        console.log(file);
+      },
+      handleExceed(files, fileList) {
+        this.$message.warning(`当前限制选择 3 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`);
+      },
+      beforeRemove(file, fileList) {
+        return this.$confirm(`确定移除 ${ file.name }？`);
+      },
+      change_click(expert_id){
+          this.dialogTableVisible1 = true;
+          this.expertid = expert_id;
+          {#this.$http.post('../expert_detail/',{id:expert_id},{emulateJSON:true}).then(function(res){#}
+          {#          console.log(res);#}
+          {#          _this.changeForm.email = res.data.email;#}
+          {#          _this.changeForm.field = res.data.field;#}
+          {#          _this.changeForm.name =res.data.name;#}
+          {#          _this.expertid = expert_id;#}
+          {#      }).catch(function (response) {});#}
+      },
+      change_info() {
+        this.$http.post('../expert_change/',{id:this.expertid, changed_name:this.changeForm.name, changed_field:this.changeForm.field},{emulateJSON:true}).then(function(res){
+                    console.log(res);}).catch(function (response) {});
+        this.$message.success("修改成功！");
+          this.dialogTableVisible1 = false;
+          setTimeout(function () {
+                    window.location.reload();
+                }, 500);
+      },
+      delete_click(expert_id){
+          this.dialogDeleteVisible=true;
+          this.expertid = expert_id;
+       },
+      delete_info() {
+        this.$http.post('../expert_delete/',{id:this.expertid},{emulateJSON:true}).then(function(res){
+                    console.log(res);
+                }).catch(function (response) {});
+        dialogTableVisible1 = false;
+        setTimeout(function () {
+                    window.location.reload();
+                }, 500);
+      },
+        submitForm(formName) {
+        this.$refs[formName].validate((valid) => {
+          if (valid) {
+              this.$http.post('../expert_change/',{id:this.expertid, changed_email:this.changeForm.email, changed_name:this.changeForm.name, changed_field:this.changeForm.field},{emulateJSON:true}).then(function(res){
+                    console.log(res);}).catch(function (response) {});
+            this.$message.success("修改成功！");
+            dialogTableVisible1 = false;
+            setTimeout(function () {
+                    window.location.reload();
+                }, 500);
+          } else {
+            console.log('错误提交!');
+            return false;
+          }
+        });
+      },
+      resetForm(formName) {
+        this.$refs[formName].resetFields();
+      },
+
+    }
+  };
+  
+var Ctor = Vue.extend(Main);
+new Ctor().$mount('#app')
+</script>
+
+</html>

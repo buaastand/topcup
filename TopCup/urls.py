@@ -15,7 +15,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from users.views import ExpertManage
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('expert/', ExpertManage.list),
+    path('expert_detail/', ExpertManage.expert_detail),
+    path('expert_change/', ExpertManage.change),
+    path('expert_delete/', ExpertManage.delete_expert),
+
 ]
