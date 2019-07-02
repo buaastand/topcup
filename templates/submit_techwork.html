@@ -221,12 +221,12 @@
             first_author:'{{ work.registration.first_auth.name }}',
             company_search:'',
             company_table:{{ company|safe }},
-            title:'{{ work.title | default_if_none:'' }}',
+            title:'{{ work.title | safe }}',
             work_type:'{{ work.work_type }}',
             field:'{{ work.field }}',
-            detail:'{{ work.detail | default_if_none:'' }}',
-            innovation:'{{ work.innovation | default_if_none:'' }}',
-            keywords:'{{ work.keywords | default_if_none:'' }}',
+            detail:'{{ work.detail |safe }}',
+            innovation:'{{ work.innovation | safe }}',
+            keywords:'{{ work.keywords | safe }}',
             options1:[{
                 value:'1',
                 label:'科技发明制作'
