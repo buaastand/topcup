@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Rigister</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="../static/css/register.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+</head>
+<body>
+<div id="Register_page" class="background">
+    <el-container>
+        <el-header>
+            <h2>注册用户</h2>
+        </el-header>
+
+        <el-main>
+            <el-form action="/register/" method="post" autocomplete="off"
+                     :model="registerForm"
+                     :rules="rules"
+                     status-icon
+                     ref="registerForm"
+                     label-width="20%"
+                     label="right">
+                <el-form-item label="学号" prop="stu_id">
+                    <el-input name="stu_id" v-model="registerForm.stu_id" type="text" style="width: 80%"></el-input>
+                </el-form-item>
+                <el-form-item label="姓名" prop="name">
+                    <el-input name="name" v-model="registerForm.name" type="text" style="width: 80%"></el-input>
+                </el-form-item>
+                <el-form-item label="院系" prop="department">
+                    <el-input name="department" v-model="registerForm.department" type="text" style="width: 80%"></el-input>
+                </el-form-item>
+                <el-form-item label="专业" prop="major">
+                    <el-input name="major" v-model="registerForm.major" type="text" style="width: 80%"></el-input>
+                </el-form-item>
+                <el-form-item label="联系电话" prop="phone">
+                    <el-input name="phone" v-model="registerForm.phone" type="tel" style="width: 80%"></el-input>
+                </el-form-item>
+                <el-form-item label="地址" prop="address">
+                    <el-input name="address" v-model="registerForm.address" type="text" style="width: 80%"></el-input>
+                </el-form-item>
+                <el-form-item label="入学年份" prop="enroll_time">
+                    <el-date-picker
+                      v-model="registerForm.enroll_time"
+                      type="date"
+                      placeholder="选择日期">
+                    </el-date-picker>
+                </el-form-item>
+                <el-form-item label="出生日期" prop="birthdate">
+                    <el-date-picker
+                      v-model="registerForm.birthdate"
+                      type="date"
+                      placeholder="选择日期">
+                    </el-date-picker>
+                </el-form-item>
+                <el-form-item label="学历" prop="degree">
+                    <template>
+                            <el-select name="degree" v-model="registerForm.degree">
+                                <el-option
+                                  v-for="item in registerForm.options"
+                                  :key="item.value"
+                                  :label="item.label"
+                                  :value="item.value">
+                                </el-option>
+                            </el-select>
+                        </template>
+                </el-form-item>
+                <el-form-item label="邮箱" prop="email">
+                    <el-input name="email" v-model="registerForm.email" type="email" style="width: 80%"></el-input>
+                </el-form-item>
+                <el-form-item label="密码" prop="password">
+                    <el-input name="password" v-model="registerForm.password" type="password" style="width: 80%"></el-input>
+                </el-form-item>
+                <el-form-item label="确认密码" prop="password2">
+                    <el-input name="password2" v-model="registerForm.password2" type="password" style="width: 80%"></el-input>
+                </el-form-item>
+                <el-form-item>
+                    <el-col :span="8" :offset="6">
+                    <el-button type="primary" @click="onSubmit('registerForm')">注册</el-button>
+                    <el-button type="danger" @click="resetForm('registerForm')">重置</el-button>
+                    </el-col>
+                </el-form-item>
+
+
+            </el-form>
+        </el-main>
+        <el-footer>
+            <a href="/login/" style="float:right">已有账户，直接登录？</a>
+        </el-footer>
+    </el-container>
+</div>
+
+
+</body>
+
+<script>
+    var app = new Vue({
+    el: '#Register_page',
+    data: {
+        registerForm:{
+        stu_id: '',
+        name: '',
+        department: '',
+        major: '',
+        phone: '',
+        address: '',
+        birthdate:'',
+        enroll_time: '',
+        degree:'',
+        options:[{
+            value:'1',
+            label:'大专'
+        },{
+            value:'2',
+            label:'大学本科'
+        },{
+            value:'3',
+            label:'硕士研究生'
+        },{
+            value:'4',
+            label:'博士研究生'
+        }],
+        email:'',
+        password:'',
+        password2:''
+        },
+        rules:{
+        stu_id:[
+            {required:true, message:'请输入学号',trigger:'blur'},],
+        name:[
+            {required:true, message:'请输入姓名',trigger:'blur'}],
+        department:[
+            {required:true, message:'请输入院系',trigger:'blur'}],
+        major:[
+            {required:true, message:'请输入专业',trigger:'blur'}],
+        phone:[
+            {required:true, message:'请输入联系电话',trigger:'blur'},
+            {min:11, max:11, message:'请确保电话格式正确，应为11位数字',trigger:'blur'}],
+        address:[
+            {required:true, message:'请输入地址',trigger:'blur'}],
+        enroll_time:[
+            {required:true, message:'请选择入学时间',trigger:'blur'}],
+        birthdate:[
+            {required:true, message:'请选择出生日期',trigger:'blur'}],
+        degree:[
+            {required:true, message:'请选择学历',trigger:'blur'}],
+        email:[
+            {required:true, message:'请输入邮箱',trigger:'blur'}],
+        password:[
+            {required:true, message:'请输入密码',trigger:'blur'},
+            {min:8, message:'密码最短为8位',trigger:'blur'}],
+        password2:[
+            {required:true, message:'请再次密码',trigger:'blur'},
+            {min:8, message:'密码最短为8位',trigger:'blur'}],
+        },
+    },
+    methods:{
+       onSubmit: function(formName) {
+       this.$refs[formName].validate((valid) => {
+          if (valid) {
+              console.log(this.registerForm);
+                axios({
+                    url: '/register/',
+                    method: 'post',
+                    data:this.registerForm,
+                    headers: {
+                      'Content-Type': 'application/json'
+                    }
+                })
+                .then(res => {
+                    console.log(res);
+                    if (res.status == 200) {
+                        if(res.data['msg'] == true){
+                            this.$alert('注册成功');
+                            window.location.href='/login/';
+                        }else {
+                            this.$alert('注册失败：'+res.data['detail']);
+                        }
+                    }
+                    else{
+                        this.$alert('注册失败', {
+                            confirmButtonText: '确定'
+                        })
+                    }
+                 })
+                .catch(err =>{
+                    console.log(err);
+                 });
+          } else {
+            console.log('error submit!!');
+            return false;
+          }
+        });
+        },
+        resetForm: function(formName) {
+        this.$refs[formName].resetFields();
+      }
+    }
+})
+
+</script>
+
+</html>
