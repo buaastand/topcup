@@ -68,8 +68,8 @@ class TechWorkListView(View):
                 'work_id': work.work_id,
                 'first_author': work.registration.first_auth.name,
                 'title': work.title,
-                'work_type': WORKTYPE_MAP[work.work_type],
-                'field': FIELD_MAP[work.field],
+                'work_type': WORKTYPE_MAP.get(work.work_type, 1),
+                'field': FIELD_MAP.get(work.field, 1),
                 'competition': work.registration.competition.title,
                 'submitted': "已提交" if work.submitted else "暂存",
             })
@@ -130,11 +130,11 @@ class TechWorkView(View):
 
             for file in filelist:
                 if(file.appendix_type == 0):
-                    file_docu.append({"name": file.filename,"url": file.file.name})
+                    file_docu.append({"name": file.filename,"url": file.file.url})
                 if(file.appendix_type == 1):
-                    file_photo.append({"name": file.filename, "url": file.file.name})
+                    file_photo.append({"name": file.filename, "url": file.file.url})
                 if (file.appendix_type == 2):
-                    file_video.append({"name": file.filename, "url": file.file.name})
+                    file_video.append({"name": file.filename, "url": file.file.url})
 
         user_name, user_identity = GetUserIdentitiy(request)
         return render(request, 'submit_techwork.html', {'work': work, 'company': company_ret, 'docu': file_docu, 'photo': file_photo, 'video': file_video,'useridentity':user_identity})
@@ -178,12 +178,20 @@ class TechWorkView(View):
                     "photo": 1,
                     "video": 2
                 }
+
+                deleteList = json.loads(request.POST.get('deleteList', "{\"deletelist\":[]}"))["deletelist"]
+                appendixList = Appendix.objects.filter(work=work)
+                for deletefile in deleteList:
+                    for appdendix in appendixList:
+                        if appdendix.file.url == deletefile:
+                            appdendix.delete()
+
                 if len(request.FILES) > 0:
                     for k, file in request.FILES.items():
                         # file = file[0]
                         filename = file._name
                         filedata = file
-                        filetype = FILE_TYLE_MAP[file.field_name.split('_')[0]]
+                        filetype = FILE_TYLE_MAP.get(k.split('_')[0], 0)
                         filedate = datetime.date.today()
                         Appendix.objects.create(filename=filename, appendix_type=filetype, upload_date=filedate,
                                                 file=filedata, work=work)
