@@ -6,6 +6,19 @@
             </el-menu-item>
             <el-menu-item index="2" class="navmenu"><a href="/competitionlist/?selected=0"
                                                        style="text-decoration: none">竞赛</a></el-menu-item>
+            {#            身份判断#}
+            {% if useridentity == 3 %}
+                <el-menu-item index="3" class="navmenu"><a href= "/cptinit/" style="text-decoration: none">创建比赛</a></el-menu-item>
+                <el-menu-item index="4" class="navmenu"><a href= "/expert/" style="text-decoration: none">管理专家</a></el-menu-item>
+            {% endif %}
+            {% if useridentity == 2 %}
+                <el-menu-item index="3" class="navmenu"><a href= "/techworklist/" style="text-decoration: none">查看作品</a></el-menu-item>
+            {% endif %}
+            {% if useridentity == 1 %}
+                <el-menu-item index="3" class="navmenu"><a href= "/reviewworklist/" style="text-decoration: none">待评作品</a></el-menu-item>
+            {% endif %}
+
+{#            身份判断#}
 
             {#            身份判断#}
             {% if useridentity == 0 %}
@@ -22,16 +35,6 @@
                       </span>
                         <el-dropdown-menu slot="dropdown">
                             <el-dropdown-item command="0" style="font-size: 16px">修改密码</el-dropdown-item>
-                            {% if useridentity == 3 %}
-                                <el-dropdown-item><a href="/cptinit/" style="text-decoration: none;color: #303133;font-size: 16px">创建比赛</a></el-dropdown-item>
-                                <el-dropdown-item><a href="/expert/" style="text-decoration: none;color: #303133;font-size: 16px">管理专家</a></el-dropdown-item>
-                            {% endif %}
-                            {% if useridentity == 2 %}
-                                <el-dropdown-item><a href="/techworklist/" style="text-decoration: none;color: #303133;font-size: 16px">查看作品</a></el-dropdown-item>
-                            {% endif %}
-                            {% if useridentity == 1 %}
-                                <el-dropdown-item><a href="/reviewworklist/" style="text-decoration: none;color: #303133;font-size: 16px">待评作品</a></el-dropdown-item>
-                            {% endif %}
                         </el-dropdown-menu>
                     </el-dropdown>
                     <a href="/logout/" class="navother" style="color: white;text-decoration: none">退出</a>

@@ -29,9 +29,7 @@
                         <el-radio-button label='0' onclick="window.open('/competitionlist?selected=0&order='+CptList.order, '_self')">全部比赛</el-radio-button>
                         <el-radio-button label='1' onclick="window.open('/competitionlist?selected=1&order='+CptList.order, '_self')">正在进行</el-radio-button>
                         <el-radio-button label='2' onclick="window.open('/competitionlist?selected=2&order='+CptList.order, '_self')">已结束</el-radio-button>
-                        {% if useridentity == 3 %}
                         <el-radio-button label='3' onclick="window.open('/competitionlist?selected=3&order='+CptList.order, '_self')">未开始</el-radio-button>
-                        {% endif %}
                     </el-radio-group>
                 </div>
                 <div style="float: right; margin-top: 14px">
@@ -54,7 +52,6 @@
                 {% for i in contacts %}
                 {% if i.status == 0 %}
                 {% if selected == '0' or selected == '3' %}
-                {% if useridentity == 3 %}
                 <el-card class="UpcomeCompetitionCard">
                     {#                        身份判断#}
                     {#                        删除#}
@@ -68,9 +65,8 @@
                     </div>
                     <div style="float: left; width: 108px">
                         <el-image style="width: 108px; height: 80px; margin: 0px auto 0px 10px"
-                            src="https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg" fit="cover">
+                            src="/media/{{ i.preview_img }}" fit="cover">
                             <div slot="error" class="image-slot">
-                                <i class="el-icon-picture-outline"></i>
                             </div>
                         </el-image>
                     </div>
@@ -90,7 +86,6 @@
                     </div>
                 </el-card>
                 {% endif %}
-                {% endif %}
                 {% elif i.status == 1 %}
                 {% if selected == '0' or selected == '1' %}
                     <el-card class="OngoingCompetitionCard">
@@ -101,10 +96,9 @@
                         <div style="float: left; width: 108px">
                             <el-image
                                 style="width: 108px; height: 80px; margin: 0px auto 0px 10px"
-                                src="https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg"
+                                src="/media/{{ i.preview_img }}"
                                 fit="cover">
                                 <div slot="error" class="image-slot">
-                                    <i class="el-icon-picture-outline"></i>
                                 </div>
                             </el-image>
                         </div>
@@ -134,10 +128,9 @@
                         <div style="float: left; width: 108px">
                             <el-image
                                 style="width: 108px; height: 80px; margin: 0px auto 0px 10px"
-                                src="https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg"
+                                src="/media/{{ i.preview_img }}"
                                 fit="cover">
                                 <div slot="error" class="image-slot">
-                                    <i class="el-icon-picture-outline"></i>
                                 </div>
                             </el-image>
                         </div>
