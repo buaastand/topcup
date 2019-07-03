@@ -11,6 +11,9 @@ from competition.views import GetUserIdentitiy
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 import datetime, time, random
 import json
+import docx
+from docx import Document
+import static.pdf
 
 
 # Create your views here.
@@ -248,3 +251,16 @@ class TechWorkView(View):
         #     baseuser.type = 1
         #     baseuser.email = email
         #     baseuser.save()
+
+def generatePdf(request):
+    workid= request.POST.get('workid')
+
+    path = "../static/pdf/科技竞赛作品提交表.docx"
+    print(path)
+    document = Document(path)  # 读入文件
+    tables = document.tables  # 获取文件中的表格集
+    table = tables[0]  # 获取文件中的第一个表格
+    for i in range(1, len(table.rows)):  # 从表格第二行开始循环读取表格数据
+        result = table.cell(i, 0).text + "" + table.cell(i, 1).text +table.cell(i, 2).text + table.cell(i, 3).text
+        # cell(i,0)表示第(i+1)行第1列数据，以此类推
+        print(result)
