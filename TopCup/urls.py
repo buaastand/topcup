@@ -53,6 +53,7 @@ urlpatterns = [
     path('cptinit/', Cpt.CompetitionInit),
     path('cptinit/cptformpost/',Cpt.CompetitionFormPost),
     path('cptchange/', Cpt.CompetitionChange),
+    path('cptchange/cptchangepost/', Cpt.CompetitionChangePost),
     # path('expert_review/',ExpertReviewView.as_view(),name='expertReview_View'),
 
     path('judge_work/', ExpertReviewView.show),
