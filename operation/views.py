@@ -7,9 +7,28 @@ from competition.views import GetUserIdentitiy
 from techworks.models import WorkInfo
 from users.models import Expert
 from .models import Review
+from users.models import Student
 
 
 # Create your views here.
+def GetUserIdentitiy(request):
+    user_identity = 0
+    user_name = ' '
+    if request.user.is_authenticated:
+        if Expert.objects.filter(user__email=request.user.username):
+            user_identity = 1  # 专家
+            user_name = Expert.objects.get(user__email=request.user.username).user.email
+
+        elif Student.objects.filter(stu_id=request.user.username):
+            user_identity = 2  # 学生
+            user_name = Student.objects.get(stu_id=request.user.username).user.email
+        else:
+            user_identity = 3  # 校团委
+            user_name = '校团委'
+    else:
+        user_identity = 0  # 未登录
+    return user_name,user_identity
+
 class ReviewWorkListView(View):
     # @login_required(login_url='/login/')
     def get(self, request):
@@ -113,3 +132,9 @@ class ExpertReviewView():
         except:
             Review.objects.create(work_id=work_id, expert_id=expert_id, score=0, comment='', review_status=0, add_time='2019-07-02')
             return JsonResponse({'status': 0}, safe=False)
+
+class AssignworkListView():
+    def assignwork_list(request):
+        context = {}
+        context['username'], context['useridentity'] = GetUserIdentitiy(request)
+        return render(request, '../templates/assignwork_list.html', context)
