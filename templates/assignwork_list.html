@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>科技竞赛平台</title>
+    <!-- 引入vue.js,axios.js -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.staticfile.org/vue-resource/1.5.1/vue-resource.min.js"></script>
+
+    <!-- 引入element.ui-->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+    <!-- 引入css-->
+    <link rel="stylesheet" href="../static/css/NavName.css">
+    <link rel="stylesheet" href="../static/css/assignwork_list.css" type="text/css">
+</head>
+
+<body style="margin: 0; background: #F5F7FA">
+    {% include 'NavMenu.html' %} 
+    
+    <div id="AssignworkList" style="width: 100%">
+        <div class="tableArea">
+            <el-table
+                ref="multipleTable"
+                :data="tableData"
+                tooltip-effect="dark"
+                style="width: 1000px"
+                @selection-change="handleSelectionChange">
+                <el-table-column
+                    type="selection"
+                    width="55">
+                </el-table-column>
+                <el-table-column
+                    type="index"
+                    label="序号"
+                    width="55">
+                </el-table-column>
+                <el-table-column
+                    label="作品ID"
+                    prop="work_id"
+                    width="120">
+                </el-table-column>
+                <el-table-column
+                    label="作品名称"
+                    prop="title"
+                    width="120">
+                </el-table-column>
+                <el-table-column
+                    label="作品类别"
+                    prop="work_type"
+                    width="120">
+                </el-table-column>
+                <el-table-column
+                    prop="作品领域"
+                    label="field"
+                    show-overflow-tooltip>
+                </el-table-column>
+          </el-table>
+        </div>
+    </div>
+
+    <script>
+        var CptList = new Vue({
+            el: '#AssignworkList',
+            data: {
+                tableData: {{ worklist | safe }},
+                multipleSelection: []
+            },
+            methods: {
+                
+            },
+            delimiters: ["{[", "]}"]
+        })
+    </script>
+</body>
+
+</html>

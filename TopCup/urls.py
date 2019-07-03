@@ -27,6 +27,9 @@ import competition.views as Cpt
 import techworks.views as Tch
 from operation.views import ReviewWorkListView
 from django.views.generic import RedirectView
+
+from operation.views import AssignworkListView
+
 urlpatterns = [
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root':settings.MEDIA_ROOT}),
     path('admin/', admin.site.urls),
@@ -59,6 +62,8 @@ urlpatterns = [
 
     path('work_list/', ExpertReviewView.list),
     #re_path(r'^static/(?P<path>.*)$', serve, {"document_root":STATIC_ROOT}),
+
+    path('assign_work/', AssignworkListView.assignwork_list)
 ]
 
 #urlpatterns += staticfiles_urlpatterns()
