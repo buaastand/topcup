@@ -67,9 +67,15 @@
             },
             formLabelWidth: '120px',
             modifyRules:{
-                old_password:[{required:true, message:'请输入用户名',trigger:'blur'}],
-                new_password:[{required:true, message:'请输入用户名',trigger:'blur'}],
-                new_password2:[{required:true, message:'请输入用户名',trigger:'blur'}],
+                old_password:[{required:true, message:'请输入原密码',trigger:'blur'}],
+                new_password:[
+                    {required:true, message:'请输入新密码',trigger:'blur'},
+                    {min:8, message:'密码最短为8位', trigger:'blur'},
+                ],
+                new_password2:[
+                    {required:true, message:'请再次输入新密码',trigger:'blur'},
+                    {min:8, message:'密码最短为8位', trigger:'blur'},
+                ],
             },
         },
         methods:{
@@ -82,20 +88,24 @@
                        method: 'post',
                        data: this.modifyForm,
                        headers: {
-                           'Content-Type': 'application/json'
+                           'Content-Type': 'application/json',
+                           'X-CSRFtoken':'{{ csrf_token }}',
                        }
                    })
                        .then(res => {
                            console.log(res);
-                           if (res.status == 200) {
-                               this.$alert('注册成功', {
-                                   confirmButtonText: '确定'
-                               })
-                               window.location.href = '/login/'
-                           } else {
-                               this.$alert('注册失败', {
-                                   confirmButtonText: '确定'
-                               })
+                           if(res.status ==200 ){
+                               if(res.data['msg'] == true){
+                                   this.$message({
+                                       message:'密码修改成功',
+                                       type: 'success',
+                                   })
+                               }
+                               else {
+                                   this.$message.error(res.data['detail'])
+                               }
+                           }else {
+                               this.$message.error('密码修改失败')
                            }
                        })
                        .catch(err => {
