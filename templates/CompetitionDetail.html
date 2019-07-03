@@ -66,10 +66,10 @@
             </el-tabs>
         </div>
         <div style="right:10px;position: absolute;margin-top:2px">
-            {% if useridentity == 1 %}
+            {% if useridentity == 2 %}
             <el-button type="text" style="text-decoration:underline" @click="techworksubmit({{ cptDetail.id }})">我要报名</el-button>
             {% endif %}
-            {% if useridentity == 2 %}
+            {% if useridentity == 1 %}
             <el-button type="text" style="text-decoration:underline" >评价作品</el-button>
             {% endif %}
             {% if useridentity == 3 %}
