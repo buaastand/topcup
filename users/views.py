@@ -179,6 +179,8 @@ class SearchStudent(View):
         stu_dict = dict()
         stu_dict['stu'] = query_set
         return JsonResponse(stu_dict,safe=False)
+
+
 class ExpertManage():
     @csrf_exempt
     # 展示专家列表，允许上传文件添加专家，当和数据库中的专家邮箱重复时跳过

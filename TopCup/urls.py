@@ -37,6 +37,7 @@ urlpatterns = [
     path('reviewworklist/', ReviewWorkListView.as_view()),
     path('techworksubmit/', Tch.TechWorkView.as_view()),
     path('stusearch/',Tch.searchstu),
+    path('deletework/',Tch.deletework),
     re_path(r'^favicon.ico',RedirectView.as_view(url=r'/static/favicon.ico')),
     path('competitionlist/?selected=0', Cpt.CompetitionList,name='competitionlist'),
     path('deletecpt/',Cpt.DeleteCompetition),

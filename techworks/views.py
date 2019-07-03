@@ -8,7 +8,8 @@ from competition.models import CompetitionRegistration, Competition
 from users.models import Student
 from django.db import transaction
 from competition.views import GetUserIdentitiy
-import datetime
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+import datetime, time, random
 import json
 
 
@@ -31,6 +32,11 @@ def searchstu(request):
                     }}
     return JsonResponse(ret)
 
+def deletework(request):
+    work_id = request.GET.get('work_id')
+    work = WorkInfo.objects.filter(work_id=work_id)
+    work.delete()
+    return HttpResponse(status=200)
 
 # @login_required(login_url='/login/')
 # @method_decorator(login_required,name='dispatch')
@@ -62,20 +68,35 @@ class TechWorkListView(View):
             5: "E",
             6: "F",
         }
+
         worklist_ret = []
         for work in worklist_origin:
             worklist_ret.append({
                 'work_id': work.work_id,
                 'first_author': work.registration.first_auth.name,
                 'title': work.title,
-                'work_type': WORKTYPE_MAP[work.work_type],
-                'field': FIELD_MAP[work.field],
+                'work_type': WORKTYPE_MAP.get(work.work_type, 1),
+                'field': FIELD_MAP.get(work.field, 1),
                 'competition': work.registration.competition.title,
                 'submitted': "已提交" if work.submitted else "暂存",
             })
 
+        paginator = Paginator(worklist_ret, 10)  # 每页10条
+        total = len(worklist_ret)
+        list = paginator.page(1)
+        page = request.GET.get('page')
+        try:
+            list = paginator.page(page)  # contacts为Page对象！
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            list = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            list = paginator.page(paginator.num_pages)
+
         user_name, user_identity = GetUserIdentitiy(request)
-        return render(request, 'techwork_list.html', {'worklist': worklist_ret,'useridentity':user_identity})
+        return render(request, 'techwork_list.html', {'worklist': list.object_list,'useridentity':user_identity,
+                                                      'num':list.number,'total':total})
 
 
 class TechWorkView(View):
@@ -96,10 +117,9 @@ class TechWorkView(View):
                     first_auth=Student.objects.get(user__username=username),
                     competition=Competition.objects.get(id=comptition_id))
                 registration.save()
-                work_cnt = WorkInfo.objects.count()
-                BASE_NUM = 10000
+                work_cnt = int(time.time()) + random.randint(0, 10000)
                 work = WorkInfo.objects.create(registration=registration, title="", detail="", innovation="",
-                                               keywords="", avg_score=0, work_id=BASE_NUM + work_cnt, work_type=1,
+                                               keywords="", avg_score=0, work_id=work_cnt, work_type=1,
                                                field=1)
                 work.save()
             else:
@@ -130,11 +150,11 @@ class TechWorkView(View):
 
             for file in filelist:
                 if(file.appendix_type == 0):
-                    file_docu.append({"name": file.filename,"url": file.file.name})
+                    file_docu.append({"name": file.filename,"url": file.file.url})
                 if(file.appendix_type == 1):
-                    file_photo.append({"name": file.filename, "url": file.file.name})
+                    file_photo.append({"name": file.filename, "url": file.file.url})
                 if (file.appendix_type == 2):
-                    file_video.append({"name": file.filename, "url": file.file.name})
+                    file_video.append({"name": file.filename, "url": file.file.url})
 
         user_name, user_identity = GetUserIdentitiy(request)
         return render(request, 'submit_techwork.html', {'work': work, 'company': company_ret, 'docu': file_docu, 'photo': file_photo, 'video': file_video,'useridentity':user_identity})
@@ -178,12 +198,20 @@ class TechWorkView(View):
                     "photo": 1,
                     "video": 2
                 }
+
+                deleteList = json.loads(request.POST.get('deleteList', "{\"deletelist\":[]}"))["deletelist"]
+                appendixList = Appendix.objects.filter(work=work)
+                for deletefile in deleteList:
+                    for appdendix in appendixList:
+                        if appdendix.file.url == deletefile:
+                            appdendix.delete()
+
                 if len(request.FILES) > 0:
                     for k, file in request.FILES.items():
                         # file = file[0]
                         filename = file._name
                         filedata = file
-                        filetype = FILE_TYLE_MAP[file.field_name.split('_')[0]]
+                        filetype = FILE_TYLE_MAP.get(k.split('_')[0], 0)
                         filedate = datetime.date.today()
                         Appendix.objects.create(filename=filename, appendix_type=filetype, upload_date=filedate,
                                                 file=filedata, work=work)
