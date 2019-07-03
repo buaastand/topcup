@@ -6,7 +6,6 @@
     <title>科技竞赛平台</title>
     <!-- 引入vue.js,axios.js -->
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
-    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="https://cdn.staticfile.org/vue-resource/1.5.1/vue-resource.min.js"></script>
 
     <!-- 引入element.ui-->
@@ -181,11 +180,12 @@
                     console.log(selected_work);
                     console.log(selected_expert);
                     
-                    axios
-                    .post('',{
-                        selected_work: selected_work,
-                        selected_expert: expert_id,
-                    })
+                    this.$http
+                    .post(
+                        '../assign_expert/',
+                        {'selected_work': JSON.stringify(selected_work),'selected_expert': JSON.stringify(selected_expert),},
+                        {emulateJSON:true}
+                    )
                     .then(response => {console.log(response)})
                     .catch(function (error) { // 请求失败处理
                         console.log(error);
