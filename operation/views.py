@@ -114,13 +114,13 @@ class ExpertReviewView():
             Review.objects.create(work_id=work_id, expert_id=expert_id, score=0, comment='', review_status=0, add_time='2019-07-02')
             return JsonResponse({'status': 0}, safe=False)
 
-class AssginWorkListView(View):
+class AssignWorkListView(View):
     """
     展示待分配作品列表
     """
     def get(self,request):
         cpt_id = request.GET.get('cpt_id','')
-        worklist_origin = WorkInfo.objects.all()[:10]
+        worklist_origin = WorkInfo.objects.all()
         WORKTYPE_MAP = {
             1: "科技发明制作",
             2: "调查报告和学术论文"
@@ -143,4 +143,4 @@ class AssginWorkListView(View):
             })
 
         user_name,user_identity = GetUserIdentitiy(request)
-        return render(request,'assginwork_list.html',{'worklist':worklist_ret,'useridentity':user_identity})
+        return render(request,'assignwork_list.html',{'worklist':worklist_ret,'useridentity':user_identity,'username':user_name})
