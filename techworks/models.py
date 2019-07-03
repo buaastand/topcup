@@ -28,6 +28,7 @@ class WorkInfo(models.Model):
     check_status = models.BooleanField(default=False, verbose_name="初审结果")
     avg_score = models.FloatField(verbose_name="平均分")
     if_defense = models.BooleanField(default=False, verbose_name="是否答辩")
+    submitted = models.BooleanField(default=False,verbose_name="是否已提交")
 
     class Meta:
         verbose_name = "作品"

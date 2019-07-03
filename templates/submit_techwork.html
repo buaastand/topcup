@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>submit_techwork</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="../static/css/submit_techwork.css">
+    <link rel="stylesheet" href="../static/css/NavName.css">
+    <link rel="icon" href="../static/images/favicon.ico" type="image/x-icon"/>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+</head>
+<body style="margin: 0">
+        {% include 'NavMenu.html' %}
+<div id="submit_techwork" class="background">
+    <el-container>
+        <el-header>
+            <h1>
+                作品申报
+            </h1>
+        </el-header>
+
+        <el-main>
+            <el-form action="" method="post" autocomplete="off"
+                     model="techworkForm"
+                     :rules="rules"
+                     status-icon
+                     ref="techworkForm"
+                     label-width="20%"
+                     label="right">
+            <h2 style="margin-left: 5%;margin-bottom: 0">
+                申报者情况
+            </h2>
+            <p style="margin-left: 5%;margin-top: 0;color: red">
+                <b>说明：必须由申报者本人按要求填写，如果多人由第一作者填报</b>
+            </p>
+                <el-form-item prop="first_author" label="第一作者">
+                    <el-input class="input" name="first_author" style="width: 70%"
+                          type="text"
+                          v-model="techworkForm.first_author"
+                          placeholder="请输入学号或姓名"  >
+                    </el-input>
+                </el-form-item>
+
+                <el-form-item label="合作者">
+                    <el-input class="input" name="company_search" style="width: 70%"
+                          type="text"
+                          v-model="techworkForm.company_search"
+                          placeholder="输入合作者学号，请确保合作者已注册成为网站用户">
+                    </el-input>
+                     <el-button @click="addCompany(techworkForm.company_search)" styly="float:right;">添加合作者</el-button>
+                </el-form-item>
+
+                <el-form-item prop="company_table"  label-width="50px">
+                    <template>
+                        <el-table :data="techworkForm.company_table">
+                            <el-table-column prop="id" type="index" label="序号"></el-table-column>
+                            <el-table-column prop="stu_id"  label="学号"></el-table-column>
+                            <el-table-column prop="name"  label="姓名"></el-table-column>
+                            <el-table-column prop="degree"  label="学历"></el-table-column>
+                            <el-table-column prop="phone"  label="联系电话"></el-table-column>
+                            <el-table-column prop="email"  label="邮箱"></el-table-column>
+                            <el-table-column>
+                            <template slot-scope="scope">
+                            <el-button size="mini" type="danger" @click="deleteCompany(scope.$index)">删除</el-button>
+                            </template>
+                            </el-table-column>
+                        </el-table>
+                    </template>
+                </el-form-item>
+
+            <h2 style="margin-left: 5%;margin-bottom: 30px">
+                申报作品情况
+            </h2>
+                <el-form-item prop="title" label="作品全称">
+                    <el-input name="title"
+                          type="text" style="width: 70%"
+                          v-model="techworkForm.title">
+                        </el-input>
+                </el-form-item>
+                <el-form-item prop="work_type" label="类别">
+                        <template>
+                            <el-select name="work_type" v-model="techworkForm.work_type">
+                                <el-option
+                                  v-for="item in techworkForm.options1"
+                                  :key="item.value"
+                                  :label="item.label"
+                                  :value="item.value">
+                                </el-option>
+                            </el-select>
+                        </template>
+                </el-form-item>
+                <el-form-item prop="field" label="作品分类">
+                        <template>
+                            <el-select name="field" v-model="techworkForm.field"  style="width: 70%">
+                                <el-option
+                                  v-for="item in techworkForm.options2"
+                                  :key="item.value"
+                                  :label="item.label"
+                                  :value="item.value">
+                                </el-option>
+                            </el-select>
+                        </template>
+                </el-form-item>
+                <el-form-item prop="detail" label="作品总体说明">
+                    <el-input
+                          type="textarea" style="width: 70%"
+                          v-model="techworkForm.detail"
+                          maxlength="800"
+                          show-word-limit
+                         :autosize="{ minRows: 10, maxRows: 10}">
+                        </el-input>
+                </el-form-item>
+                <el-form-item prop="innovation" label="创新点">
+                    <el-input
+                          type="textarea" style="width: 70%"
+                          v-model="techworkForm.innovation"
+                          maxlength="800"
+                          show-word-limit
+                          placeholder="1-5条体现作品主要创意的创新点"
+                         :autosize="{ minRows: 10, maxRows: 10}">
+                        </el-input>
+                </el-form-item>
+                <el-form-item prop="keywords" label="关键词">
+                    <el-input
+                          type="text" style="width: 70%"
+                          v-model="techworkForm.keywords"
+                          placeholder="4-7个体现作品核心技术和问题的关键词，请以逗号分隔">
+                    </el-input>
+                </el-form-item>
+
+            <h2 style="margin-left: 5%;margin-bottom: 30px">
+                上传附件
+            </h2>
+                <el-row>
+                    <el-col :span="6" :offset="4">
+                     <el-form-item label-width="0">
+                    <el-upload
+                          action="https://jsonplaceholder.typicode.com/posts/"
+                          multiple
+                          accept=".pdf"
+                          :limit="3"
+                          :on-exceed="handleExceed"
+                          :on-change="document_path_file"
+                          :file-list="techworkForm.document_list"
+                          :before-upload="beforeDocumentUpload">
+                          <el-button type="info" round>文档+</el-button>
+                          <div slot="tip" class="el-upload__tip">只能上传pdf文件，且不超过2M</div>
+                        </el-upload>
+                    </el-form-item>
+                    </el-col>
+                    <el-col :span="6">
+                        <el-form-item label-width="0">
+                    <el-upload
+                          action="https://jsonplaceholder.typicode.com/posts/"
+                          multiple
+                          accept=".jpg, .png"
+                          :limit="5"
+                          :on-exceed="handleExceed"
+                          :on-change="photo_path_file"
+                          :file-list="techworkForm.photo_list"
+                          :before-upload="beforeImageUpload">
+                          <el-button type="info" round>图片+</el-button>
+                          <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过2M</div>
+                        </el-upload>
+                </el-form-item>
+                    </el-col>
+                    <el-col :span="6">
+                <el-form-item label-width="0">
+                    <el-upload
+                          action="https://jsonplaceholder.typicode.com/posts/"
+                          multiple
+                          accept=".mp4"
+                          :limit="1"
+                          :on-exceed="handleExceed"
+                          :on-change="video_path_file"
+                          :file-list="techworkForm.video_list"
+                          :before-upload="beforeVideoUpload">
+                          <el-button type="info" round>视频+</el-button>
+                          <div slot="tip" class="el-upload__tip">只能上传MP4文件</div>
+                        </el-upload>
+                </el-form-item>
+                    </el-col>
+                </el-row>
+
+                <el-form-item label-width="0">
+                    <el-button type="success" @click="onSubmit('techworkForm')" style="width: 100px;float: right; margin-right: 100px"{% if work.submitted %}disabled{% endif %}>{% if work.submitted %}作品已提交{% else %}提交{% endif %}</el-button>
+                    <el-button type="primary" @click="onPreserve('techworkForm')" style="width: 100px;float: right; margin-right: 20px" {% if work.submitted %}disabled{% endif %}>暂存</el-button>
+                </el-form-item>
+            </el-form>
+
+        </el-main>
+    </el-container>
+</div>
+
+
+
+
+
+</body>
+
+<script>
+
+    function formm (url, data, config, success, fail) {
+                  axios.post(url, data, config).then(function (response) {
+                    return success(response);
+                  }).catch(function (res) {
+                    return fail(res);
+                  });
+                }
+    function toRaw(f) {
+        return f.raw
+    }
+
+    var app = new Vue({
+    el: '#submit_techwork',
+    data: {
+        techworkForm:{
+            first_author:'{{ work.registration.first_auth.name }}',
+            company_search:'',
+            company_table:{{ company|safe }},
+            title:'{{ work.title | default_if_none:'' }}',
+            work_type:'{{ work.work_type }}',
+            field:'{{ work.field }}',
+            detail:'{{ work.detail | default_if_none:'' }}',
+            innovation:'{{ work.innovation | default_if_none:'' }}',
+            keywords:'{{ work.keywords | default_if_none:'' }}',
+            options1:[{
+                value:'1',
+                label:'科技发明制作'
+            },{
+                value:'2',
+                label:'调查报告和学术论文'
+            }],
+            options2:[{
+                value:'1',
+                label:'A.机械与控制（包括机械、仪器仪表、自动化控制、工程、交通、建筑等）'
+            },{
+                value:'2',
+                label:'B.信息技术（包括计算机、电信、通讯、电子等）'
+            }, {
+                value:'3',
+                label:'C.数理（包括数学、物理、地球与空间科学等）'
+            }, {
+                value:'4',
+                label:'D.生命科学(包括生物､农学､药学､医学､健康､卫生､食品等)'
+            }, {
+                value:'5',
+                label:'E.能源化工（包括能源、材料、石油、化学、化工、生态、环保等）'
+            },{
+                value:'6',
+                label:'F.哲学社会科学（包括哲学、经济、社会、法律、教育、管理）'
+            }],
+            document_list:{{ docu |safe }},
+            photo_list:{{ photo |safe }},
+            video_list:{{ video |safe }},
+            },
+        photo_path:[],
+        document_path:[],
+        video_path:[]
+    },
+    methods: {
+        video_path_file (file, fileList) {
+
+      this.video_path = fileList.map(toRaw);
+    }
+        ,
+
+        photo_path_file (file, fileList) {
+      // 秘钥上传组件 on-change 事件
+      this.photo_path = fileList.map(toRaw);
+    },
+        document_path_file (file, fileList) {
+      // 秘钥上传组件 on-change 事件
+      this.document_path = fileList.map(toRaw);
+    },
+      onPreserve(formName) {     //  暂存
+          this.$refs[formName].validate((valid) => {
+              if (valid) {
+                  let form = this.$refs[formName];
+                // 创建 FormData 对象
+                  url = "/techworksubmit/";
+                let formData = new FormData();
+                formData.append('work_id', {{ work.work_id }});
+                // 创建了 FormData 对象的时候传入了表单但是读不出来表单数据，不知道哪里的问题。所以下面用 append 方法添加参数，想打印出来看看的话可以 formData.get('id')
+                formData.append('first_author', this.techworkForm.first_author);
+                console.log(this.techworkForm.company_table);
+                formData.append('company_table', JSON.stringify(this.techworkForm.company_table));
+                formData.append('title', this.techworkForm.title);
+                formData.append('work_type', this.techworkForm.work_type);
+                formData.append('field', this.techworkForm.field);
+                formData.append('detail', this.techworkForm.detail);
+                formData.append('innovation', this.techworkForm.innovation);
+                formData.append('keywords', this.techworkForm.keywords);
+                // 这里文件上传的字段一定要设置文件列表中的 raw 参数 this.cert_path[0].raw
+                  if(this.document_path[0]){
+                      let doc;
+                      let cnt=0;
+                      for (doc in this.document_path){
+                          cnt+=1;
+                          formData.append('document_list_'+cnt, this.document_path[doc]);
+                      }
+
+                  }
+                {#formData.append('document_list', this.document_path[0] ? this.document_path: '');#}
+                  if(this.photo_path[0]){
+                      let photo;
+                      let cnt=0;
+                      for (photo in this.photo_path){
+                          cnt+=1;
+                          formData.append('photo_list_'+cnt, this.photo_path[photo]);
+                      }
+
+                  }
+                {#formData.append('photo_list', this.photo_path[0] ? this.photo_path : '');#}
+                formData.append('video_list', this.video_path[0] ? this.video_path : '');
+                formData.append('submitted',0);
+                formData.append('csrfmiddlewaretoken',"{{ csrf_token }}")
+                console.log(formData.get('first_author'));
+                // 记得配置请求头中 Content-Type 为'multipart/form-data'
+                let config = {
+                  headers: {
+                    'Content-Type': 'multipart/form-data'
+                  }
+                };
+                formm(url, formData, config, response => {
+                   console.log(response.data);
+                  this.loading = false;
+                  if (response.status == 200) {
+                    this.$message('暂存完成');
+                  } else {
+                    this.$message.error(response.msg);
+                  }
+                }, () => {
+                  this.$message.error('网络错误');
+                  this.loading = false;
+                });
+              } else {
+                  console.log("error submit");
+                  return false;
+              }
+          });
+      },
+      onSubmit(formName){   // 提交
+            this.$refs[formName].validate((valid) => {
+              if (valid) {
+                  let form = this.$refs[formName];
+                // 创建 FormData 对象
+                  url = "/techworksubmit/";
+                let formData = new FormData();
+                formData.append('work_id', {{ work.work_id }});
+                // 创建了 FormData 对象的时候传入了表单但是读不出来表单数据，不知道哪里的问题。所以下面用 append 方法添加参数，想打印出来看看的话可以 formData.get('id')
+                formData.append('first_author', this.techworkForm.first_author);
+                console.log(this.techworkForm.company_table);
+                formData.append('company_table', JSON.stringify(this.techworkForm.company_table));
+                formData.append('title', this.techworkForm.title);
+                formData.append('work_type', this.techworkForm.work_type);
+                formData.append('field', this.techworkForm.field);
+                formData.append('detail', this.techworkForm.detail);
+                formData.append('innovation', this.techworkForm.innovation);
+                formData.append('keywords', this.techworkForm.keywords);
+                // 这里文件上传的字段一定要设置文件列表中的 raw 参数 this.cert_path[0].raw
+                  if(this.document_path[0]){
+                      let doc;
+                      let cnt=0;
+                      for (doc in this.document_path){
+                          cnt+=1;
+                          formData.append('document_list_'+cnt, this.document_path[doc]);
+                      }
+
+                  }
+                {#formData.append('document_list', this.document_path[0] ? this.document_path: '');#}
+                  if(this.photo_path[0]){
+                      let photo;
+                      let cnt=0;
+                      for (photo in this.photo_path){
+                          cnt+=1;
+                          formData.append('photo_list_'+cnt, this.photo_path[photo]);
+                      }
+
+                  }
+                {#formData.append('photo_list', this.photo_path[0] ? this.photo_path : '');#}
+                formData.append('video_list', this.video_path[0] ? this.video_path : '');
+                formData.append('submitted',1);
+                formData.append('csrfmiddlewaretoken',"{{ csrf_token }}")
+                console.log(formData.get('first_author'));
+                // 记得配置请求头中 Content-Type 为'multipart/form-data'
+                let config = {
+                  headers: {
+                    'Content-Type': 'multipart/form-data'
+                  }
+                };
+                formm(url, formData, config, response => {
+                   console.log(response.data);
+                  this.loading = false;
+                  if (response.status == 200) {
+                    this.$message('提交完成');
+                  } else {
+                    this.$message.error(response.msg);
+                  }
+                }, () => {
+                  this.$message.error('网络错误');
+                  this.loading = false;
+                });
+              } else {
+                  console.log("error submit");
+                  return false;
+              }
+          });
+    },
+
+      addCompany(search){   //添加合作者，search 为合作者学号
+          if(this.techworkForm.company_table.length>3) {
+              this.$alert('合作者最多只能有4位', {
+                  confirmButtonText: '确定'
+              })
+          }
+
+          else{     // 调用函数查找合作者信息
+              axios.get('/stusearch/',{params:{stu_id:search,}})
+              .then(response=>{
+                  console.log(response)
+                  //let stu = JSON.parse(response.data);
+                  this.techworkForm.company_table.push(response.data['student'])
+              })
+              .catch(function (error) {
+                console.log(error);
+              });
+              {#this.$alert(search, {#}
+              {#    confirmButtonText: '确定'#}
+              {# })#}
+
+          }
+      },
+      deleteCompany(n) {    // 删除合作者者
+          if (n == -2) {
+              this.techworkForm.company_table = "";
+          }{
+              this.techworkForm.company_table.splice(n, 1);
+          }
+      },
+
+      handleExceed(files, fileList) {   // 上传文件数量限制提醒
+        this.$message.warning('上传文件数量超标');
+      },
+      beforeImageUpload(file) {     // 上传图片限制
+          const isJPG = (file.type === 'image/jpeg' || file.type === 'image/png');
+          const isLt2M = file.size / 1024 / 1024 < 2;
+
+          if (!isJPG) {
+              this.$message.error('上传头像图片只能是 JPG/PNG 格式!');
+          }
+          if (!isLt2M) {
+              this.$message.error('上传头像图片大小不能超过 2MB!');
+          }
+          return isJPG && isLt2M;
+      },
+      beforeVideoUpload(file) {     // 上传视频限制
+          const isMP4 = file.type === 'video/mp4';
+          if (!isMP4) {
+              this.$message.error('上传视频只能是 MP4 格式!');
+          }
+          return isMP4;
+      },
+    }
+})
+
+</script>
+
+</html>

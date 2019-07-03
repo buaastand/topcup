@@ -2,14 +2,17 @@
     <div class="nav">
         <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" @select="handleSelect"
                  background-color="#1989FA" text-color="#fff" active-text-color="#A3D0FD">
-            <el-menu-item index="1" class="navheader">科技竞赛平台</el-menu-item>
+            <el-menu-item index="1" class="navheader"><a href= "/index/" style="text-decoration: none">科技竞赛平台</a></el-menu-item>
             <el-menu-item index="2" class="navmenu"><a href= "/competitionlist/?selected=0" style="text-decoration: none">竞赛</a></el-menu-item>
 {#            身份判断#}
             {% if useridentity == 3 %}
                 <el-menu-item index="3" class="navmenu"><a href= "/cptinit/" style="text-decoration: none">创建比赛</a></el-menu-item>
             {% endif %}
             {% if useridentity == 2 %}
-                <el-menu-item index="3" class="navmenu">查看作品</el-menu-item>
+                <el-menu-item index="3" class="navmenu"><a href= "/techworklist/" style="text-decoration: none">查看作品</a></el-menu-item>
+            {% endif %}
+            {% if useridentity == 1 %}
+                <el-menu-item index="3" class="navmenu"><a href= "/reviewworklist/" style="text-decoration: none">待评作品</a></el-menu-item>
             {% endif %}
 
 {#            身份判断#}
