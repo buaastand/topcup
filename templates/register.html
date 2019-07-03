@@ -169,7 +169,8 @@
                     method: 'post',
                     data:this.registerForm,
                     headers: {
-                      'Content-Type': 'application/json'
+                      'Content-Type': 'application/json',
+                      'X-CSRFtoken':document.getElementsByTagName('meta')['csrf-token'].getAttribute('content'),
                     }
                 })
                 .then(res => {
