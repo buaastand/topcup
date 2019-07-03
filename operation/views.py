@@ -176,6 +176,8 @@ class AssignExpertView(View):
                 review.save()
         cpt_name = WorkInfo.objects.get(work_id=work_list[0]).registration.competition.title
 
+
+        # ref：https://www.cnblogs.com/lovealways/p/6701662.html
         import smtplib
         from email.mime.text import MIMEText
         sender = '1102616394@qq.com'
