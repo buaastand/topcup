@@ -22,21 +22,25 @@
     {% include 'NavMenu.html' %} 
     
     <div id="AssignworkList" style="width: 100%">
+        <div class="buttonArea">
+            <el-button type="primary" @click="dialogVisible = true">为选中的作品分配专家</el-button>
+        </div>
+
         <div class="tableArea">
             <el-table
                 ref="multipleTable"
                 :data="tableData"
                 tooltip-effect="dark"
-                style="width: 1000px"
+                style="width: 1000px;"
                 @selection-change="handleSelectionChange">
                 <el-table-column
                     type="selection"
-                    width="55">
+                    width="40">
                 </el-table-column>
                 <el-table-column
                     type="index"
                     label="序号"
-                    width="55">
+                    width="60">
                 </el-table-column>
                 <el-table-column
                     label="作品ID"
@@ -46,20 +50,36 @@
                 <el-table-column
                     label="作品名称"
                     prop="title"
-                    width="120">
+                    width="400">
                 </el-table-column>
                 <el-table-column
                     label="作品类别"
                     prop="work_type"
-                    width="120">
+                    :filters="typeFilters"
+                    :filter-method="filterHandler"
+                    width="200">
                 </el-table-column>
                 <el-table-column
                     label="作品领域"
                     prop="field"
+                    :filters="fieldFilters"
+                    :filter-method="filterHandler"
                     show-overflow-tooltip>
                 </el-table-column>
           </el-table>
         </div>
+
+        <el-dialog
+            title="提示"
+            :visible.sync="dialogVisible"
+            width="30%"
+            :before-close="handleClose">
+        <span>这是一段信息</span>
+        <span slot="footer" class="dialog-footer">
+            <el-button @click="dialogVisible = false">取 消</el-button>
+            <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+        </span>
+        </el-dialog>
     </div>
 
     <script>
@@ -67,7 +87,12 @@
             el: '#AssignworkList',
             data: {
                 tableData: {{ worklist | safe }},
-                multipleSelection: []
+                multipleSelection: [],
+                typeFilters: [{ text: '科技发明制作', value: '科技发明制作' }, 
+                    { text: '调查报告和学术论文', value: '调查报告和学术论文' }],
+                fieldFilters: [{ text: 'A', value: 'A' }, { text: 'B', value: 'B' }, 
+                    { text: 'C', value: 'C' }, { text: 'D', value: 'D' }, 
+                    { text: 'E', value: 'E' }, { text: 'F', value: 'F' }]
             },
             methods: {
                 toggleSelection(rows) {
@@ -81,6 +106,19 @@
                 },
                 handleSelectionChange(val) {
                     this.multipleSelection = val;
+                    console.log(this.multipleSelection)
+                },
+                filterHandler(value, row, column) {
+                    const property = column['property'];
+                    return row[property] === value;
+                },
+                matchWorksAndExperts(){
+                    axios
+                    .post('')
+                    .then(response => (this.info = response))
+                    .catch(function (error) { // 请求失败处理
+                        console.log(error);
+                    });
                 }
             },
             delimiters: ["{[", "]}"]
