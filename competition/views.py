@@ -142,9 +142,6 @@ def DeleteCompetition(request):
         return JsonResponse({'Message': 1})
     return JsonResponse({'Message': "删除比赛信息"})
 
-
-
-
 def CompetitionInit(request):
     user_name, user_identity = GetUserIdentitiy(request)
     context ={}
@@ -182,7 +179,7 @@ def CompetitionFormPost(request):
     
     print(detail_img)
     if detail_img is None:
-        detail_img = 'static/image/detailimg.jpg'
+        detail_img = 'img/detailimg.jpg'
     
     print(detail_img)
     try:
@@ -207,5 +204,37 @@ def CompetitionFormPost(request):
         return JsonResponse({'Message': 0})
     return JsonResponse({'Message': 1})
 
+@csrf_exempt
 def CompetitionChange(request):
-    return render(request,'../templates/CompetitionChange.html')
+    user_name, user_identity = GetUserIdentitiy(request)
+    context = {}
+    cptDetail = Competition.objects.get(id = request.GET['cptid'])
+    context = {'cptDetail': cptDetail}
+    context['username'] = user_name
+    context['useridentity'] = user_identity
+
+    return render(request,'../templates/CompetitionChange.html', context)
+
+@csrf_exempt
+def CompetitionChangePost(request):
+
+    cptDetail = Competition.objects.get(id = request.GET['cptid'])
+    init_date = request.POST.get('init_date')
+    submit_end_date = request.POST.get('submit_end_date')
+    check_end_date = request.POST.get('check_end_date')
+    review_end_date = request.POST.get('review_end_date')
+    defense_end_date = request.POST.get('defense_end_date')
+    finish_date = request.POST.get('finish_date')
+
+    try:
+        cptDetail.init_date = init_date
+        cptDetail.submit_end_date = submit_end_date
+        cptDetail.check_end_date = check_end_date
+        cptDetail.review_end_date = review_end_date
+        cptDetail.defense_end_date = defense_end_date
+        cptDetail.finish_date = finish_date
+        cptDetail.save()
+    except:
+        return JsonResponse({'Message': 0})
+    return JsonResponse({'Message': 1})
+
