@@ -31,6 +31,11 @@
     margin-right: auto;
 }
 
+.previewPicUploader {
+    width: 108px;
+    height: 80px;
+}
+
 .previewPicUploader .el-upload{
     border: 1px dashed #d9d9d9;
     border-radius: 6px;
@@ -55,6 +60,11 @@
     width: 108px;
     height: 80px;
     display: block;
+}
+
+.detailPicUploader {
+    width: 500px;
+    height: 130px;
 }
 
 .detailPicUploader .el-upload{
