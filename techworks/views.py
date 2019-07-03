@@ -96,7 +96,7 @@ class TechWorkListView(View):
 
         user_name, user_identity = GetUserIdentitiy(request)
         return render(request, 'techwork_list.html', {'worklist': list.object_list,'useridentity':user_identity,
-                                                      'num':list.number,'total':total})
+                                                      'username':user_name, 'num':list.number,'total':total})
 
 
 class TechWorkView(View):
@@ -165,7 +165,8 @@ class TechWorkView(View):
         user_name, user_identity = GetUserIdentitiy(request)
         return render(request, 'submit_techwork.html', {'work': work, 'company': company_ret,
                                                         'show_list': show_list, 'invest_list':invest_list,
-                                                        'docu': file_docu, 'photo': file_photo, 'video': file_video,'useridentity':user_identity})
+                                                        'docu': file_docu, 'photo': file_photo, 'video': file_video,
+                                                        'username':user_name, 'useridentity':user_identity})
 
     def post(self, request):
         try:
