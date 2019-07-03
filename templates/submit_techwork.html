@@ -140,6 +140,42 @@
                     </el-input>
                 </el-form-item>
 
+
+            <el-form-item label="作品可展示的形式" v-if="techworkForm.work_type == 1">
+                <el-checkbox-group v-model="techworkForm.show_type" style="width: 70%"
+                {% if work.submitted %}disabled{% endif %}>
+                <el-checkbox label="2" name="show_type">模型</el-checkbox>
+                <el-checkbox label="3" name="show_type">图纸</el-checkbox>
+                <el-checkbox label="4" name="show_type">磁盘</el-checkbox>
+                <el-checkbox label="6" name="show_type">图片</el-checkbox>
+                <el-checkbox label="7" name="show_type">录像</el-checkbox>
+                <el-checkbox label="8" name="show_type">样品</el-checkbox>
+                <el-checkbox label="1" name="show_type">实物、产品</el-checkbox>
+                <el-checkbox label="5" name="show_type">现场演示</el-checkbox>
+                </el-checkbox-group>
+            </el-form-item>
+
+            <el-form-item label="作品调查方式" v-if="techworkForm.work_type == 2">
+                <el-checkbox-group v-model="techworkForm.invest_type" style="width: 80%"
+                                   {% if work.submitted %}disabled{% endif %}>
+                <el-checkbox label="1" name="invest_type">走访</el-checkbox>
+                <el-checkbox label="2" name="invest_type">问卷</el-checkbox>
+                <el-checkbox label="7" name="invest_type">会议</el-checkbox>
+                <el-checkbox label="12" name="invest_type">文件</el-checkbox>
+                <el-checkbox label="3" name="invest_type">现场采访</el-checkbox>
+                <el-checkbox label="4" name="invest_type">人员介绍</el-checkbox>
+                <el-checkbox label="5" name="invest_type">个别交谈</el-checkbox>
+                <el-checkbox label="6" name="invest_type">亲临实践</el-checkbox>
+                <el-checkbox label="9" name="invest_type">书报刊物</el-checkbox>
+                <el-checkbox label="10" name="invest_type">统计报表</el-checkbox>
+                <el-checkbox label="11" name="invest_type">影视资料</el-checkbox>
+                <el-checkbox label="13" name="invest_type">集体组织</el-checkbox>
+                <el-checkbox label="8" name="invest_type">图片、照片</el-checkbox>
+                <el-checkbox label="14" name="invest_type">自发</el-checkbox>
+                <el-checkbox label="15" name="invest_type">其他</el-checkbox>
+                </el-checkbox-group>
+            </el-form-item>
+
             <h2 style="margin-left: 5%;margin-bottom: 30px">
                 上传附件
             </h2>
@@ -243,6 +279,8 @@
             detail:'{{ work.detail |safe }}',
             innovation:'{{ work.innovation | safe }}',
             keywords:'{{ work.keywords | safe }}',
+            show_type:{{ show_list | safe }},
+            invest_type:{{ invest_list | safe }},
             options1:[{
                 value:'1',
                 label:'科技发明制作'
@@ -307,6 +345,11 @@
                 formData.append('detail', this.techworkForm.detail);
                 formData.append('innovation', this.techworkForm.innovation);
                 formData.append('keywords', this.techworkForm.keywords);
+                console.log(this.techworkForm.show_type);
+                console.log(this.techworkForm.invest_type);
+
+                formData.append('show_type',JSON.stringify(this.techworkForm.show_type));
+                formData.append('invest_type',JSON.stringify(this.techworkForm.invest_type));
                 // 这里文件上传的字段一定要设置文件列表中的 raw 参数 this.cert_path[0].raw
                   if(this.document_path[0]){
                       let doc;
@@ -347,7 +390,6 @@
                 formData.append('deleteList',JSON.stringify({"deletelist":deleteList}));
                 console.log(deleteList);
                 formData.append('csrfmiddlewaretoken',"{{ csrf_token }}")
-                console.log(formData.get('first_author'));
                 // 记得配置请求头中 Content-Type 为'multipart/form-data'
                 let config = {
                   headers: {
@@ -360,8 +402,9 @@
                   if (response.status == 200) {
                       if(submit == 1)
                           this.$message('提交完成');
-                      else if(submit == 0)
+                      else if(submit == 0) {
                           this.$message('暂存完成');
+                      }
                       window.location.href="/techworksubmit/?workid="+{{ work.work_id }};
                   } else {
                     this.$message.error(response.msg);
