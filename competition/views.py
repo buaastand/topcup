@@ -180,8 +180,11 @@ def CompetitionFormPost(request):
     else :
         status = 2
     
-
-
+    print(detail_img)
+    if detail_img is None:
+        detail_img = 'static/image/detailimg.jpg'
+    
+    print(detail_img)
     try:
         new_competition = Competition(title = title, abstract = abstract,
                                                 detail = detail, rule = rule,
