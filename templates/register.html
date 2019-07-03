@@ -177,10 +177,15 @@
                     console.log(res);
                     if (res.status == 200) {
                         if(res.data['msg'] == true){
-                            this.$alert('注册成功');
+                            this.$message({
+                               message:'注册成功',
+                               type:'success',
+                            });
                             window.location.href='/login/';
                         }else {
-                            this.$alert('注册失败：'+res.data['detail']);
+                            this.$message.error(
+                              '注册失败：'+res.data['detail']
+                            );
                         }
                     }
                     else{
