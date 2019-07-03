@@ -35,19 +35,17 @@
                     </el-radio-group>
                 </div>
                 <div style="float: right; margin-top: 14px">
-                    <span style="margin-right: 10px; color: #909399; font-size: 14px">按</span>
                     <el-dropdown @command="changeRank">
                         <span style="color: #409EFF; font-size: 16px; cursor: pointer">
-                            {[ RankWay ]}<i class="el-icon-arrow-down el-icon--right"></i>
+                            {[ RankWay ]}<i class="el-icon-sort"></i>
                         </span>
                         <el-dropdown-menu slot="dropdown">
-                            <el-dropdown-item command="最早开始时间" onclick="window.open('/competitionlist?order=0&selected='+CptList.selected, '_self')">最早开始时间</el-dropdown-item>
-                            <el-dropdown-item command="最晚开始时间" onclick="window.open('/competitionlist?order=1&selected='+CptList.selected, '_self')">最晚开始时间</el-dropdown-item>
-                            <el-dropdown-item command="最早结束时间" onclick="window.open('/competitionlist?order=2&selected='+CptList.selected, '_self')">最早结束时间</el-dropdown-item>
-                            <el-dropdown-item command="最晚结束时间" onclick="window.open('/competitionlist?order=3&selected='+CptList.selected, '_self')">最晚结束时间</el-dropdown-item>
+                            <el-dropdown-item command="开始时间升序" onclick="window.open('/competitionlist?order=0&selected='+CptList.selected, '_self')">开始时间升序</el-dropdown-item>
+                            <el-dropdown-item command="开始时间降序" onclick="window.open('/competitionlist?order=1&selected='+CptList.selected, '_self')">开始时间降序</el-dropdown-item>
+                            <el-dropdown-item command="结束时间升序" onclick="window.open('/competitionlist?order=2&selected='+CptList.selected, '_self')">结束时间升序</el-dropdown-item>
+                            <el-dropdown-item command="结束时间降序" onclick="window.open('/competitionlist?order=3&selected='+CptList.selected, '_self')">结束时间降序</el-dropdown-item>
                         </el-dropdown-menu>
                     </el-dropdown>
-                    <span style="margin-left: 10px; color: #909399; font-size: 14px">排序</span>
                 </div>
             </div>
 
@@ -97,12 +95,6 @@
                 {% if selected == '0' or selected == '1' %}
                     <el-card class="OngoingCompetitionCard">
 {#                        身份判断#}
-{#                        删除#}
-                        {% if useridentity == 3 %}
-                        <div class="CloseCompetitionCard">
-                            <i class="el-icon-close" @click="DeleteCpt({{i.id}})"></i>
-                        </div>
-                        {% endif %}
                         <div class="WordBorder">
                             <div class="ErectWord">正在进行</div>
                         </div>
@@ -136,11 +128,6 @@
 
                     <el-card class="OutdatedCompetitionCard">
 {#                        身份判断#}
-                        {% if useridentity == 3 %}
-                        <div class="CloseCompetitionCard">
-                            <i class="el-icon-close" @click="DeleteCpt({{i.id}})"></i>
-                        </div>
-                        {% endif %}
                         <div class="WordBorder">
                             <div class="ErectWord">已结束</div>
                         </div>
@@ -199,16 +186,16 @@
 
         function NUM_TO_TEXT(order) {
             if (order == 1) {
-                return '最晚开始时间';
+                return '开始时间降序';
             }
             else if (order == 2) {
-                return '最早结束时间';
+                return '结束时间升序';
             }
             else if (order == 3) {
-                return '最晚结束时间';
+                return '结束时间降序';
             }
             else {
-                return '最早开始时间';
+                return '开始时间升序';
             }
         } 
 
@@ -228,8 +215,12 @@
                 },
                 DeleteCpt(val)
                 {
-                    console.log(val);
-                    this.$http
+                    this.$confirm('此操作将永久删除该比赛, 是否继续?', '提示', {
+                      confirmButtonText: '确定',
+                      cancelButtonText: '取消',
+                      type: 'warning'
+                    }).then(() => {
+                        this.$http
                         .post('../deletecpt/',
                             {
                                 id:val,
@@ -252,6 +243,12 @@
                         .catch(err => {
                         console.error(err);
                         });
+                    }).catch(() => {
+                      this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                      });
+                    });
                 }
             },
             delimiters: ["{[", "]}"]

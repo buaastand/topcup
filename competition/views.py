@@ -89,13 +89,13 @@ def CompetitionList(request):
 
     total = len(cptList)
     if order == '1':
-        cptList = cptList.order_by("-init_date")
+        cptList = cptList.order_by("init_date")
     elif order == '2':
         cptList = cptList.order_by("finish_date")
     elif order == '3':
         cptList = cptList.order_by("-finish_date")
     else:
-        cptList = cptList.order_by("init_date")
+        cptList = cptList.order_by("-init_date")
 
     now_time = datetime.date.today()
     for i in cptList:
