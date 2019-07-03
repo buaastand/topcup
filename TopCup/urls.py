@@ -36,6 +36,7 @@ urlpatterns = [
     path('techworklist/', Tch.TechWorkListView.as_view()),
     path('reviewworklist/', ReviewWorkListView.as_view()),
     path('techworksubmit/', Tch.TechWorkView.as_view()),
+    path('generatepdf/',Tch.generatePdf),
     path('stusearch/',Tch.searchstu),
     path('deletework/',Tch.deletework),
     re_path(r'^favicon.ico',RedirectView.as_view(url=r'/static/favicon.ico')),

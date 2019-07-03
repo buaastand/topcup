@@ -14,7 +14,7 @@
 {% include "NavMenu.html" %}
 <div id="cptdetail" class="cptdetail">
 
-    <div class="cptdetailimg">
+    <div class="cptdetailimg" style="background-image:url('/media/{{ cptDetail.detail_img }}') ">
         {#            左右渐变#}
         <div class="beauty-left" style="float: left"></div>
         <div class="beauty-right" style="float: right"></div>
@@ -86,7 +86,14 @@
         el: '#cptdetail',
         methods:{
             techworksubmit(val){
-                window.open('/techworksubmit/?cptid='+val,"_self")
+                if( {{ status_type }} === 0)
+                {
+                    window.open('/techworksubmit/?cptid=' + val, "_self")
+                }
+                else
+                {
+                    this.$message.error("不在报名时间内！")
+                }
             },
             CptChange(val){
                 window.open('/cptchange/?cptid='+val,"_self")

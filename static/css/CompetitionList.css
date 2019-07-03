@@ -99,3 +99,15 @@
     margin-top: 15px;
 }
 
+.image-slot, .demo-image__placeholder .image-slot {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 108px;
+    height: 80px;
+    background: url("https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg");
+    background-size: cover;
+    color: #909399;
+    font-size: 14px;
+}
+
