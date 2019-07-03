@@ -46,17 +46,17 @@ def CompetitionDetail(request):
     temp=datetime.date.today()
     now_time =temp
     if now_time<cptDetail.init_date:
-        status_type="0"
+        status_type="-1"
     elif now_time<cptDetail.submit_end_date:
-        status_type="1"
+        status_type="0"
     elif now_time<cptDetail.check_end_date:
-        status_type="2"
+        status_type="1"
     elif now_time<cptDetail.review_end_date:
-        status_type="3"
+        status_type="2"
     elif now_time<cptDetail.defense_end_date:
-        status_type="4"
+        status_type="3"
     else:
-        status_type="5"
+        status_type="4"
 
     context['status_type']=status_type
     context['useridentity'] = user_identity

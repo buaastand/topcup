@@ -86,7 +86,14 @@
         el: '#cptdetail',
         methods:{
             techworksubmit(val){
-                window.open('/techworksubmit/?cptid='+val,"_self")
+                if( {{ status_type }} === 0)
+                {
+                    window.open('/techworksubmit/?cptid=' + val, "_self")
+                }
+                else
+                {
+                    this.$message.error("不在报名时间内！")
+                }
             },
             CptChange(val){
                 window.open('/cptchange/?cptid='+val,"_self")
