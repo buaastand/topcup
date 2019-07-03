@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>submit_techwork</title>
+    <title>TopCup作品填报</title>
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
     <link rel="stylesheet" href="../static/css/submit_techwork.css">
     <link rel="stylesheet" href="../static/css/NavName.css">
@@ -12,7 +12,7 @@
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 
 </head>
-<body style="margin: 0">
+<body style="margin: 0; background: #F5F7FA">
         {% include 'NavMenu.html' %}
 <div id="submit_techwork" class="background">
     <el-container>
@@ -362,7 +362,7 @@
                           this.$message('提交完成');
                       else if(submit == 0)
                           this.$message('暂存完成');
-                    window.location.reload();
+                      window.location.href="/techworksubmit/?workid="+{{ work.work_id }};
                   } else {
                     this.$message.error(response.msg);
                   }
@@ -385,13 +385,13 @@
           }
 
           else{     // 调用函数查找合作者信息
-              axios.get('/stusearch/',{params:{stu_id:search,}})
-              .then(response=>{
+              axios.get('/stusearch/',{params:{stu_id:search}})
+              .then(response=> {
                   console.log(response)
-                  //let stu = JSON.parse(response.data);
                   this.techworkForm.company_table.push(response.data['student'])
               })
-              .catch(function (error) {
+              .catch(error=>{
+                this.$message.error('查无此人: 请确保合作者已注册为网站用户');
                 console.log(error);
               });
               {#this.$alert(search, {#}

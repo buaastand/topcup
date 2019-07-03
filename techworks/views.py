@@ -8,7 +8,8 @@ from competition.models import CompetitionRegistration, Competition
 from users.models import Student
 from django.db import transaction
 from competition.views import GetUserIdentitiy
-import datetime
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+import datetime, time, random
 import json
 
 
@@ -31,6 +32,11 @@ def searchstu(request):
                     }}
     return JsonResponse(ret)
 
+def deletework(request):
+    work_id = request.GET.get('work_id')
+    work = WorkInfo.objects.filter(work_id=work_id)
+    work.delete()
+    return HttpResponse(status=200)
 
 # @login_required(login_url='/login/')
 # @method_decorator(login_required,name='dispatch')
@@ -62,6 +68,7 @@ class TechWorkListView(View):
             5: "E",
             6: "F",
         }
+
         worklist_ret = []
         for work in worklist_origin:
             worklist_ret.append({
@@ -74,8 +81,22 @@ class TechWorkListView(View):
                 'submitted': "已提交" if work.submitted else "暂存",
             })
 
+        paginator = Paginator(worklist_ret, 10)  # 每页10条
+        total = len(worklist_ret)
+        list = paginator.page(1)
+        page = request.GET.get('page')
+        try:
+            list = paginator.page(page)  # contacts为Page对象！
+        except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
+            list = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            list = paginator.page(paginator.num_pages)
+
         user_name, user_identity = GetUserIdentitiy(request)
-        return render(request, 'techwork_list.html', {'worklist': worklist_ret,'useridentity':user_identity})
+        return render(request, 'techwork_list.html', {'worklist': list.object_list,'useridentity':user_identity,
+                                                      'num':list.number,'total':total})
 
 
 class TechWorkView(View):
@@ -96,10 +117,9 @@ class TechWorkView(View):
                     first_auth=Student.objects.get(user__username=username),
                     competition=Competition.objects.get(id=comptition_id))
                 registration.save()
-                work_cnt = WorkInfo.objects.count()
-                BASE_NUM = 10000
+                work_cnt = int(time.time()) + random.randint(0, 10000)
                 work = WorkInfo.objects.create(registration=registration, title="", detail="", innovation="",
-                                               keywords="", avg_score=0, work_id=BASE_NUM + work_cnt, work_type=1,
+                                               keywords="", avg_score=0, work_id=work_cnt, work_type=1,
                                                field=1)
                 work.save()
             else:
