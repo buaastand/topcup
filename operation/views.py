@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.base import View
+import datetime
 
 from competition.views import GetUserIdentitiy
 from techworks.models import WorkInfo
@@ -146,6 +147,7 @@ class AssignWorkListView(View):
         expertlist_ret = []
         for expert in expertlist_origin:
             expertlist_ret.append({
+                'expert_id':expert.user.id,
                 'name':expert.name,
                 'field':FIELD_MAP[expert.field],
                 'email':expert.user.email,
@@ -162,4 +164,37 @@ class AssignExpertView(View):
         pass
 
     def post(self,request):
-        work_list = request.POST.get('')
+        expert_list = request.POST.get('selected_expert')
+        work_list = request.POST.get('selected_work')
+        for expert_id in expert_list:
+            for work_id in work_list:
+                review = Review()
+                review.work = work_id
+                review.expert = expert_id
+                review.add_time = datetime.date.today
+                review.review_status = 0 #邮件刚刚发出的状态
+                review.save()
+        cpt_name = WorkInfo.objects.get(work_id=work_list[0]).registration.competition.title
+
+        import smtplib
+        from email.mime.text import MIMEText
+        sender = '1102616394@qq.com'
+        passwd = 'zkgiepqbxtrubahb'
+        s = smtplib.SMTP_SSL('smtp.qq.com', 465)
+        s.login(sender, passwd)
+        for expert_id in expert_list:
+            receiver = Expert.objects.get(user_id=expert_id).user.email
+            subject = '邀请参加'+'\"'+cpt_name+'\"'+'作品评审'
+            content = '这是email内容'
+            msg = MIMEText(content)
+            msg['Subject'] = subject
+            msg['From'] = sender
+            msg['To'] = receiver
+            try:
+                s.sendmail(sender,receiver,msg.as_string())
+            except:
+                pass
+        s.quit()
+
+
+
