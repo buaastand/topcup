@@ -142,5 +142,24 @@ class AssignWorkListView(View):
                 'field':FIELD_MAP[work.field],
             })
 
+        expertlist_origin = Expert.objects.all()
+        expertlist_ret = []
+        for expert in expertlist_origin:
+            expertlist_ret.append({
+                'name':expert.name,
+                'field':FIELD_MAP[expert.field],
+                'email':expert.user.email,
+            })
+
         user_name,user_identity = GetUserIdentitiy(request)
-        return render(request,'assignwork_list.html',{'worklist':worklist_ret,'useridentity':user_identity,'username':user_name})
+        return render(request,'assignwork_list.html',{'expertlist':expertlist_ret,'worklist':worklist_ret,'useridentity':user_identity,'username':user_name})
+
+class AssignExpertView(View):
+    """
+    待分配专家
+    """
+    def get(self,request):
+        pass
+
+    def post(self,request):
+        work_list = request.POST.get('')
