@@ -20,7 +20,8 @@
 
 .boxCard {
     width: 1000px;
-    margin-top: 0px;
+    margin-top: 20px;
+    margin-bottom: 20px;
     margin-left: auto;
     margin-right: auto;
 }
