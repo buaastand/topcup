@@ -28,7 +28,7 @@ import techworks.views as Tch
 from operation.views import ReviewWorkListView
 from django.views.generic import RedirectView
 
-from operation.views import AssignWorkListView
+from operation.views import AssignWorkListView,AssignExpertView
 
 urlpatterns = [
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root':settings.MEDIA_ROOT}),
@@ -63,7 +63,8 @@ urlpatterns = [
     path('work_list/', ExpertReviewView.list),
     #re_path(r'^static/(?P<path>.*)$', serve, {"document_root":STATIC_ROOT}),
 
-    path('assign_work/', AssignWorkListView.as_view())
+    path('assign_work/', AssignWorkListView.as_view()),
+    path('assign_expert/',AssignExpertView.as_view()),
 ]
 
 #urlpatterns += staticfiles_urlpatterns()

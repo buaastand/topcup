@@ -6,9 +6,14 @@ from users.models import Expert
 # Create your models here.
 class Review(models.Model):
     REVIEW_STATUS = (
-        (0, "未接受"),
-        (1, "已接收"),
-        (2, "已评价"),
+        (0,'邮件已发出'),
+        (1,'专家已拒绝'),
+        (2,'专家尚未评价'),
+        (3,'评价已暂存'),
+        (4,'评价已提交'),
+        # (0, "未接受"),
+        # (1, "已接收"),
+        # (2, "已评价"),
     )
     work = models.ForeignKey(WorkInfo, on_delete=models.CASCADE, verbose_name="作品")
     expert = models.ForeignKey(Expert, on_delete=models.CASCADE, verbose_name="专家")

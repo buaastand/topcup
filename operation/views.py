@@ -2,7 +2,8 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.base import View
-
+import datetime
+import json
 from competition.views import GetUserIdentitiy
 from techworks.models import WorkInfo
 from users.models import Expert
@@ -153,7 +154,7 @@ class AssignWorkListView(View):
             })
 
         user_name,user_identity = GetUserIdentitiy(request)
-        return render(request,'assignwork_list.html',{'expertlist':expertlist_ret,'worklist':worklist_ret,'useridentity':user_identity,'username':user_name})
+        return render(request,'assignwork_list.html',{'expertlist':expertlist_ret, 'worklist':worklist_ret , 'useridentity':user_identity,'username':user_name})
 
 class AssignExpertView(View):
     """
@@ -163,4 +164,42 @@ class AssignExpertView(View):
         pass
 
     def post(self,request):
-        work_list = request.POST.get('')
+        expert_list = request.POST.get('selected_expert')
+        expert_list = json.loads(expert_list)
+        work_list = request.POST.get('selected_work')
+        work_list = json.loads(work_list)
+
+        for expert_id in expert_list:
+            for work_id in work_list:
+                review = Review()
+                review.work = work_id
+                review.expert = expert_id
+                review.add_time = datetime.date.today
+                review.review_status = 0 #邮件刚刚发出的状态
+                review.save()
+        cpt_name = WorkInfo.objects.get(work_id=work_list[0]).registration.competition.title
+
+
+        # ref：https://www.cnblogs.com/lovealways/p/6701662.html
+        import smtplib
+        from email.mime.text import MIMEText
+        sender = '1102616394@qq.com'
+        passwd = 'zkgiepqbxtrubahb'
+        s = smtplib.SMTP_SSL('smtp.qq.com', 465)
+        s.login(sender, passwd)
+        for expert_id in expert_list:
+            receiver = Expert.objects.get(user_id=expert_id).user.email
+            subject = '邀请参加'+'\"'+cpt_name+'\"'+'作品评审'
+            content = '这是email内容'
+            msg = MIMEText(content)
+            msg['Subject'] = subject
+            msg['From'] = sender
+            msg['To'] = receiver
+            try:
+                s.sendmail(sender,receiver,msg.as_string())
+            except:
+                pass
+        s.quit()
+
+
+
