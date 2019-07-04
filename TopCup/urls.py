@@ -61,6 +61,7 @@ urlpatterns = [
     # path('judge/', ExpertReviewView.judge),
 
     path('reviewworklist/', Opt.ExpertReviewListView.as_view()),
+    path('downloadZip/', Opt.DownLoadZip),
 
     path('work_list/', Opt.ExpertReviewView.list),
     #re_path(r'^static/(?P<path>.*)$', serve, {"document_root":STATIC_ROOT}),

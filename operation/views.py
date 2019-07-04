@@ -1,21 +1,38 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.base import View
-import datetime
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+import datetime, zipfile, tempfile, os
+from wsgiref.util import FileWrapper
 
 from competition.views import GetUserIdentitiy
 from competition.models import Competition
-from techworks.models import WorkInfo
+from techworks.models import WorkInfo, Appendix
 from users.models import Expert
 from .models import Review
+from TopCup.settings import MEDIA_ROOT
 
 
 # Create your views here.
-def DownLoadPDF(request):
-    pass
+def DownLoadZip(request):
+    review = Review.objects.get(id = request.GET.get('id'))
+    work = WorkInfo.objects.get(id=review.work_id)
+    appendix_list = Appendix.objects.filter(work__work_id=work.work_id)
+    temp = tempfile.TemporaryFile()
+    archive = zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED)
+    for appendix in appendix_list:
+        target_file = os.path.join(MEDIA_ROOT, str(appendix.file)).replace('\\', '/')
+        archive.write(target_file, appendix.filename)
 
-
+    archive.close()
+    data = temp.tell()
+    temp.seek(0)
+    wrapper = FileWrapper(temp)
+    response = HttpResponse(wrapper, content_type='application/zip')
+    response['Content-Disposition'] = 'attachment; filename=test' + '.zip'
+    response['Content-Length'] = data
+    return response
 
 
 class ExpertReviewListView(View):
@@ -26,8 +43,9 @@ class ExpertReviewListView(View):
         review_list = Review.objects.filter(expert__user_id=user_id)
 
         TAG_MAP = {
-            1: "未评审",
-            2: "已评审"
+            2: "未评审",
+            3: "已评审",
+            4: "已提交"
         }
 
         for review in review_list:
@@ -35,7 +53,7 @@ class ExpertReviewListView(View):
             if work.work_type == 1:
                 review_invention_ret.append({
                     'id': review.id,
-                    'tilte': work.title,
+                    'title': work.title,
                     'keywords': work.keywords,
                     'score': review.score,
                     'tag': TAG_MAP[review.review_status]
@@ -43,16 +61,27 @@ class ExpertReviewListView(View):
             else:
                 review_report_ret.append({
                     'id': review.id,
-                    'tilte': work.title,
+                    'title': work.title,
                     'keywords': work.keywords,
                     'score': review.score,
                     'tag': TAG_MAP[review.review_status]
                 })
 
+        paginator1 = Paginator(review_invention_ret, 10)  # 每页10条
+        paginator2 = Paginator(review_report_ret, 10)
+        total1 = len(review_invention_ret)
+        total2 = len(review_report_ret)
+        list1 = paginator1.page(1)
+        list2 = paginator2.page(1)
+        page = request.GET.get('page')
+
         user_name, user_identity = GetUserIdentitiy(request)
         return render(request, 'ExpertReviewWorkList.html', {'invention': review_invention_ret,
                                                              'report': review_report_ret,
+                                                             'num1': list1.number, 'total1': total1,
+                                                             'num2': list2.number, 'total2': total2,
                                                              'username': user_name, 'useridentity': user_identity})
+
 
 class ExpertReviewView(View):
     def list(request):
@@ -124,6 +153,7 @@ class ExpertReviewView(View):
             Review.objects.create(work_id=work_id, expert_id=expert_id, score=0, comment='', review_status=0, add_time='2019-07-02')
             return JsonResponse({'status': 0}, safe=False)
 
+
 class AssignWorkListView(View):
     """
     展示待分配作品列表
@@ -164,6 +194,7 @@ class AssignWorkListView(View):
 
         user_name,user_identity = GetUserIdentitiy(request)
         return render(request,'assignwork_list.html',{'expertlist':expertlist_ret,'worklist':worklist_ret,'useridentity':user_identity,'username':user_name})
+
 
 class AssignExpertView(View):
     """

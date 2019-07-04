@@ -186,7 +186,6 @@
                           action=""
                           multiple
                           accept=".pdf"
-                          :limit="3"
                           :on-exceed="handleExceed"
                           :on-change="document_path_file"
                           {% if work.submitted == 0 %}:on-remove="deleteFile"{% endif %}
