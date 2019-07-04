@@ -99,3 +99,14 @@
     margin-top: 15px;
 }
 
+.image-slot, .demo-image__placeholder .image-slot {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 108px;
+    height: 80px;
+    background: #f5f7fa;
+    color: #909399;
+    font-size: 14px;
+}
+
