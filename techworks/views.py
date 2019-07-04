@@ -14,6 +14,9 @@ import json
 import docx
 from docx import Document
 import re
+import comtypes.client
+import time
+
 from docx.shared import Pt
 
 
@@ -265,22 +268,14 @@ def generatePdf(request):
         document = Document(path)  # 读入文件
         work_info = WorkInfo.objects.get(work_id=workid)
         registration = work_info.registration
-
-        # pappp=1
-        # for par in document.paragraphs:
-        #     print(par.text)
-        #     print(pappp)
-        #     pappp=pappp+1
-
-        #获取段落文字
-        para=document.paragraphs
-        para[0].text=re.sub("（系统自动生成）", workid, para[0].text)
+        # 获取段落文字
+        para = document.paragraphs
+        para[0].text = re.sub("（系统自动生成）", workid, para[0].text)
         para[8].text = re.sub("（名称）", work_info.title, para[8].text)
-        if(work_info.work_type==1):
-            para[12].text=re.sub("□","☑",para[12].text)
-        elif(work_info.work_type==2):
-            para[13].text=re.sub("□","√",para[13].text)
-
+        if (work_info.work_type == 1):
+            para[12].text = re.sub("□", "☑", para[12].text)
+        elif (work_info.work_type == 2):
+            para[13].text = re.sub("□", "☑", para[13].text)
 
         tables = document.tables  # 获取文件中的表格集
         table = tables[0]  # 获取文件中的第一个表格
@@ -303,6 +298,7 @@ def generatePdf(request):
         table.cell(0, 6).text = auth.stu_id
         table.cell(0, 8).text = auth.birthdate.strftime("%Y-%m-%d")
         # 替换学历
+
         degreechange = r"（  ）"
         if (auth.degree == 1):
             table.cell(1, 3).text = re.sub(degreechange, "（A）", table.cell(1, 3).text)
@@ -337,11 +333,6 @@ def generatePdf(request):
             row = row + 1
         # 表格2
         table2 = tables[1]  # 获取文件中的第二个表格
-        # print(table2)
-        # for i in range(0, len(table2.rows)):  # 从表格第一行开始循环读取表格数据
-        #     result = table2.cell(i, 0).text + "" + table2.cell(i, 1).text
-        #     # cell(i,0)表示第(i+1)行第1列数据，以此类推
-        #     print(result)
         table2.cell(0, 1).text = work_info.title
         fieldchange = r"（  ）"
         if (work_info.field == 1):
@@ -357,10 +348,29 @@ def generatePdf(request):
         elif (work_info.field == 6):
             table2.cell(1, 1).text = re.sub(fieldchange, "（F）", table2.cell(1, 1).text)
 
-        table2.cell(2,1).text=work_info.detail
-        table2.cell(3,1).text=work_info.innovation
-        table2.cell(4,1).text=work_info.keywords
+        table2.cell(2, 1).text = work_info.detail
+        table2.cell(3, 1).text = work_info.innovation
+        table2.cell(4, 1).text = work_info.keywords
+        print(table2.cell(5, 1).text)
+        print(table2.cell(6, 1).text)
+        labellist = json.loads(work_info.labels)['labels']
+        labellist=list(map(int,labellist))
+        labellist.sort(reverse=True)
 
+        position = ()
+        if (work_info.work_type == 1):
+            position = (5, 1)
+        elif (work_info.work_type == 2):
+            position = (6, 1)
+        opt_list = table2.cell(*position).text.split("□")[1:]
+        num = len(opt_list)
+        checklist = ["□" for i in range(num)]
+        for i in labellist:
+            checklist[i - 1] = "☑"
+        check_result = ""
+        for check, opt in zip(checklist, opt_list):
+            check_result += check + opt
+        table2.cell(*position).text = check_result
         document.save('static/pdf/fulltable.docx')
 
     return JsonResponse({'ret': 'Reply for work_id'})
