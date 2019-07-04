@@ -57,13 +57,12 @@ urlpatterns = [
     path('cptchange/', Cpt.CompetitionChange),
     # path('expert_review/',ExpertReviewView.as_view(),name='expertReview_View'),
 
-    # path('judge_work/', ExpertReviewView.show),
-    # path('judge/', ExpertReviewView.judge),
-
     path('reviewworklist/', Opt.ExpertReviewListView.as_view()),
     path('downloadZip/', Opt.DownLoadZip),
+    path('judge/', Opt.Judge),
 
-    path('work_list/', Opt.ExpertReviewView.list),
+    path('work_list/', Opt.ExpertReviewListView.as_view()),
+    path('work_review/', Opt.ExpertReviewView.as_view()),
     #re_path(r'^static/(?P<path>.*)$', serve, {"document_root":STATIC_ROOT}),
 
     path('assign_work/', AssignWorkListView.as_view()),
