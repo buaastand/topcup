@@ -44,12 +44,17 @@
                 <el-table-column
                     label="作品ID"
                     prop="work_id"
-                    width="120">
+                    width="120"
+                    column-key="work_id"
+                    sortable>
                 </el-table-column>
                 <el-table-column
                     label="作品名称"
                     prop="title"
-                    width="400">
+                    width="400"
+                    column-key="title"
+                    sortable
+                    show-overflow-tooltip>
                 </el-table-column>
                 <el-table-column
                     label="作品类别"
@@ -63,9 +68,21 @@
                     prop="field"
                     :filters="fieldFilters"
                     :filter-method="filterHandler"
-                    show-overflow-tooltip>
+                    >
                 </el-table-column>
           </el-table>
+        </div>
+
+        <div style="width:100%; margin-top: 10px; text-align: center">
+            <el-pagination
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+              :current-page="currentPage4"
+              :page-sizes="[10, 20, 30, 40]"
+              :page-size="100"
+              layout="total, sizes, prev, pager, next, jumper"
+              :total="400">
+            </el-pagination>
         </div>
 
         <el-dialog
@@ -106,6 +123,7 @@
             data: {
                 dialogVisible: false,
                 workTableData: {{ worklist | safe }},
+                totalWork: '',
                 expertTableData: {{ expertlist | safe }},
                 wmultipleSelection: [],
                 emultipleSelection: [],
@@ -144,6 +162,12 @@
                 filterHandler(value, row, column) {
                     const property = column['property'];
                     return row[property] === value;
+                },
+                handleSizeChange(val) {
+                    console.log(`每页 ${val} 条`);
+                },
+                handleCurrentChange(val) {
+                    console.log(`当前页: ${val}`);
                 },
                 selectExpert() {
                     if (this.wmultipleSelection.length > 0) {
