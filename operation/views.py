@@ -4,47 +4,56 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.base import View
 
 from competition.views import GetUserIdentitiy
+from competition.models import Competition
 from techworks.models import WorkInfo
 from users.models import Expert
 from .models import Review
 
 
 # Create your views here.
-class ReviewWorkListView(View):
-    # @login_required(login_url='/login/')
+def DownLoadPDF(request):
+    pass
+
+
+
+
+class ExpertReviewListView(View):
     def get(self, request):
-        # if request.GET.get('workid', None) is None:
-        #     WorkInfo.objects.create()
-        worklist_origin = WorkInfo.objects.all()[:10]
-        # work = WorkInfo.objects.get(work_id='1').wo
-        WORKTYPE_MAP = {
-            1: "科技发明制作",
-            2: "调查报告和学术论文"
+        user_id = request.user.id
+        review_invention_ret = []
+        review_report_ret = []
+        review_list = Review.objects.filter(expert__user_id=user_id)
+
+        TAG_MAP = {
+            1: "未评审",
+            2: "已评审"
         }
-        FIELD_MAP = {
-            1: "A",
-            2: "B",
-            3: "C",
-            4: "D",
-            5: "E",
-            6: "F",
-        }
-        worklist_ret = []
-        for work in worklist_origin:
-            worklist_ret.append({
-                'work_id': work.work_id,
-                'first_author': work.registration.first_auth.name,
-                'title': work.title,
-                'work_type': WORKTYPE_MAP[work.work_type],
-                'field': FIELD_MAP[work.field],
-                'competition': work.registration.competition.title,
-                'submitted': "已提交" if work.submitted else "暂存",
-            })
+
+        for review in review_list:
+            work = WorkInfo.objects.get(id=review.work_id)
+            if work.work_type == 1:
+                review_invention_ret.append({
+                    'id': review.id,
+                    'tilte': work.title,
+                    'keywords': work.keywords,
+                    'score': review.score,
+                    'tag': TAG_MAP[review.review_status]
+                })
+            else:
+                review_report_ret.append({
+                    'id': review.id,
+                    'tilte': work.title,
+                    'keywords': work.keywords,
+                    'score': review.score,
+                    'tag': TAG_MAP[review.review_status]
+                })
 
         user_name, user_identity = GetUserIdentitiy(request)
-        return render(request, 'reviewwork_list.html', {'worklist': worklist_ret,'useridentity':user_identity})
+        return render(request, 'ExpertReviewWorkList.html', {'invention': review_invention_ret,
+                                                             'report': review_report_ret,
+                                                             'username': user_name, 'useridentity': user_identity})
 
-class ExpertReviewView():
+class ExpertReviewView(View):
     def list(request):
         return render(request, 'work-list.html')
 

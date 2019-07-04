@@ -189,7 +189,7 @@
                           :limit="3"
                           :on-exceed="handleExceed"
                           :on-change="document_path_file"
-                          {% if work.submitted %}:on-remove="deleteFile"{% endif %}
+                          {% if work.submitted == 0 %}:on-remove="deleteFile"{% endif %}
                           :file-list="techworkForm.document_list"
                           :on-preview="downloadFile"
                           :auto-upload="false"
@@ -208,7 +208,7 @@
                           :limit="5"
                           :on-exceed="handleExceed"
                           :on-change="photo_path_file"
-                          {% if work.submitted %}:on-remove="deleteFile"{% endif %}
+                          {% if work.submitted == 0 %}:on-remove="deleteFile"{% endif %}
                           :file-list="techworkForm.photo_list"
                           :on-preview="downloadFile"
                           :auto-upload="false"
@@ -227,7 +227,7 @@
                           :limit="1"
                           :on-exceed="handleExceed"
                           :on-change="video_path_file"
-                          {% if work.submitted %}:on-remove="deleteFile"{% endif %}
+                          {% if work.submitted == 0 %}:on-remove="deleteFile"{% endif %}
                           :file-list="techworkForm.video_list"
                           :on-preview="downloadFile"
                           :auto-upload="false"

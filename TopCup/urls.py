@@ -21,11 +21,10 @@ from TopCup import settings
 from users.views import ExpertManage
 
 from django.urls import path,re_path
-from operation.views import ExpertReviewView
 
 import competition.views as Cpt
 import techworks.views as Tch
-from operation.views import ReviewWorkListView
+import operation.views as Opt
 from django.views.generic import RedirectView
 urlpatterns = [
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root':settings.MEDIA_ROOT}),
@@ -34,13 +33,13 @@ urlpatterns = [
     path('index/', Cpt.CompetitionList),
     path('competitionlist/', Cpt.CompetitionList),
     path('techworklist/', Tch.TechWorkListView.as_view()),
-    path('reviewworklist/', ReviewWorkListView.as_view()),
     path('techworksubmit/', Tch.TechWorkView.as_view()),
     path('stusearch/',Tch.searchstu),
     path('deletework/',Tch.deletework),
     re_path(r'^favicon.ico',RedirectView.as_view(url=r'/static/favicon.ico')),
     path('competitionlist/?selected=0', Cpt.CompetitionList,name='competitionlist'),
     path('deletecpt/',Cpt.DeleteCompetition),
+
     path('expert/', ExpertManage.list),
     path('expert_detail/', ExpertManage.expert_detail),
     path('expert_change/', ExpertManage.change),
@@ -55,10 +54,12 @@ urlpatterns = [
     path('cptchange/', Cpt.CompetitionChange),
     # path('expert_review/',ExpertReviewView.as_view(),name='expertReview_View'),
 
-    path('judge_work/', ExpertReviewView.show),
-    path('judge/', ExpertReviewView.judge),
+    # path('judge_work/', ExpertReviewView.show),
+    # path('judge/', ExpertReviewView.judge),
 
-    path('work_list/', ExpertReviewView.list),
+    path('reviewworklist/', Opt.ExpertReviewListView.as_view()),
+
+    path('work_list/', Opt.ExpertReviewView.list),
     #re_path(r'^static/(?P<path>.*)$', serve, {"document_root":STATIC_ROOT}),
 ]
 

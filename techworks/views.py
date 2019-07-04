@@ -32,11 +32,13 @@ def searchstu(request):
                     }}
     return JsonResponse(ret)
 
+
 def deletework(request):
     work_id = request.GET.get('work_id')
     work = WorkInfo.objects.filter(work_id=work_id)
     work.delete()
     return HttpResponse(status=200)
+
 
 # @login_required(login_url='/login/')
 # @method_decorator(login_required,name='dispatch')
@@ -119,7 +121,7 @@ class TechWorkView(View):
                     first_auth=Student.objects.get(user__username=username),
                     competition=Competition.objects.get(id=comptition_id))
                 registration.save()
-                work_cnt = int(time.time())*100 + random.randint(0, 10000)
+                work_cnt = int(time.time())
                 work = WorkInfo.objects.create(registration=registration, title="", detail="", innovation="",
                                                keywords="", avg_score=0, work_id=work_cnt, work_type=1,
                                                field=1)
@@ -155,11 +157,11 @@ class TechWorkView(View):
             filelist = Appendix.objects.filter(work__work_id=work.work_id)
 
             for file in filelist:
-                if(file.appendix_type == 0):
-                    file_docu.append({"name": file.filename,"url": file.file.url})
-                if(file.appendix_type == 1):
+                if file.appendix_type == 0:
+                    file_docu.append({"name": file.filename, "url": file.file.url})
+                elif file.appendix_type == 1:
                     file_photo.append({"name": file.filename, "url": file.file.url})
-                if (file.appendix_type == 2):
+                elif file.appendix_type == 2:
                     file_video.append({"name": file.filename, "url": file.file.url})
 
         user_name, user_identity = GetUserIdentitiy(request)
@@ -265,3 +267,62 @@ class TechWorkView(View):
         #     baseuser.type = 1
         #     baseuser.email = email
         #     baseuser.save()
+
+
+class TechWorkReview(View):
+    def  get(self, request):
+        work_id = request.GET.get('workid', None)
+        username = request.user.username
+        work = None
+        company_ret = []
+        show_list = []
+        invest_list = []
+        file_docu = []
+        file_photo = []
+        file_video = []
+        if work_id is None:
+            return HttpResponse(status=400)     #作品不存在
+
+        else:
+            work = WorkInfo.objects.get(work_id=work_id)
+            registration = work.registration
+            company = []
+            if registration.second_auth is not None:
+                auth = registration.second_auth
+                company.append(registration.second_auth)
+            if registration.third_auth is not None:
+                company.append(registration.third_auth)
+            if registration.forth_auth is not None:
+                company.append(registration.forth_auth)
+            if registration.fifth_auth is not None:
+                company.append(registration.fifth_auth)
+            for auth in company:
+                company_ret.append({"stu_id": auth.stu_id,
+                                    "name": auth.name,
+                                    "degree": auth.degree,
+                                    "phone": auth.phone,
+                                    "email": auth.user.email})
+            if work.work_type == 1:
+                show_list = json.loads(work.labels)['labels']
+            else:
+                invest_list = json.loads(work.labels)['labels']
+
+            filelist = Appendix.objects.filter(work__work_id=work.work_id)
+
+            for file in filelist:
+                if file.appendix_type == 0:
+                    file_docu.append({"name": file.filename, "url": file.file.url})
+                elif file.appendix_type == 1:
+                    file_photo.append({"name": file.filename, "url": file.file.url})
+                elif file.appendix_type == 2:
+                    file_video.append({"name": file.filename, "url": file.file.url})
+
+        user_name, user_identity = GetUserIdentitiy(request)
+        return render(request, 'submit_techwork.html', {'work': work, 'company': company_ret,
+                                                        'show_list': show_list, 'invest_list': invest_list,
+                                                        'docu': file_docu, 'photo': file_photo, 'video': file_video,
+                                                        'username': user_name, 'useridentity': user_identity})
+
+    def post(self, request):
+        pass
+
