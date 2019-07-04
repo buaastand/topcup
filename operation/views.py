@@ -60,9 +60,9 @@ class ExpertReviewView():
             review = Review.objects.filter(work=work, expert=expert)
             if len(review) > 0:
                 review = review[0]
-                if review.review_status == 0:  # 还没评过
+                if review.review_status == 2:  # 还没评过
                     return render(request, 'judgeWork.html',
-                                  {'status': 0, 'score': 50, 'expert_id': expert_id, 'work_id': work_id,
+                                  {'status': 2, 'score': 50, 'expert_id': expert_id, 'work_id': work_id,
                                    'useridentity': user_identity})
                 else:  # 暂存或评价过
                     return render(request, 'judgeWork.html',
@@ -72,7 +72,7 @@ class ExpertReviewView():
                 Review.objects.create(work=work, expert=expert, score=50, comment='', review_status=0,
                                       add_time='2019-07-02')
                 return render(request, 'judgeWork.html',
-                              {'status': 50, 'score': 0, 'expert_id': expert_id, 'work_id': work_id,
+                              {'status': 2, 'score': 50, 'expert_id': expert_id, 'work_id': work_id,
                                'useridentity': user_identity})
         except Exception as e:
             print(e)
@@ -105,11 +105,11 @@ class ExpertReviewView():
         print(work_id, expert_id)
         try:
             review = Review.objects.get(work_id=work_id, expert_id=expert_id)
-            if review.review_status == 0: #还没评过
-                return JsonResponse({'status':0}, safe=False)
+            if review.review_status == 2: #还没评过
+                return JsonResponse({'status':2}, safe=False)
                 # return render(request, 'judgeWork.html', {'status': 0})
             else: #暂存或评价过
                 return JsonResponse({'status':review.review_status, 'score':review.score, 'comment':review.comment}, safe=False)
         except:
             Review.objects.create(work_id=work_id, expert_id=expert_id, score=0, comment='', review_status=0, add_time='2019-07-02')
-            return JsonResponse({'status': 0}, safe=False)
+            return JsonResponse({'status': 2}, safe=False)

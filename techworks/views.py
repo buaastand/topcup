@@ -13,8 +13,6 @@ import datetime, time, random
 import json
 import docx
 from docx import Document
-import static.pdf
-
 
 # Create your views here.
 def searchstu(request):
@@ -253,14 +251,21 @@ class TechWorkView(View):
         #     baseuser.save()
 
 def generatePdf(request):
-    workid= request.POST.get('workid')
+    if request.method == 'POST':
+        print('收到post')
+        workid= request.POST.get('workid')
+        print(workid)
+        path = 'static/pdf/emptytable.docx'
+        document = Document(path)  # 读入文件
+        for par in document.paragraphs:
+            print(par.text)
+        work_info = WorkInfo.objects.get(work_id=workid)
+    return JsonResponse({'ret':'Reply for work_id'})
 
-    path = "../static/pdf/科技竞赛作品提交表.docx"
-    print(path)
-    document = Document(path)  # 读入文件
-    tables = document.tables  # 获取文件中的表格集
-    table = tables[0]  # 获取文件中的第一个表格
-    for i in range(1, len(table.rows)):  # 从表格第二行开始循环读取表格数据
-        result = table.cell(i, 0).text + "" + table.cell(i, 1).text +table.cell(i, 2).text + table.cell(i, 3).text
-        # cell(i,0)表示第(i+1)行第1列数据，以此类推
-        print(result)
+
+    # tables = document.tables  # 获取文件中的表格集
+    # table = tables[0]  # 获取文件中的第一个表格
+    # for i in range(1, len(table.rows)):  # 从表格第二行开始循环读取表格数据
+    #     result = table.cell(i, 0).text + "" + table.cell(i, 1).text +table.cell(i, 2).text + table.cell(i, 3).text
+    #     # cell(i,0)表示第(i+1)行第1列数据，以此类推
+    #     print(result)

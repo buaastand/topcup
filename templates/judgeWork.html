@@ -26,7 +26,7 @@
     </div>
 </div>
 
-    <div v-if="{{status}} != '2'">
+    <div v-if="{{status}} != '4'">
 <el-form  :model="rateForm" :rules="rules" ref="rateForm" style="width: 70%;margin-left:15%">
     <el-form-item label="作品评分" prop="score">
       <el-slider
@@ -117,7 +117,7 @@
 
       submitForm1(formName) {
         this.$refs[formName].validate((valid) => {
-            this.rateForm.status=1;
+            this.rateForm.status=3;
           if (valid && (this.rateForm.score)-0 != 0) {
             {#console.log("bbbb");#}
             console.log(this.rateForm.suggestion);
@@ -140,7 +140,7 @@
       submitForm2(formName) {
         this.$refs[formName].validate((valid) => {
             console.log("aaaa");
-            this.rateForm.status=2;
+            this.rateForm.status=4;
           if (valid && (this.rateForm.score)-0 != 0) {
             console.log(this.rateForm);
             this.$http.post('../judge/',{work_id:this.work_id, expert_id:this.expert_id, status:this.rateForm.status, score:this.rateForm.score, comment:this.rateForm.suggestion},{emulateJSON:true}).then(function(res){

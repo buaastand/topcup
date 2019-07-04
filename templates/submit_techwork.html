@@ -249,6 +249,7 @@
     var app = new Vue({
         el: '#submit_techwork',
         data: {
+            work_id:{{ work.work_id }},
             techworkForm: {
                 first_author: '{{ work.registration.first_auth.name }}',
                 company_search: '',
@@ -452,12 +453,22 @@
                 window.open(file.url);
             },
             generatePdf() {
-                axios
-                    .post('/generatepdf/',{
-                        workid:{{ work.work_id }}
+                let _this = this;
+                console.log(_this.work_id);
+                let formData = new FormData();
+                formData.append('workid', _this.work_id);
+                let config = {
+                            headers: {
+                                'Content-Type': 'multipart/form-data'
+                            }
+                        };
+                axios.post('../generatepdf/',formData,  config)
+                    .then(function (response) {
+                        console.log(response);
                     })
-                    .then()
-                    .catch()
+                    .catch(function (response) {
+
+                    });
             }
         }
     })
