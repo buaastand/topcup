@@ -14,8 +14,8 @@ import json
 import docx
 from docx import Document
 import re
-import comtypes.client
-import time
+import convertapi
+
 
 from docx.shared import Pt
 
@@ -261,6 +261,7 @@ class TechWorkView(View):
         #     baseuser.save()
 
 
+
 def generatePdf(request):
     if request.method == 'POST':
         workid = request.POST.get('workid')
@@ -351,8 +352,6 @@ def generatePdf(request):
         table2.cell(2, 1).text = work_info.detail
         table2.cell(3, 1).text = work_info.innovation
         table2.cell(4, 1).text = work_info.keywords
-        print(table2.cell(5, 1).text)
-        print(table2.cell(6, 1).text)
         labellist = json.loads(work_info.labels)['labels']
         labellist=list(map(int,labellist))
         labellist.sort(reverse=True)
@@ -372,5 +371,11 @@ def generatePdf(request):
             check_result += check + opt
         table2.cell(*position).text = check_result
         document.save('static/pdf/fulltable.docx')
+        convertapi.api_secret = 'D1kgtEI0Qc5VTJpb'
+        convertapi.convert('pdf', {
+            'File': 'static/pdf/fulltable.docx'
+        }, from_format='docx').save_files('static/pdf/fulltable.pdf')
+
 
     return JsonResponse({'ret': 'Reply for work_id'})
+
