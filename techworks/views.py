@@ -13,6 +13,11 @@ import json
 
 
 # Create your views here.
+
+def work_info(request):
+
+    return render(request, "../templates/viewWorkInfo.html")
+
 def searchstu(request):
     DEGREE_MAP = {
             1: "大专",
