@@ -39,13 +39,11 @@ def searchstu(request):
     }}
     return JsonResponse(ret)
 
-
 def deletework(request):
     work_id = request.GET.get('work_id')
     work = WorkInfo.objects.filter(work_id=work_id)
     work.delete()
     return HttpResponse(status=200)
-
 
 # @login_required(login_url='/login/')
 # @method_decorator(login_required,name='dispatch')
@@ -104,8 +102,8 @@ class TechWorkListView(View):
             list = paginator.page(paginator.num_pages)
 
         user_name, user_identity = GetUserIdentitiy(request)
-        return render(request, 'techwork_list.html', {'worklist': list.object_list, 'useridentity': user_identity,
-                                                      'num': list.number, 'total': total})
+        return render(request, 'techwork_list.html', {'worklist': list.object_list,'useridentity':user_identity,
+                                                      'username':user_name, 'num':list.number,'total':total})
 
 
 class TechWorkView(View):
@@ -117,6 +115,8 @@ class TechWorkView(View):
             username = "16211086"
         work = None
         company_ret = []
+        show_list = []
+        invest_list = []
         file_docu = []
         file_photo = []
         file_video = []
@@ -126,7 +126,7 @@ class TechWorkView(View):
                     first_auth=Student.objects.get(user__username=username),
                     competition=Competition.objects.get(id=comptition_id))
                 registration.save()
-                work_cnt = int(time.time()) + random.randint(0, 10000)
+                work_cnt = int(time.time())*100 + random.randint(0, 10000)
                 work = WorkInfo.objects.create(registration=registration, title="", detail="", innovation="",
                                                keywords="", avg_score=0, work_id=work_cnt, work_type=1,
                                                field=1)
@@ -154,6 +154,10 @@ class TechWorkView(View):
                                     "degree": auth.degree,
                                     "phone": auth.phone,
                                     "email": auth.user.email})
+            if work.work_type == 1:
+                show_list = json.loads(work.labels)['labels']
+            else:
+                invest_list = json.loads(work.labels)['labels']
 
             filelist = Appendix.objects.filter(work__work_id=work.work_id)
 
@@ -166,9 +170,10 @@ class TechWorkView(View):
                     file_video.append({"name": file.filename, "url": file.file.url})
 
         user_name, user_identity = GetUserIdentitiy(request)
-        return render(request, 'submit_techwork.html',
-                      {'work': work, 'company': company_ret, 'docu': file_docu, 'photo': file_photo,
-                       'video': file_video, 'useridentity': user_identity})
+        return render(request, 'submit_techwork.html', {'work': work, 'company': company_ret,
+                                                        'show_list': show_list, 'invest_list':invest_list,
+                                                        'docu': file_docu, 'photo': file_photo, 'video': file_video,
+                                                        'username':user_name, 'useridentity':user_identity})
 
     def post(self, request):
         try:
@@ -203,6 +208,14 @@ class TechWorkView(View):
                 work.keywords = request.POST.get('keywords', work.keywords)
                 work.work_type = int(request.POST.get('work_type', work.work_type))
                 work.field = int(request.POST.get("field", work.field))
+
+                if work.work_type == 1:
+                    label_list = json.loads(request.POST.get('show_type', work.labels))
+                else:
+                    label_list = json.loads(request.POST.get('invest_type', work.labels))
+
+                work.labels = json.dumps({"labels":label_list})
+
                 work.submitted = True if int(request.POST.get("submitted", work.submitted)) == 1 else False
                 FILE_TYLE_MAP = {
                     "document": 0,
