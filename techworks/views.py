@@ -19,6 +19,7 @@ from docx.oxml.ns import qn
 
 from docx.shared import Pt
 
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 # Create your views here.
 def searchstu(request):
@@ -179,6 +180,7 @@ class TechWorkView(View):
         try:
             with transaction.atomic():
                 work_id = int(request.POST.get('work_id'))
+                print(work_id)
                 work = WorkInfo.objects.get(work_id=work_id)
                 registration = work.registration
                 AUTH_MAP = {
@@ -273,6 +275,29 @@ class TechWorkView(View):
         #     baseuser.email = email
         #     baseuser.save()
 
+def insert(document, paragraph, font, size, content, center=False):
+    # 用于对docx文档的文字插入，font为字体，size为字号，content为内容
+    p = document.paragraphs
+    run = p[paragraph].add_run(content)
+    run.font.name = font
+    # run.font.color.rgb = RGBColor(54, 95, 145)  # 颜色设置，这里是用RGB颜色
+    run.font.size = Pt(size)
+    run._element.rPr.rFonts.set(qn('w:eastAsia'), font)
+    if center == True:
+        p[paragraph].paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+def insert_chart(document, table, row, column, font, size, content, clear=False):
+    p = document.tables
+    if clear == True:
+        for i in p[table].cell(row, column).paragraphs:
+            i.clear()
+            i.text = ''
+        # p[table].cell(row, column).paragraphs[0].clear()
+    run = p[table].cell(row, column).paragraphs[0].add_run(content)
+    run.font.name = font
+    # run.font.color.rgb = RGBColor(54, 95, 145)  # 颜色设置，这里是用RGB颜色
+    run.font.size = Pt(size)
+    run._element.rPr.rFonts.set(qn('w:eastAsia'), font)
 
 
 def generatePdf(request):
@@ -284,17 +309,25 @@ def generatePdf(request):
         registration = work_info.registration
         # 获取段落文字
         para = document.paragraphs
-        para[0].text = re.sub("（系统自动生成）", workid, para[0].text)
-        para[0].font
-        para[8].text = re.sub("（名称）", work_info.title, para[8].text)
+        para[0].clear()
+        insert(document, 0, '楷体_GB2312', 15, '作品编码：  ' + workid)
+        # para[0].text = re.sub("（系统自动生成）", workid, para[0].text)
+        para[8].clear()
+        insert(document, 8, '楷体_GB2312', 15, '        作品名称：  ' + work_info.title)
+        para[9].clear()
+        insert(document, 9, '楷体_GB2312', 15, '        院系名称：  ' + registration.first_auth.department + '（签章）')
+
         if (work_info.work_type == 1):
-            para[12].text = re.sub("□", "☑", para[12].text)
+            para[12].clear()
+            insert(document, 12, '楷体_GB2312', 14, '☑科技发明制作')
+            # para[12].text = re.sub("□", "☑", para[12].text)
         elif (work_info.work_type == 2):
-            para[13].text = re.sub("□", "☑", para[13].text)
+            para[13].clear()
+            insert(document, 13, '楷体_GB2312', 14, '☑调查报告和学术论文')
+            # para[13].text = re.sub("□", "☑", para[13].text)
 
         tables = document.tables  # 获取文件中的表格集
         table = tables[0]  # 获取文件中的第一个表格
-        leng = len(table.rows)
         company = []
 
         if registration.first_auth is not None:
@@ -309,63 +342,91 @@ def generatePdf(request):
             company.append(registration.fifth_auth)
 
         # 表格1
-        table.cell(0, 3).text = auth.name
-        table.cell(0, 6).text = auth.stu_id
-        table.cell(0, 8).text = auth.birthdate.strftime("%Y-%m-%d")
-        # 替换学历
 
+        # table.cell(0, 3).text = auth.name
+        # table.cell(0, 6).text = auth.stu_id
+        # table.cell(0, 8).text = auth.birthdate.strftime("%Y-%m-%d")
+        insert_chart(document, 0, 0, 3, '仿宋_GB2312', 14, auth.name)
+        insert_chart(document, 0, 0, 6, '仿宋_GB2312', 14, auth.stu_id)
+        insert_chart(document, 0, 0, 8, '仿宋_GB2312', 14, auth.birthdate.strftime("%Y-%m-%d"))
+
+
+        # 替换学历
+        #（  ）A大专  B大学本科  C硕士研究生  D博士研究生（  ）A大专  B大学本科  C硕士研究生  D博士研究生
         degreechange = r"（  ）"
         if (auth.degree == 1):
-            table.cell(1, 3).text = re.sub(degreechange, "（A）", table.cell(1, 3).text)
+            insert_chart(document, 0, 1, 3, '仿宋_GB2312', 14, '（ A ）A大专  B大学本科  C硕士研究生  D博士研究生', True)
         elif (auth.degree == 2):
-            table.cell(1, 3).text = re.sub(degreechange, "（B）", table.cell(1, 3).text)
+            insert_chart(document, 0, 1, 3, '仿宋_GB2312', 14, '（ B ）A大专  B大学本科  C硕士研究生  D博士研究生', True)
         elif (auth.degree == 3):
-            table.cell(1, 3).text = re.sub(degreechange, "（C）", table.cell(1, 3).text)
+            insert_chart(document, 0, 1, 3, '仿宋_GB2312', 14, '（ C ）A大专  B大学本科  C硕士研究生  D博士研究生', True)
         elif (auth.degree == 4):
-            table.cell(1, 3).text = re.sub(degreechange, "（D）", table.cell(1, 3).text)
+            insert_chart(document, 0, 1, 3, '仿宋_GB2312', 14, '（ D ）A大专  B大学本科  C硕士研究生  D博士研究生', True)
         # 第一作者
-        table.cell(2, 3).text = auth.major
-        table.cell(2, 8).text = auth.enroll_time.strftime("%Y-%m-%d")
-        table.cell(3, 4).text = work_info.title
-        table.cell(4, 3).text = auth.address
-        table.cell(4, 8).text = auth.phone
-        table.cell(5, 8).text = auth.user.email
+        # table.cell(2, 3).text = auth.major
+        # table.cell(2, 8).text = auth.enroll_time.strftime("%Y-%m-%d")
+        # table.cell(3, 4).text = work_info.title
+        # table.cell(4, 3).text = auth.address
+        # table.cell(4, 8).text = auth.phone
+        # table.cell(5, 8).text = auth.user.email
+        insert_chart(document, 0, 2, 3, '仿宋_GB2312', 14, auth.major)
+        insert_chart(document, 0, 2, 8, '仿宋_GB2312', 14, auth.enroll_time.strftime("%Y-%m-%d"))
+        insert_chart(document, 0, 3, 4, '仿宋_GB2312', 14, work_info.title)
+        insert_chart(document, 0, 4, 3, '仿宋_GB2312', 14, auth.address)
+        insert_chart(document, 0, 4, 8, '仿宋_GB2312', 14, auth.phone)
+        insert_chart(document, 0, 5, 8, '仿宋_GB2312', 14, auth.user.email)
+
         # 其他合作者
         row = 7
         for i in company:
-            table.cell(row, 1).text = i.name
-            table.cell(row, 2).text = i.stu_id
+            insert_chart(document, 0, row, 1, '仿宋_GB2312', 14, i.name)
+            insert_chart(document, 0, row, 2, '仿宋_GB2312', 14, i.stu_id)
+            # table.cell(row, 1).text = i.name
+            # table.cell(row, 2).text = i.stu_id
             if (i.degree == 1):
-                table.cell(row, 3).text = "大专"
+                insert_chart(document, 0, row, 3, '仿宋_GB2312', 14, '大专')
+                # table.cell(row, 3).text = "大专"
             elif (i.degree == 2):
-                table.cell(row, 3).text = "大学本科"
+                insert_chart(document, 0, row, 3, '仿宋_GB2312', 14, '大学本科')
+                # table.cell(row, 3).text = "大学本科"
             elif (i.degree == 3):
-                table.cell(row, 3).text = "硕士研究生"
+                insert_chart(document, 0, row, 3, '仿宋_GB2312', 14, '硕士研究生')
+                # table.cell(row, 3).text = "硕士研究生"
             elif (i.degree == 4):
-                table.cell(row, 3).text = "博士研究生"
-            table.cell(row, 6).text = i.phone
-            table.cell(row, 7).text = i.user.email
+                insert_chart(document, 0, row, 3, '仿宋_GB2312', 14, '博士研究生')
+                # table.cell(row, 3).text = "博士研究生"
+            insert_chart(document, 0, row, 6, '仿宋_GB2312', 14, i.phone)
+            insert_chart(document, 0, row, 7, '仿宋_GB2312', 14, i.user.email)
+            # table.cell(row, 6).text = i.phone
+            # table.cell(row, 7).text = i.user.email
             row = row + 1
         # 表格2
         table2 = tables[1]  # 获取文件中的第二个表格
-        table2.cell(0, 1).text = work_info.title
+        insert_chart(document, 1, 0, 1, '仿宋_GB2312', 14, work_info.title)
+        # table2.cell(0, 1).text = work_info.title
         fieldchange = r"（  ）"
         if (work_info.field == 1):
-            table2.cell(1, 1).text = re.sub(fieldchange, "（A）", table2.cell(1, 1).text)
+            table2.cell(1, 1).text = re.sub(fieldchange, "（A）\n", table2.cell(1, 1).text)
         elif (work_info.field == 2):
-            table2.cell(1, 1).text = re.sub(fieldchange, "（B）", table2.cell(1, 1).text)
+            table2.cell(1, 1).text = re.sub(fieldchange, "（B）\n", table2.cell(1, 1).text)
         elif (work_info.field == 3):
-            table2.cell(1, 1).text = re.sub(fieldchange, "（C）", table2.cell(1, 1).text)
+            table2.cell(1, 1).text = re.sub(fieldchange, "（C）\n", table2.cell(1, 1).text)
         elif (work_info.field == 4):
-            table2.cell(1, 1).text = re.sub(fieldchange, "（D）", table2.cell(1, 1).text)
+            table2.cell(1, 1).text = re.sub(fieldchange, "（D）\n", table2.cell(1, 1).text)
         elif (work_info.field == 5):
-            table2.cell(1, 1).text = re.sub(fieldchange, "（E）", table2.cell(1, 1).text)
+            table2.cell(1, 1).text = re.sub(fieldchange, "（E）\n", table2.cell(1, 1).text)
         elif (work_info.field == 6):
-            table2.cell(1, 1).text = re.sub(fieldchange, "（F）", table2.cell(1, 1).text)
+            table2.cell(1, 1).text = re.sub(fieldchange, "（F）\n", table2.cell(1, 1).text)
 
-        table2.cell(2, 1).text = work_info.detail
-        table2.cell(3, 1).text = work_info.innovation
-        table2.cell(4, 1).text = work_info.keywords
+        field_temp = table2.cell(1, 1).text
+        insert_chart(document, 1, 1, 1, '仿宋_GB2312', 14, field_temp, True)
+
+        insert_chart(document, 1, 2, 1, '仿宋_GB2312', 14, work_info.detail, True)
+        insert_chart(document, 1, 3, 1, '仿宋_GB2312', 14, work_info.innovation, True)
+        insert_chart(document, 1, 4, 1, '仿宋_GB2312', 14, work_info.keywords, True)
+        # table2.cell(2, 1).text = work_info.detail
+        # table2.cell(3, 1).text = work_info.innovation
+        # table2.cell(4, 1).text = work_info.keywords
         labellist = json.loads(work_info.labels)['labels']
         labellist=list(map(int,labellist))
         labellist.sort(reverse=True)
@@ -384,7 +445,16 @@ def generatePdf(request):
         for check, opt in zip(checklist, opt_list):
             check_result += check + opt
         table2.cell(*position).text = check_result
+
+        if work_info.work_type == 2:
+            temp = document.tables[1].cell(6, 1).paragraphs[0].text
+            insert_chart(document, 1, 6, 1, '仿宋_GB2312', 14, temp, True)
+        else:
+            temp = document.tables[1].cell(5, 1).paragraphs[0].text
+            insert_chart(document, 1, 5, 1, '仿宋_GB2312', 14, temp, True)
+
         document.save('static/pdf/fulltable.docx')
+
         convertapi.api_secret = 'D1kgtEI0Qc5VTJpb'
         convertapi.convert('pdf', {
             'File': 'static/pdf/fulltable.docx'
