@@ -15,7 +15,7 @@ import docx
 from docx import Document
 import re
 import convertapi
-
+from docx.oxml.ns import qn
 
 from docx.shared import Pt
 
@@ -285,6 +285,7 @@ def generatePdf(request):
         # 获取段落文字
         para = document.paragraphs
         para[0].text = re.sub("（系统自动生成）", workid, para[0].text)
+        para[0].font
         para[8].text = re.sub("（名称）", work_info.title, para[8].text)
         if (work_info.work_type == 1):
             para[12].text = re.sub("□", "☑", para[12].text)
