@@ -93,7 +93,8 @@
             title="可选专家"
             :visible.sync="dialogVisible"
             width="800px"
-            :before-close="handleClose">
+            :before-close="handleClose"
+            v-loading="loading">
             <div style="width: 740px; margin:0 auto 0 auto">
                 <el-table ref="multipleTable" 
                     :data="expertTableData" 
@@ -140,6 +141,7 @@
             el: '#AssignworkList',
             data: {
                 dialogVisible: false,
+                loading:false,
 
                 workFilters: {
                     'work_type': ALL_WORK_TYPE,
@@ -225,9 +227,12 @@
                     .catch(_ => {});
                 },
                 matchWorksAndExperts(){
+                    this.loading = true;
+
                     var em_length = this.emultipleSelection.length;
                     if (em_length < 3) {
                         this.$message.error('请至少选择三名专家！');
+                        this.loading = false;
                         return;
                     }
 
@@ -251,11 +256,22 @@
                         'selected_expert': JSON.stringify(selected_expert),},
                         {emulateJSON:true}
                     )
-                    .then(response => {console.log(response)})
+                    .then(response => {
+                        console.log(response);
+                        if(response.body.Message == 0){
+                            this.$message({message:'分配成功！', type:'success'});
+                            window.open('../assign_work/', '_self');
+                        }
+                        else{
+                            this.$message.error('分配失败！');
+                        }
+                        this.loading = false;
+                    })
                     .catch(function (error) { // 请求失败处理
                         console.log(error);
                         this.$message.error('分配失败！');
                         this.dialogVisible = false;
+                        this.loading = false;
                     });
                 },
                 test(filters){
