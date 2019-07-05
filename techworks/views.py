@@ -36,6 +36,22 @@ def work_info(request):
     labellist = list(map(int, labelList))
     authorList = []
 
+    firstAuthor = {}
+    firstAuthor['name'] = workFirstAuthorInfo.name
+    firstAuthor['stu_id'] = workFirstAuthorInfo.stu_id
+    firstAuthor['birthdate'] = str(workFirstAuthorInfo.birthdate.year) + "-"
+    if workFirstAuthorInfo.birthdate.month < 10:
+        firstAuthor['birthdate'] = firstAuthor['birthdate'] + "0" + str(workFirstAuthorInfo.birthdate.month)
+    else:
+        firstAuthor['birthdate'] = firstAuthor['birthdate'] + str(workFirstAuthorInfo.birthdate.month)
+    firstAuthor['degree'] = DEGREE[workFirstAuthorInfo.degree]
+    firstAuthor['major'] = workFirstAuthorInfo.major
+    firstAuthor['enroll_time'] = str(workFirstAuthorInfo.enroll_time)
+    firstAuthor['address'] = workFirstAuthorInfo.address
+    firstAuthor['phone'] = workFirstAuthorInfo.phone
+    firstAuthor['email'] = workFirstAuthorInfo.user.email
+
+
     if(workAuthor.second_auth_id):
         workSecondAuthorInfo = Student.objects.get(user_id=workAuthor.second_auth_id)
         authorList.append({'name': workSecondAuthorInfo.name,
@@ -64,7 +80,7 @@ def work_info(request):
                            'phone': workForthAuthorInfo.phone,
                            'email': workForthAuthorInfo.user.email})
     else:
-        workFourthAuthorInfo = ''
+        workForthAuthorInfo = ''
 
     if (workAuthor.fifth_auth_id):
         workFifthAuthorInfo = Student.objects.get(user_id=workAuthor.fifth_auth_id)
@@ -83,6 +99,7 @@ def work_info(request):
     information['labellist'] = labellist
     information['username'] = user_name
     information['useridentity'] = user_identity
+    information['firstAuthor'] = firstAuthor
 
     return render(request, '../templates/viewWorkInfo.html', information)
 
