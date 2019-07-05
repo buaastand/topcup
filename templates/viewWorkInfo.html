@@ -180,16 +180,16 @@
           作品图片
       </div>
 
-<div style="padding-left: 25px">
+<div >
 
 {% if not photolist %}
-      <div  style="margin-left: 2%;margin-top: 1%">
+      <div  style="margin-left: 5%;margin-top: 1%">
           暂无
       </div>
   {% endif %}
-
+<div style="margin-left: 3%">
     {% for i in photolist %}
-<div v-if="{{ i.appendix_type}} == '2'" onclick="Ctor.handleClick('{{ i.file }}')" style="float: left;margin-left:20px;margin-bottom:20px;margin-top:20px">
+<div v-if="{{ i.appendix_type}} == '2'" onclick="Ctor.handleClick('{{ i.file }}')" style="float: left;margin-left:2%;margin-bottom:20px;margin-top:20px">
       <el-image
       style="width: 140px; height: 140px"
       src={{ i.file}}
@@ -204,6 +204,7 @@
     fit="cover" ></el-image>
 </el-dialog>
 {% endfor %}
+</div>
 </div>
   </el-collapse-item>
   <el-collapse-item name="5">
