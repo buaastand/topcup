@@ -291,9 +291,9 @@
             title:'{{ work.title | safe }}',
             work_type:'{{ work.work_type }}',
             field:'{{ work.field }}',
-            detail:'{{ work.detail |safe }}',
-            innovation:'{{ work.innovation | safe }}',
-            keywords:'{{ work.keywords | safe }}',
+                detail: '{{ work.detail | escapejs }}',
+                innovation: '{{ work.innovation | escapejs}}',
+                keywords: '{{ work.keywords|escapejs  }}',
             show_type:{{ show_list | safe }},
             invest_type:{{ invest_list | safe }},
             options1:[{

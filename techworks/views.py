@@ -1,25 +1,27 @@
-from django.shortcuts import render, HttpResponse
-from django.http.response import JsonResponse
-from django.views import View
-from django.contrib.auth.decorators import login_required
-from .models import WorkInfo, Appendix
-from django.db.models import Q
-from competition.models import CompetitionRegistration, Competition
-from users.models import Student
-from django.db import transaction
-from competition.views import GetUserIdentitiy
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-import datetime, time, random
+import datetime
 import json
-import docx
-from docx import Document
+import os
+import random
 import re
-import convertapi
-from docx.oxml.ns import qn
+import time
 
+import convertapi
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db import transaction
+from django.db.models import Q
+from django.http.response import JsonResponse
+from django.shortcuts import render, HttpResponse
+from django.views import View
+from docx import Document
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml.ns import qn
 from docx.shared import Pt
 
-from docx.enum.text import WD_ALIGN_PARAGRAPH
+from competition.models import CompetitionRegistration, Competition
+from competition.views import GetUserIdentitiy
+from users.models import Student
+from .models import WorkInfo, Appendix
+
 
 # Create your views here.
 def searchstu(request):
@@ -129,7 +131,7 @@ class TechWorkView(View):
                     first_auth=Student.objects.get(user__username=username),
                     competition=Competition.objects.get(id=comptition_id))
                 registration.save()
-                work_cnt = int(int(str(int(time.time()))[4:])*100 + random(0,100))
+                work_cnt = int(int(str(int(time.time()))[4:]) * 100 + random.randint(0, 100))
                 work = WorkInfo.objects.create(registration=registration, title="", detail="", innovation="",
                                                keywords="", avg_score=0, work_id=work_cnt, work_type=1,
                                                field=1)
@@ -425,7 +427,8 @@ def generatePdf(request):
         else:
             temp = document.tables[1].cell(5, 1).paragraphs[0].text
             insert_chart(document, 1, 5, 1, '仿宋_GB2312', 14, temp, True)
-
+        if not os.path.exists('media/pdf/'):
+            os.mkdir('media/pdf/')
         document.save('media/pdf/'+workid+'.docx')
 
         convertapi.api_secret = 'D1kgtEI0Qc5VTJpb'
