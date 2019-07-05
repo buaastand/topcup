@@ -541,3 +541,14 @@ def generatePdf(request):
 
     return JsonResponse({'url': '/media/pdf/'+workid+'.pdf'})
 
+@csrf_exempt
+def checkWork(request):
+    work_id = request.GET['work_id']
+    newStatus = request.POST.get('status')
+    try:
+        techwork = WorkInfo.objects.get(id = work_id)
+        techwork.check_status = newStatus
+        techwork.save()
+    except:
+        return JsonResponse({'Message': 0})
+    return JsonResponse({'Message': 1})
