@@ -32,6 +32,8 @@ def work_info(request):
     workAppendix = Appendix.objects.filter(work_id=request.GET['work_id'])
     workAuthor = CompetitionRegistration.objects.get(id=request.GET['work_id'])
     workFirstAuthorInfo = Student.objects.get(user_id=workAuthor.first_auth_id)
+    labelList = json.loads(workInfo.labels)['labels']
+    labellist = list(map(int, labelList))
     authorList = []
 
     if(workAuthor.second_auth_id):
@@ -78,6 +80,7 @@ def work_info(request):
     information['workAppendix']= workAppendix
     information['workAuthor'] = workAuthor
     information['authorList'] = authorList
+    information['labellist'] = labellist
     information['username'] = user_name
     information['useridentity'] = user_identity
 

@@ -5,7 +5,7 @@
     <!-- 引入样式 -->
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
     <link rel="stylesheet" type="text/css" href="css/loader.css">
-      <link rel="stylesheet" href="../static/css/NavName.css">
+      <link rel="stylesheet" href="../../static/css/NavName.css">
 
          <!-- 引入组件库 -->
       <script src="https://unpkg.com/vue/dist/vue.js"></script>
@@ -79,14 +79,15 @@
               {{ workInfo.keywords }}
           </el-form-item>
             {% if workInfo.work_type == 1 %}
+
                 <el-form-item label="展示形式:" prop="way">
-                {% for i in workInfo.labels.labels %}
-                    <el-tag  effect="dark">i</el-tag>
+                {% for i in labellist %}
+                    <el-tag  effect="dark">{[ wayArray[ {{ i }} ] ]}</el-tag>
                 {% endfor %}
                 </el-form-item>
             {% else %}<el-form-item label="调查方式:" prop="method">
-                {% for i in workInfo.labels %}
-             <el-tag  effect="dark">methodArray[i]</el-tag>
+                {% for i in labellist %}
+             <el-tag  effect="dark">{[ methodArray[{{ i }}] ]}</el-tag>
                 {% endfor %}
             {% endif %}
             </el-form-item>
@@ -186,31 +187,6 @@
 </body>
 
 <script>
-  var wayArray=new Array()
-    wayArray[1]="实物、产品"
-    wayArray[2]="模型"
-    wayArray[3]="图纸"
-    wayArray[4]="磁盘"
-    wayArray[5]="现场演示"
-    wayArray[6]="图片"
-    wayArray[7]="录像"
-    wayArray[8]="样品"
-  var methodArray=new Array()
-    methodArray[1]="走访"
-    methodArray[2]="问卷"
-    methodArray[3]="现场采访"
-    methodArray[4]="人员介绍"
-    methodArray[5]="个别交谈"
-    methodArray[6]="亲临实践"
-    methodArray[7]="会议"
-    methodArray[8]="图片、照片"
-    methodArray[9]="书报刊物"
-    methodArray[10]="统计报表"
-    methodArray[11]="影视资料"
-    methodArray[12]="文件"
-    methodArray[13]="集体组织"
-    methodArray[14]="自发"
-    methodArray[15]="其他"
 
   var Main ={
     data() {
@@ -218,7 +194,9 @@
         dialogVisible1:false,
         activeNames: ['1','2','3','4','5'],
         tableData:{{ authorList|safe }},
-
+        wayArray: ['','实物、产品','模型','图纸','磁盘','现场演示','图片','录像','样品'],
+          methodArray:['','走访','问卷','现场采访','人员介绍','个别交谈','亲临实践','会议','图片、照片',
+                       '书报刊物','统计报表','影视资料','文件','集体组织','自发','其他'],
         receiveForm: [
          { name: '',
            type: '',
@@ -247,7 +225,7 @@
       }
 
 
-    }
+    }, delimiters: ['{[',']}']
   }
 
 var Ctor = Vue.extend(Main)
