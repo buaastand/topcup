@@ -19,7 +19,7 @@
     <el-container>
         <el-header>
             <h1 style="font-weight: bold">
-                评审任务：(比赛名称)
+                评审任务
             </h1>
 
         </el-header>
@@ -30,11 +30,11 @@
             <el-tab-pane label="科技发明制作" name="invention">
                 <template>
                 <el-table :data="inventionList" :default-sort = "{prop: 'tag', order: 'descending'}">
-                    <el-table-column prop="id"     label="编号" width="80px" align="center"></el-table-column>
+                    <el-table-column prop="id"     label="编号" width="80px" align="center" sortable></el-table-column>
                     <el-table-column prop="title"  label="作品名称" width="200px" align="center"></el-table-column>
                     <el-table-column prop="keywords"  label="关键词" width="300px" align="center"></el-table-column>
-                    <el-table-column prop="score"  label="分数" width="100px" align="center"></el-table-column>
-                    <el-table-column prop="tag"    label="状态" width="150px" align="center" sortable>
+                    <el-table-column prop="score"  label="分数" width="100px" align="center" sortable></el-table-column>
+                    <el-table-column prop="tag"    label="状态" width="150px" align="center" sortable  sortable sort-orders="descending">
                          <template slot-scope="scope">
                                 <el-tag :type="scope.row.tag === '未评审' ? 'danger' : 'success'" effect="dark" >
                                     {% verbatim myblock %}
@@ -56,17 +56,10 @@
             <el-tab-pane label="调查报告和学术论文" name="report" >
                 <template>
                 <el-table :data="reportList" :default-sort = "{prop: 'tag', order: 'descending'}">
-                    <el-table-column prop="id"     label="编号" width="80px" align="center"></el-table-column>
+                    <el-table-column prop="id"     label="编号" width="80px" align="center" sortable></el-table-column>
                     <el-table-column prop="title"  label="作品名称" width="200px" align="center"></el-table-column>
                     <el-table-column prop="keywords"  label="关键词" width="300px" align="center"></el-table-column>
-                    <el-table-column prop="score"  label="分数" width="100px" align="center">
-
-                                <el-popover trigger="hover" placement="top">
-                                  <p>评论意见: {{ scope.row.comment }}</p>
-                                </el-popover>
-
-                    </el-table-column>
-
+                    <el-table-column prop="score"  label="分数" width="100px" align="center" sortable></el-table-column>
                     <el-table-column prop="tag"    label="状态" width="150px" align="center" sortable sort-orders="descending">
                          <template slot-scope="scope">
                                 <el-tag :type="scope.row.tag === '未评审' ? 'danger' : 'success'" effect="dark" >
@@ -117,18 +110,17 @@
     </el-container>
 
         <el-dialog title="评审" :visible.sync="dialogFormVisible" width="500px">
-          <el-form :model="judge">
-            <el-form-item label="评分(百分制)" label-width="100px">
+          <el-form :model="judge" :rules="rules">
+            <el-form-item label="评分(百分制)" label-width="100px"  prop="score">
                <el-input-number v-model="judge.score" :step="1" :max="100" :min="0" :controls="false">
                </el-input-number>
-                <p style="margin: 0; color: red; font-weight: bold">百分制，评分范围为: 0 — 100</p>
+                <p style="margin: 0; color: #409EFF; font-weight: bold">百分制，评分范围为: 0 — 100</p>
             </el-form-item>
             <el-form-item label="评审意见" label-width="100px">
               <el-input v-model="judge.comment" placeholder="请输入您对作品的意见与看法"
                         :autosize="{ minRows: 5, maxRows: 10}"
                         autocomplete="off"
-                        type="textarea"
-                        value={{ comment }}></el-input>
+                        type="textarea"></el-input>
             </el-form-item>
           </el-form>
           <div slot="footer" class="dialog-footer">
@@ -147,7 +139,13 @@
         Type:'invention',
         inventionList: {{ invention | safe }},
         reportList: {{ report | safe }},
-        judge:[],
+        judge:{
+            score:'',
+            comment: ''
+        },
+        rules:{
+            score:[{required: true, message: '请填写分数', trigger: 'blur' }]
+        },
         dialogTableVisible: false,
         dialogFormVisible: false,
     },
@@ -186,21 +184,28 @@
         viewWork(id){       // 查看详情
             window.location="/work_review/?id="+id;
         },
-        handleCurrentChange(val) {
-            window.open("/reviewworklist?page="+val,"_self");
-        },
 
-        submitReview(){
+        submitReview(){     //提交
             axios.get('/submitReview/')
             .then(response => {
-                window.open(response.request.responseURL);
-                this.$message.success('提交成功: 感谢您对本次比赛的支持与帮助！');
+                console.log(response);
+                if(response.data['status'] === 1) {
+                    this.$message.success('提交成功: 感谢您对本次比赛的支持与帮助！');
+                    window.location.href = "/reviewworklist/";
+                }
+                else
+                    this.$message.error('提交失败: 请完成所以评审任务后再提交');
+
             })
             .catch(error => {
                 this.$message.error('网络异常：提交失败');
                 console.log(error);
             });
-        }
+        },
+
+        handleCurrentChange(val) {
+            window.open("/reviewworklist?page="+val,"_self");
+        },
 
     }
 })
