@@ -2,9 +2,11 @@
     <div class="nav">
         <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" @select="handleSelect"
                  background-color="#1989FA" text-color="#fff" active-text-color="#A3D0FD">
-            <el-menu-item index="1" class="navheader"><a href= "/index/" style="text-decoration: none">科技竞赛平台</a></el-menu-item>
-            <el-menu-item index="2" class="navmenu"><a href= "/competitionlist/?selected=0" style="text-decoration: none">竞赛</a></el-menu-item>
-{#            身份判断#}
+            <el-menu-item index="1" class="navheader"><a href="/index/" style="text-decoration: none">科技竞赛平台</a>
+            </el-menu-item>
+            <el-menu-item index="2" class="navmenu"><a href="/competitionlist/?selected=0"
+                                                       style="text-decoration: none">竞赛</a></el-menu-item>
+            {#            身份判断#}
             {% if useridentity == 3 %}
                 <el-menu-item index="3" class="navmenu"><a href= "/cptinit/" style="text-decoration: none">创建比赛</a></el-menu-item>
                 <el-menu-item index="4" class="navmenu"><a href= "/expert/" style="text-decoration: none">管理专家</a></el-menu-item>
@@ -18,6 +20,7 @@
 
 {#            身份判断#}
 
+            {#            身份判断#}
             {% if useridentity == 0 %}
                 <div class="navright">
                     <a href="/register" class="navother" style="color: white;text-decoration: none">注册</a>
@@ -25,88 +28,100 @@
                 </div>
             {% else %}
                 <div class="navright">
-                    <a class="navother" style="color: white;text-decoration: none">{{ username }}</a>
-                    <a class="navother" style="color: white;text-decoration: none" @click="dialogFormVisible = true">修改密码</a>
-
+                    {#                    下拉菜单#}
+                    <el-dropdown @command="userAction">
+                      <span class="el-dropdown-link navother">
+                        {{ username }}<i class="el-icon-arrow-down el-icon--right"></i>
+                      </span>
+                        <el-dropdown-menu slot="dropdown">
+                            <el-dropdown-item command="0" style="font-size: 16px">修改密码</el-dropdown-item>
+                        </el-dropdown-menu>
+                    </el-dropdown>
                     <a href="/logout/" class="navother" style="color: white;text-decoration: none">退出</a>
                 </div>
             {% endif %}
         </el-menu>
-            <el-dialog title="修改密码" :visible.sync="dialogFormVisible" width="450px" center>
-              <el-form :model="modifyForm" :rules="modifyRules" ref="modifyForm">
+        <el-dialog title="修改密码" :visible.sync="dialogFormVisible" width="450px" center>
+            <el-form :model="modifyForm" :rules="modifyRules" ref="modifyForm">
                 <el-form-item prop="old_password" label="原密码" :label-width="formLabelWidth">
-                  <el-input v-model="modifyForm.old_password" autocomplete="off" show-password></el-input>
+                    <el-input v-model="modifyForm.old_password" autocomplete="off" show-password></el-input>
                 </el-form-item>
                 <el-form-item prop="new_password" label="新密码" :label-width="formLabelWidth">
-                  <el-input v-model="modifyForm.new_password" autocomplete="off" show-password></el-input>
+                    <el-input v-model="modifyForm.new_password" autocomplete="off" show-password></el-input>
                 </el-form-item>
                 <el-form-item prop="new_password2" label="确认密码" :label-width="formLabelWidth">
-                  <el-input v-model="modifyForm.new_password2" autocomplete="off" show-password></el-input>
+                    <el-input v-model="modifyForm.new_password2" autocomplete="off" show-password></el-input>
                 </el-form-item>
-              </el-form>
-              <div slot="footer" class="dialog-footer">
+            </el-form>
+            <div slot="footer" class="dialog-footer">
                 <el-button @click="dialogFormVisible = false">取 消</el-button>
                 <el-button type="primary" @click="Modify('modifyForm')">确 定</el-button>
-              </div>
-            </el-dialog>
+            </div>
+        </el-dialog>
     </div>
 </div>
 
 <script>
     var NavMenu = new Vue({
         el: '#page',
-        data:{
-            activeIndex:'0',
+        data: {
+            activeIndex: '0',
             // 修改密码
             dialogTableVisible: false,
             dialogFormVisible: false,
             modifyForm: {
-              old_password: '',
-              new_password: '',
-              new_password2: '',
+                old_password: '',
+                new_password: '',
+                new_password2: '',
             },
             formLabelWidth: '120px',
-            modifyRules:{
-                old_password:[{required:true, message:'请输入用户名',trigger:'blur'}],
-                new_password:[{required:true, message:'请输入用户名',trigger:'blur'}],
-                new_password2:[{required:true, message:'请输入用户名',trigger:'blur'}],
+            modifyRules: {
+                old_password: [{required: true, message: '请输入内容', trigger: 'blur'}],
+                new_password: [{required: true, message: '请输入内容', trigger: 'blur'}],
+                new_password2: [{required: true, message: '请输入内容', trigger: 'blur'}],
             },
         },
-        methods:{
-            Modify: function(formName) {
-           this.$refs[formName].validate((valid) => {
-               if (valid) {
-                   console.log(this.modifyForm);
-                   axios({
-                       url: '/update/pwd/',
-                       method: 'post',
-                       data: this.modifyForm,
-                       headers: {
-                           'Content-Type': 'application/json'
-                       }
-                   })
-                       .then(res => {
-                           console.log(res);
-                           if (res.status == 200) {
-                               this.$alert('注册成功', {
-                                   confirmButtonText: '确定'
-                               })
-                               window.location.href = '/login/'
-                           } else {
-                               this.$alert('注册失败', {
-                                   confirmButtonText: '确定'
-                               })
-                           }
-                       })
-                       .catch(err => {
-                           console.log(err);
-                       });
-               } else {
-                   console.log('error submit!!');
-                   return false;
-               }
+        methods: {
+            Modify: function (formName) {
+                this.$refs[formName].validate((valid) => {
+                    if (valid) {
+                        console.log(this.modifyForm);
+                        axios({
+                            url: '/update/pwd/',
+                            method: 'post',
+                            data: this.modifyForm,
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                            .then(res => {
+                                console.log(res);
+                                if (res.status == 200) {
+                                    this.$alert('注册成功', {
+                                        confirmButtonText: '确定'
+                                    })
+                                    window.location.href = '/login/'
+                                } else {
+                                    this.$alert('注册失败', {
+                                        confirmButtonText: '确定'
+                                    })
+                                }
+                            })
+                            .catch(err => {
+                                console.log(err);
+                            });
+                    } else {
+                        console.log('error submit!!');
+                        return false;
+                    }
                 });
             },
+            userAction(cmd) {
+                if (cmd == '0') {
+                    console.log("testtttttttttttt");
+                    this.dialogFormVisible = true
+                }
+            }
         }
     })
 </script>
