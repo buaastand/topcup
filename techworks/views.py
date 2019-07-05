@@ -15,6 +15,12 @@ import datetime, time, random
 import json
 import docx
 from docx import Document
+import re
+import convertapi
+from docx.oxml.ns import qn
+
+from docx.shared import Pt
+
 
 # Create your views here.
 @csrf_exempt
@@ -79,20 +85,20 @@ def work_info(request):
 
 def searchstu(request):
     DEGREE_MAP = {
-            1: "大专",
-            2: "大学本科",
-            3: "硕士研究生",
-            4: "博士研究生",
+        1: "大专",
+        2: "大学本科",
+        3: "硕士研究生",
+        4: "博士研究生",
     }
     stuid = request.GET.get('stu_id')
     student = Student.objects.get(stu_id=stuid)
-    ret = {"student":{
-                    "stu_id":student.stu_id,
-                    "name":student.name,
-                    "degree":DEGREE_MAP[student.degree],
-                    "phone":student.phone,
-                    "email":student.user.email
-                    }}
+    ret = {"student": {
+        "stu_id": student.stu_id,
+        "name": student.name,
+        "degree": DEGREE_MAP[student.degree],
+        "phone": student.phone,
+        "email": student.user.email
+    }}
     return JsonResponse(ret)
 
 def deletework(request):
@@ -159,7 +165,7 @@ class TechWorkListView(View):
 
         user_name, user_identity = GetUserIdentitiy(request)
         return render(request, 'techwork_list.html', {'worklist': list.object_list,'useridentity':user_identity,
-                                                      'num':list.number,'total':total})
+                                                      'username':user_name, 'num':list.number,'total':total})
 
 
 class TechWorkView(View):
@@ -171,6 +177,8 @@ class TechWorkView(View):
             username = "16211086"
         work = None
         company_ret = []
+        show_list = []
+        invest_list = []
         file_docu = []
         file_photo = []
         file_video = []
@@ -180,7 +188,7 @@ class TechWorkView(View):
                     first_auth=Student.objects.get(user__username=username),
                     competition=Competition.objects.get(id=comptition_id))
                 registration.save()
-                work_cnt = int(time.time()) + random.randint(0, 10000)
+                work_cnt = int(time.time())*100 + random.randint(0, 10000)
                 work = WorkInfo.objects.create(registration=registration, title="", detail="", innovation="",
                                                keywords="", avg_score=0, work_id=work_cnt, work_type=1,
                                                field=1)
@@ -208,19 +216,26 @@ class TechWorkView(View):
                                     "degree": auth.degree,
                                     "phone": auth.phone,
                                     "email": auth.user.email})
+            if work.work_type == 1:
+                show_list = json.loads(work.labels)['labels']
+            else:
+                invest_list = json.loads(work.labels)['labels']
 
             filelist = Appendix.objects.filter(work__work_id=work.work_id)
 
             for file in filelist:
-                if(file.appendix_type == 0):
-                    file_docu.append({"name": file.filename,"url": file.file.url})
-                if(file.appendix_type == 1):
+                if (file.appendix_type == 0):
+                    file_docu.append({"name": file.filename, "url": file.file.url})
+                if (file.appendix_type == 1):
                     file_photo.append({"name": file.filename, "url": file.file.url})
                 if (file.appendix_type == 2):
                     file_video.append({"name": file.filename, "url": file.file.url})
 
         user_name, user_identity = GetUserIdentitiy(request)
-        return render(request, 'submit_techwork.html', {'work': work, 'company': company_ret, 'docu': file_docu, 'photo': file_photo, 'video': file_video,'useridentity':user_identity})
+        return render(request, 'submit_techwork.html', {'work': work, 'company': company_ret,
+                                                        'show_list': show_list, 'invest_list':invest_list,
+                                                        'docu': file_docu, 'photo': file_photo, 'video': file_video,
+                                                        'username':user_name, 'useridentity':user_identity})
 
     def post(self, request):
         try:
@@ -234,19 +249,19 @@ class TechWorkView(View):
                     2: registration.forth_auth,
                     3: registration.fifth_auth
                 }
-                team = json.loads(request.POST.get("company_table",[]))
-                for id in range(0,4):
+                team = json.loads(request.POST.get("company_table", []))
+                for id in range(0, 4):
                     if len(team) > id:
                         stu = team[id]
                     else:
                         stu = None
-                    if id==0:
+                    if id == 0:
                         registration.second_auth = Student.objects.get(stu_id=stu["stu_id"]) if stu else None
-                    if id==1:
+                    if id == 1:
                         registration.third_auth = Student.objects.get(stu_id=stu["stu_id"]) if stu else None
-                    if id==2:
+                    if id == 2:
                         registration.forth_auth = Student.objects.get(stu_id=stu["stu_id"]) if stu else None
-                    if id==3:
+                    if id == 3:
                         registration.fifth_auth = Student.objects.get(stu_id=stu["stu_id"]) if stu else None
 
                 work.title = request.POST.get('title', work.title)
@@ -255,6 +270,14 @@ class TechWorkView(View):
                 work.keywords = request.POST.get('keywords', work.keywords)
                 work.work_type = int(request.POST.get('work_type', work.work_type))
                 work.field = int(request.POST.get("field", work.field))
+
+                if work.work_type == 1:
+                    label_list = json.loads(request.POST.get('show_type', work.labels))
+                else:
+                    label_list = json.loads(request.POST.get('invest_type', work.labels))
+
+                work.labels = json.dumps({"labels":label_list})
+
                 work.submitted = True if int(request.POST.get("submitted", work.submitted)) == 1 else False
                 FILE_TYLE_MAP = {
                     "document": 0,
@@ -312,22 +335,123 @@ class TechWorkView(View):
         #     baseuser.email = email
         #     baseuser.save()
 
+
+
 def generatePdf(request):
     if request.method == 'POST':
-        print('收到post')
-        workid= request.POST.get('workid')
-        print(workid)
+        workid = request.POST.get('workid')
         path = 'static/pdf/emptytable.docx'
         document = Document(path)  # 读入文件
-        for par in document.paragraphs:
-            print(par.text)
         work_info = WorkInfo.objects.get(work_id=workid)
-    return JsonResponse({'ret':'Reply for work_id'})
+        registration = work_info.registration
+        # 获取段落文字
+        para = document.paragraphs
+        para[0].text = re.sub("（系统自动生成）", workid, para[0].text)
+        para[0].font
+        para[8].text = re.sub("（名称）", work_info.title, para[8].text)
+        if (work_info.work_type == 1):
+            para[12].text = re.sub("□", "☑", para[12].text)
+        elif (work_info.work_type == 2):
+            para[13].text = re.sub("□", "☑", para[13].text)
+
+        tables = document.tables  # 获取文件中的表格集
+        table = tables[0]  # 获取文件中的第一个表格
+        leng = len(table.rows)
+        company = []
+
+        if registration.first_auth is not None:
+            auth = registration.first_auth
+        if registration.second_auth is not None:
+            company.append(registration.second_auth)
+        if registration.third_auth is not None:
+            company.append(registration.third_auth)
+        if registration.forth_auth is not None:
+            company.append(registration.forth_auth)
+        if registration.fifth_auth is not None:
+            company.append(registration.fifth_auth)
+
+        # 表格1
+        table.cell(0, 3).text = auth.name
+        table.cell(0, 6).text = auth.stu_id
+        table.cell(0, 8).text = auth.birthdate.strftime("%Y-%m-%d")
+        # 替换学历
+
+        degreechange = r"（  ）"
+        if (auth.degree == 1):
+            table.cell(1, 3).text = re.sub(degreechange, "（A）", table.cell(1, 3).text)
+        elif (auth.degree == 2):
+            table.cell(1, 3).text = re.sub(degreechange, "（B）", table.cell(1, 3).text)
+        elif (auth.degree == 3):
+            table.cell(1, 3).text = re.sub(degreechange, "（C）", table.cell(1, 3).text)
+        elif (auth.degree == 4):
+            table.cell(1, 3).text = re.sub(degreechange, "（D）", table.cell(1, 3).text)
+        # 第一作者
+        table.cell(2, 3).text = auth.major
+        table.cell(2, 8).text = auth.enroll_time.strftime("%Y-%m-%d")
+        table.cell(3, 4).text = work_info.title
+        table.cell(4, 3).text = auth.address
+        table.cell(4, 8).text = auth.phone
+        table.cell(5, 8).text = auth.user.email
+        # 其他合作者
+        row = 7
+        for i in company:
+            table.cell(row, 1).text = i.name
+            table.cell(row, 2).text = i.stu_id
+            if (i.degree == 1):
+                table.cell(row, 3).text = "大专"
+            elif (i.degree == 2):
+                table.cell(row, 3).text = "大学本科"
+            elif (i.degree == 3):
+                table.cell(row, 3).text = "硕士研究生"
+            elif (i.degree == 4):
+                table.cell(row, 3).text = "博士研究生"
+            table.cell(row, 6).text = i.phone
+            table.cell(row, 7).text = i.user.email
+            row = row + 1
+        # 表格2
+        table2 = tables[1]  # 获取文件中的第二个表格
+        table2.cell(0, 1).text = work_info.title
+        fieldchange = r"（  ）"
+        if (work_info.field == 1):
+            table2.cell(1, 1).text = re.sub(fieldchange, "（A）", table2.cell(1, 1).text)
+        elif (work_info.field == 2):
+            table2.cell(1, 1).text = re.sub(fieldchange, "（B）", table2.cell(1, 1).text)
+        elif (work_info.field == 3):
+            table2.cell(1, 1).text = re.sub(fieldchange, "（C）", table2.cell(1, 1).text)
+        elif (work_info.field == 4):
+            table2.cell(1, 1).text = re.sub(fieldchange, "（D）", table2.cell(1, 1).text)
+        elif (work_info.field == 5):
+            table2.cell(1, 1).text = re.sub(fieldchange, "（E）", table2.cell(1, 1).text)
+        elif (work_info.field == 6):
+            table2.cell(1, 1).text = re.sub(fieldchange, "（F）", table2.cell(1, 1).text)
+
+        table2.cell(2, 1).text = work_info.detail
+        table2.cell(3, 1).text = work_info.innovation
+        table2.cell(4, 1).text = work_info.keywords
+        labellist = json.loads(work_info.labels)['labels']
+        labellist=list(map(int,labellist))
+        labellist.sort(reverse=True)
+
+        position = ()
+        if (work_info.work_type == 1):
+            position = (5, 1)
+        elif (work_info.work_type == 2):
+            position = (6, 1)
+        opt_list = table2.cell(*position).text.split("□")[1:]
+        num = len(opt_list)
+        checklist = ["□" for i in range(num)]
+        for i in labellist:
+            checklist[i - 1] = "☑"
+        check_result = ""
+        for check, opt in zip(checklist, opt_list):
+            check_result += check + opt
+        table2.cell(*position).text = check_result
+        document.save('static/pdf/fulltable.docx')
+        convertapi.api_secret = 'D1kgtEI0Qc5VTJpb'
+        convertapi.convert('pdf', {
+            'File': 'static/pdf/fulltable.docx'
+        }, from_format='docx').save_files('static/pdf/fulltable.pdf')
 
 
-    # tables = document.tables  # 获取文件中的表格集
-    # table = tables[0]  # 获取文件中的第一个表格
-    # for i in range(1, len(table.rows)):  # 从表格第二行开始循环读取表格数据
-    #     result = table.cell(i, 0).text + "" + table.cell(i, 1).text +table.cell(i, 2).text + table.cell(i, 3).text
-    #     # cell(i,0)表示第(i+1)行第1列数据，以此类推
-    #     print(result)
+    return JsonResponse({'ret': 'Reply for work_id'})
+

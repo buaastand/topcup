@@ -142,6 +142,42 @@
                     </el-input>
                 </el-form-item>
 
+
+                <el-form-item label="作品可展示的形式" v-if="techworkForm.work_type == 1">
+                    <el-checkbox-group v-model="techworkForm.show_type" style="width: 70%"
+                                       {% if work.submitted %}disabled{% endif %}>
+                        <el-checkbox label="2" name="show_type">模型</el-checkbox>
+                        <el-checkbox label="3" name="show_type">图纸</el-checkbox>
+                        <el-checkbox label="4" name="show_type">磁盘</el-checkbox>
+                        <el-checkbox label="6" name="show_type">图片</el-checkbox>
+                        <el-checkbox label="7" name="show_type">录像</el-checkbox>
+                        <el-checkbox label="8" name="show_type">样品</el-checkbox>
+                        <el-checkbox label="1" name="show_type">实物、产品</el-checkbox>
+                        <el-checkbox label="5" name="show_type">现场演示</el-checkbox>
+                    </el-checkbox-group>
+                </el-form-item>
+
+                <el-form-item label="作品调查方式" v-if="techworkForm.work_type == 2">
+                    <el-checkbox-group v-model="techworkForm.invest_type" style="width: 80%"
+                                       {% if work.submitted %}disabled{% endif %}>
+                        <el-checkbox label="1" name="invest_type">走访</el-checkbox>
+                        <el-checkbox label="2" name="invest_type">问卷</el-checkbox>
+                        <el-checkbox label="7" name="invest_type">会议</el-checkbox>
+                        <el-checkbox label="12" name="invest_type">文件</el-checkbox>
+                        <el-checkbox label="3" name="invest_type">现场采访</el-checkbox>
+                        <el-checkbox label="4" name="invest_type">人员介绍</el-checkbox>
+                        <el-checkbox label="5" name="invest_type">个别交谈</el-checkbox>
+                        <el-checkbox label="6" name="invest_type">亲临实践</el-checkbox>
+                        <el-checkbox label="9" name="invest_type">书报刊物</el-checkbox>
+                        <el-checkbox label="10" name="invest_type">统计报表</el-checkbox>
+                        <el-checkbox label="11" name="invest_type">影视资料</el-checkbox>
+                        <el-checkbox label="13" name="invest_type">集体组织</el-checkbox>
+                        <el-checkbox label="8" name="invest_type">图片、照片</el-checkbox>
+                        <el-checkbox label="14" name="invest_type">自发</el-checkbox>
+                        <el-checkbox label="15" name="invest_type">其他</el-checkbox>
+                    </el-checkbox-group>
+                </el-form-item>
+
                 <h2 style="margin-left: 5%;margin-bottom: 30px">
                     上传附件
                 </h2>
@@ -216,9 +252,10 @@
                                style="width: 100px;float: right; margin-right: 20px"
                                {% if work.submitted %}disabled{% endif %}>暂存
                     </el-button>
+                
                     {% if work.submitted %}
                         <el-button type="primary" @click="generatePdf"
-                                   style="width: 100px;float: right; margin-right: 20px">导出PDF
+                                   style="width: 100px;float: right; margin-right: 20px">生成PDF
                         </el-button>
                     {% endif %}
                 </el-form-item>
@@ -250,228 +287,234 @@
         el: '#submit_techwork',
         data: {
             work_id:{{ work.work_id }},
-            techworkForm: {
-                first_author: '{{ work.registration.first_auth.name }}',
-                company_search: '',
-                company_table:{{ company|safe }},
-                title: '{{ work.title | safe }}',
-                work_type: '{{ work.work_type }}',
-                field: '{{ work.field }}',
-                detail: '{{ work.detail |safe }}',
-                innovation: '{{ work.innovation | safe }}',
-                keywords: '{{ work.keywords | safe }}',
-                options1: [{
-                    value: '1',
-                    label: '科技发明制作'
-                }, {
-                    value: '2',
-                    label: '调查报告和学术论文'
-                }],
-                options2: [{
-                    value: '1',
-                    label: 'A.机械与控制（包括机械、仪器仪表、自动化控制、工程、交通、建筑等）'
-                }, {
-                    value: '2',
-                    label: 'B.信息技术（包括计算机、电信、通讯、电子等）'
-                }, {
-                    value: '3',
-                    label: 'C.数理（包括数学、物理、地球与空间科学等）'
-                }, {
-                    value: '4',
-                    label: 'D.生命科学(包括生物､农学､药学､医学､健康､卫生､食品等)'
-                }, {
-                    value: '5',
-                    label: 'E.能源化工（包括能源、材料、石油、化学、化工、生态、环保等）'
-                }, {
-                    value: '6',
-                    label: 'F.哲学社会科学（包括哲学、经济、社会、法律、教育、管理）'
-                }],
-                document_list:{{ docu |safe }},
-                photo_list:{{ photo |safe }},
-                video_list:{{ video |safe }},
+            techworkForm:{
+            first_author:'{{ work.registration.first_auth.name }}',
+            company_search:'',
+            company_table:{{ company|safe }},
+            title:'{{ work.title | safe }}',
+            work_type:'{{ work.work_type }}',
+            field:'{{ work.field }}',
+            detail:'{{ work.detail |safe }}',
+            innovation:'{{ work.innovation | safe }}',
+            keywords:'{{ work.keywords | safe }}',
+            show_type:{{ show_list | safe }},
+            invest_type:{{ invest_list | safe }},
+            options1:[{
+                value:'1',
+                label:'科技发明制作'
+            },{
+                value:'2',
+                label:'调查报告和学术论文'
+            }],
+            options2:[{
+                value:'1',
+                label:'A.机械与控制（包括机械、仪器仪表、自动化控制、工程、交通、建筑等）'
+            },{
+                value:'2',
+                label:'B.信息技术（包括计算机、电信、通讯、电子等）'
+            }, {
+                value:'3',
+                label:'C.数理（包括数学、物理、地球与空间科学等）'
+            }, {
+                value:'4',
+                label:'D.生命科学(包括生物､农学､药学､医学､健康､卫生､食品等)'
+            }, {
+                value:'5',
+                label:'E.能源化工（包括能源、材料、石油、化学、化工、生态、环保等）'
+            },{
+                value:'6',
+                label:'F.哲学社会科学（包括哲学、经济、社会、法律、教育、管理）'
+            }],
+            document_list:{{ docu |safe }},
+            photo_list:{{ photo |safe }},
+            video_list:{{ video |safe }},
             },
-            photo_path: [],
-            document_path: [],
-            video_path: []
+        photo_path:[],
+        document_path:[],
+        video_path:[]
         },
-        methods: {
-            video_path_file(file, fileList) {
-                this.video_path = fileList.map(toRaw);
-            },
-            photo_path_file(file, fileList) {
-                // 秘钥上传组件 on-change 事件
-                this.photo_path = fileList.map(toRaw);
-            },
-            document_path_file(file, fileList) {
-                // 秘钥上传组件 on-change 事件
-                this.document_path = fileList.map(toRaw);
-            },
-            onSubmit(formName, submit) {   // 提交
-                this.$refs[formName].validate((valid) => {
-                    if (valid) {
-                        let form = this.$refs[formName];
-                        // 创建 FormData 对象
-                        url = "/techworksubmit/";
-                        let formData = new FormData();
-                        formData.append('work_id', {{ work.work_id }});
-                        // 创建了 FormData 对象的时候传入了表单但是读不出来表单数据，不知道哪里的问题。所以下面用 append 方法添加参数，想打印出来看看的话可以 formData.get('id')
-                        formData.append('first_author', this.techworkForm.first_author);
-                        console.log(this.techworkForm.company_table);
-                        formData.append('company_table', JSON.stringify(this.techworkForm.company_table));
-                        formData.append('title', this.techworkForm.title);
-                        formData.append('work_type', this.techworkForm.work_type);
-                        formData.append('field', this.techworkForm.field);
-                        formData.append('detail', this.techworkForm.detail);
-                        formData.append('innovation', this.techworkForm.innovation);
-                        formData.append('keywords', this.techworkForm.keywords);
-                        // 这里文件上传的字段一定要设置文件列表中的 raw 参数 this.cert_path[0].raw
-                        if (this.document_path[0]) {
-                            let doc;
-                            let cnt = 0;
-                            for (doc in this.document_path) {
-                                cnt += 1;
-                                formData.append('document_list_' + cnt, this.document_path[doc]);
+    methods: {
+                video_path_file(file, fileList) {
+                    this.video_path = fileList.map(toRaw);
+                },
+                photo_path_file(file, fileList) {
+                    // 秘钥上传组件 on-change 事件
+                    this.photo_path = fileList.map(toRaw);
+                },
+                document_path_file(file, fileList) {
+                    // 秘钥上传组件 on-change 事件
+                    this.document_path = fileList.map(toRaw);
+                },
+                onSubmit(formName, submit) {   // 提交
+                    this.$refs[formName].validate((valid) => {
+                        if (valid) {
+                            let form = this.$refs[formName];
+                            // 创建 FormData 对象
+                            url = "/techworksubmit/";
+                            let formData = new FormData();
+                            formData.append('work_id', {{ work.work_id }});
+                            // 创建了 FormData 对象的时候传入了表单但是读不出来表单数据，不知道哪里的问题。所以下面用 append 方法添加参数，想打印出来看看的话可以 formData.get('id')
+                            formData.append('first_author', this.techworkForm.first_author);
+                            console.log(this.techworkForm.company_table);
+                            formData.append('company_table', JSON.stringify(this.techworkForm.company_table));
+                            formData.append('title', this.techworkForm.title);
+                            formData.append('work_type', this.techworkForm.work_type);
+                            formData.append('field', this.techworkForm.field);
+                            formData.append('detail', this.techworkForm.detail);
+                            formData.append('innovation', this.techworkForm.innovation);
+                            formData.append('keywords', this.techworkForm.keywords);
+                            console.log(this.techworkForm.show_type);
+                            console.log(this.techworkForm.invest_type);
+
+                            formData.append('show_type', JSON.stringify(this.techworkForm.show_type));
+                            formData.append('invest_type', JSON.stringify(this.techworkForm.invest_type));
+                            // 这里文件上传的字段一定要设置文件列表中的 raw 参数 this.cert_path[0].raw
+                            if (this.document_path[0]) {
+                                let doc;
+                                let cnt = 0;
+                                for (doc in this.document_path) {
+                                    cnt += 1;
+                                    formData.append('document_list_' + cnt, this.document_path[doc]);
+                                }
+
+                            }
+                            {#formData.append('document_list', this.document_path[0] ? this.document_path: '');#}
+                            if (this.photo_path[0]) {
+                                let photo;
+                                let cnt = 0;
+                                for (photo in this.photo_path) {
+                                    cnt += 1;
+                                    formData.append('photo_list_' + cnt, this.photo_path[photo]);
+                                }
+
+                            }
+                            {#formData.append('photo_list', this.photo_path[0] ? this.photo_path : '');#}
+                            if (this.video_path[0]) {
+                                let video;
+                                let cnt = 0;
+                                for (video in this.video_path) {
+                                    cnt += 1;
+                                    formData.append('video_list_' + cnt, this.video_path[video]);
+                                }
+                            }
+                            {#formData.append('video_list', this.video_path[0] ? this.video_path : '');#}
+                            if (submit == 1) {
+                                formData.append('submitted', 1);
+                            } else if (submit == 0) {
+                                formData.append('submitted', 0);
                             }
 
+                            formData.append('deleteList', JSON.stringify({"deletelist": deleteList}));
+                            console.log(deleteList);
+                            formData.append('csrfmiddlewaretoken', "{{ csrf_token }}")
+                            // 记得配置请求头中 Content-Type 为'multipart/form-data'
+                            let config = {
+                                headers: {
+                                    'Content-Type': 'multipart/form-data'
+                                }
+                            };
+                            formm(url, formData, config, response => {
+                                console.log(response.data);
+                                this.loading = false;
+                                if (response.status == 200) {
+                                    if (submit == 1)
+                                        this.$message('提交完成');
+                                    else if (submit == 0) {
+                                        this.$message('暂存完成');
+                                    }
+                                    window.location.href = "/techworksubmit/?workid=" +{{ work.work_id }};
+                                } else {
+                                    this.$message.error(response.msg);
+                                }
+                            }, () => {
+                                this.$message.error('网络错误');
+                                this.loading = false;
+                            });
+                        } else {
+                            console.log("error submit");
+                            return false;
                         }
-                        {#formData.append('document_list', this.document_path[0] ? this.document_path: '');#}
-                        if (this.photo_path[0]) {
-                            let photo;
-                            let cnt = 0;
-                            for (photo in this.photo_path) {
-                                cnt += 1;
-                                formData.append('photo_list_' + cnt, this.photo_path[photo]);
-                            }
-
-                        }
-                        {#formData.append('photo_list', this.photo_path[0] ? this.photo_path : '');#}
-                        if (this.video_path[0]) {
-                            let video;
-                            let cnt = 0;
-                            for (video in this.video_path) {
-                                cnt += 1;
-                                formData.append('video_list_' + cnt, this.video_path[video]);
-                            }
-                        }
-                        {#formData.append('video_list', this.video_path[0] ? this.video_path : '');#}
-                        if (submit == 1) {
-                            formData.append('submitted', 1);
-                        } else if (submit == 0) {
-                            formData.append('submitted', 0);
-                        }
-
-                        formData.append('deleteList', JSON.stringify({"deletelist": deleteList}));
-                        console.log(deleteList);
-                        formData.append('csrfmiddlewaretoken', "{{ csrf_token }}")
-                        console.log(formData.get('first_author'));
-                        // 记得配置请求头中 Content-Type 为'multipart/form-data'
-                        let config = {
-                            headers: {
-                                'Content-Type': 'multipart/form-data'
-                            }
-                        };
-                        formm(url, formData, config, response => {
-                            console.log(response.data);
-                            this.loading = false;
-                            if (response.status == 200) {
-                                if (submit == 1)
-                                    this.$message('提交完成');
-                                else if (submit == 0)
-                                    this.$message('暂存完成');
-                                window.location.href = "/techworksubmit/?workid=" +{{ work.work_id }};
-                            } else {
-                                this.$message.error(response.msg);
-                            }
-                        }, () => {
-                            this.$message.error('网络错误');
-                            this.loading = false;
-                        });
-                    } else {
-                        console.log("error submit");
-                        return false;
-                    }
-                });
-            },
-
-            addCompany(search) {   //添加合作者，search 为合作者学号
-                if (this.techworkForm.company_table.length > 3) {
-                    this.$alert('合作者最多只能有4位', {
-                        confirmButtonText: '确定'
-                    })
-                } else {     // 调用函数查找合作者信息
-                    axios.get('/stusearch/', {params: {stu_id: search}})
-                        .then(response => {
-                            console.log(response)
-                            this.techworkForm.company_table.push(response.data['student'])
-                        })
-                        .catch(error => {
-                            this.$message.error('查无此人: 请确保合作者已注册为网站用户');
-                            console.log(error);
-                        });
-                    {#this.$alert(search, {#}
-                    {#    confirmButtonText: '确定'#}
-                    {# })#}
-
-                }
-            },
-            deleteCompany(n) {    // 删除合作者者
-                if (n == -2) {
-                    this.techworkForm.company_table = "";
-                }
-                {
-                    this.techworkForm.company_table.splice(n, 1);
-                }
-            },
-
-            handleExceed(files, fileList) {   // 上传文件数量限制提醒
-                this.$message.warning('上传文件数量超标');
-            },
-            beforeImageUpload(file) {     // 上传图片限制
-                const isJPG = (file.type === 'image/jpeg' || file.type === 'image/png');
-                const isLt2M = file.size / 1024 / 1024 < 2;
-
-                if (!isJPG) {
-                    this.$message.error('上传头像图片只能是 JPG/PNG 格式!');
-                }
-                if (!isLt2M) {
-                    this.$message.error('上传头像图片大小不能超过 2MB!');
-                }
-                return isJPG && isLt2M;
-            },
-            beforeVideoUpload(file) {     // 上传视频限制
-                const isMP4 = file.type === 'video/mp4';
-                if (!isMP4) {
-                    this.$message.error('上传视频只能是 MP4 格式!');
-                }
-                return isMP4;
-            },
-            deleteFile(file) {
-                console.log(file);
-                deleteList.push(file.url);
-            },
-            downloadFile(file) {
-                window.open(file.url);
-            },
-            generatePdf() {
-                let _this = this;
-                console.log(_this.work_id);
-                let formData = new FormData();
-                formData.append('workid', _this.work_id);
-                let config = {
-                            headers: {
-                                'Content-Type': 'multipart/form-data'
-                            }
-                        };
-                axios.post('../generatepdf/',formData,  config)
-                    .then(function (response) {
-                        console.log(response);
-                    })
-                    .catch(function (response) {
-
                     });
-            }
-        }
-    })
+                },
+
+                addCompany(search) {   //添加合作者，search 为合作者学号
+                    if (this.techworkForm.company_table.length > 3) {
+                        this.$alert('合作者最多只能有4位', {
+                            confirmButtonText: '确定'
+                        })
+                    } else {     // 调用函数查找合作者信息
+                        axios.get('/stusearch/', {params: {stu_id: search}})
+                            .then(response => {
+                                console.log(response)
+                                this.techworkForm.company_table.push(response.data['student'])
+                            })
+                            .catch(error => {
+                                this.$message.error('查无此人: 请确保合作者已注册为网站用户');
+                                console.log(error);
+                            });
+                        {#this.$alert(search, {#}
+                        {#    confirmButtonText: '确定'#}
+                        {# })#}
+
+                    }
+                },
+                deleteCompany(n) {    // 删除合作者者
+                    if (n == -2) {
+                        this.techworkForm.company_table = "";
+                    }
+                    {
+                        this.techworkForm.company_table.splice(n, 1);
+                    }
+                },
+
+                handleExceed(files, fileList) {   // 上传文件数量限制提醒
+                    this.$message.warning('上传文件数量超标');
+                },
+                beforeImageUpload(file) {     // 上传图片限制
+                    const isJPG = (file.type === 'image/jpeg' || file.type === 'image/png');
+                    const isLt2M = file.size / 1024 / 1024 < 2;
+
+                    if (!isJPG) {
+                        this.$message.error('上传头像图片只能是 JPG/PNG 格式!');
+                    }
+                    if (!isLt2M) {
+                        this.$message.error('上传头像图片大小不能超过 2MB!');
+                    }
+                    return isJPG && isLt2M;
+                },
+                beforeVideoUpload(file) {     // 上传视频限制
+                    const isMP4 = file.type === 'video/mp4';
+                    if (!isMP4) {
+                        this.$message.error('上传视频只能是 MP4 格式!');
+                    }
+                    return isMP4;
+                },
+                deleteFile(file) {
+                    console.log(file);
+                    deleteList.push(file.url);
+                },
+                downloadFile(file) {
+                    window.open(file.url);
+                },
+                generatePdf() {
+                    let _this = this;
+                    console.log(_this.work_id);
+                    let formData = new FormData();
+                    formData.append('workid', _this.work_id);
+                    let config = {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    };
+                    axios.post('../generatepdf/', formData, config)
+                        .then(function (response) {
+                            console.log(response);
+                        })
+                        .catch(function (response) {
+
+                        });
+                },
+            }})
 
 </script>
 
