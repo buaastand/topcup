@@ -132,23 +132,32 @@ class ExpertReviewView(View):
         id = request.GET.get('id')
         username = request.user.username
         work = None
-        show_list = []
-        invest_list = []
+        show = []
+        invest = []
         file_docu = []
         file_photo = []
         file_video = []
+        SHOW_MAP = {1: "实物、产品", 2: "模型", 3: "图纸", 4: "磁盘", 5: "现场演示", 6: "图片", 7: "录像", 8: "样品"}
+        INVEST_MAP = {1: "走访", 2: "问卷", 3: "现场采访", 4: "人员介绍", 5: "个别交谈", 6: "亲临实践", 7: "会议",
+                      8: "图片、照片", 9: "书报刊物", 10: "统计报表", 11: "影视资料", 12: "文件", 13: "集体组织", 14: "自发",
+                      15: "其他"}
         if id is None:
             return HttpResponse(status=400)     #作品不存在
 
         else:
+            show_list = []
+            invest_list = []
             review = Review.objects.get(id=id)
             work = WorkInfo.objects.get(id=review.work_id)
 
             if work.work_type == 1:
                 show_list = json.loads(work.labels)['labels']
+                for i in show_list:
+                    show.append(SHOW_MAP[int(i)])
             else:
                 invest_list = json.loads(work.labels)['labels']
-
+                for i in show_list:
+                    invest.append(INVEST_MAP[int(i)])
             filelist = Appendix.objects.filter(work__work_id=work.work_id)
             for file in filelist:
                 if file.appendix_type == 0:
@@ -161,7 +170,7 @@ class ExpertReviewView(View):
         user_name, user_identity = GetUserIdentitiy(request)
         return render(request, 'ExpertReviewWork.html', {'work': work, 'id': review.id,
                                                          'score': review.score, 'comment':review.comment,
-                                                         'show_list': show_list, 'invest_list': invest_list,
+                                                         'show_list': show, 'invest_list': invest,
                                                          'docu': file_docu, 'photo': file_photo, 'video': file_video,
                                                          'username': user_name, 'useridentity': user_identity})
 

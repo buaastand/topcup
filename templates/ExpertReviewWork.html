@@ -67,8 +67,19 @@
                           {{ work.keywords }}
                       </el-form-item>
 
-
-
+                        {% if work.work_type == 1 %}
+                            <el-form-item label="展示形式">
+                            {% for i in show_list %}
+                                <el-tag style="margin-left: 5px">{{ i }}</el-tag>
+                            {% endfor %}
+                            </el-form-item>
+                        {% else %}
+                            <el-form-item label="调查方式">
+                            {% for i in invest_list %}
+                                <el-tag style="margin-left: 5px">{{ i }}</el-tag>
+                            {% endfor %}
+                        {% endif %}
+                            </el-form-item>
                     </el-form>
                   </div>
               </el-collapse-item>

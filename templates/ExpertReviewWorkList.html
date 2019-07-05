@@ -30,7 +30,7 @@
             <el-tab-pane label="科技发明制作" name="invention">
                 <template>
                 <el-table :data="inventionList" :default-sort = "{prop: 'tag', order: 'descending'}">
-                    <el-table-column prop="id"     label="编号" width="80px" align="center" sortable></el-table-column>
+                    <el-table-column type="index"  label="编号" width="80px" align="center" sortable></el-table-column>
                     <el-table-column prop="title"  label="作品名称" width="200px" align="center"></el-table-column>
                     <el-table-column prop="keywords"  label="关键词" width="300px" align="center"></el-table-column>
                     <el-table-column prop="score"  label="分数" width="100px" align="center" sortable></el-table-column>
@@ -56,7 +56,7 @@
             <el-tab-pane label="调查报告和学术论文" name="report" >
                 <template>
                 <el-table :data="reportList" :default-sort = "{prop: 'tag', order: 'descending'}">
-                    <el-table-column prop="id"     label="编号" width="80px" align="center" sortable></el-table-column>
+                    <el-table-column type="index" label="序号" width="80px" align="center" sortable></el-table-column>
                     <el-table-column prop="title"  label="作品名称" width="200px" align="center"></el-table-column>
                     <el-table-column prop="keywords"  label="关键词" width="300px" align="center"></el-table-column>
                     <el-table-column prop="score"  label="分数" width="100px" align="center" sortable></el-table-column>
