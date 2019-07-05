@@ -2,6 +2,8 @@ from django.shortcuts import render, HttpResponse
 from django.http.response import JsonResponse
 from django.views import View
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+
 from .models import WorkInfo, Appendix
 from django.db.models import Q
 from competition.models import CompetitionRegistration, Competition
@@ -13,10 +15,65 @@ import json
 
 
 # Create your views here.
-
+@csrf_exempt
 def work_info(request):
+    DEGREE = ['大专','大学本科','硕士研究生','博士研究生']
+    user_name, user_identity = GetUserIdentitiy(request)
+    information = {}
+    workInfo = WorkInfo.objects.get(id=request.GET['work_id'])
+    workAppendix = Appendix.objects.filter(work_id=request.GET['work_id'])
+    workAuthor = CompetitionRegistration.objects.get(id=request.GET['work_id'])
+    workFirstAuthorInfo = Student.objects.get(user_id=workAuthor.first_auth_id)
+    authorList = []
 
-    return render(request, "../templates/viewWorkInfo.html")
+    if(workAuthor.second_auth_id):
+        workSecondAuthorInfo = Student.objects.get(user_id=workAuthor.second_auth_id)
+        authorList.append({'name': workSecondAuthorInfo.name,
+                           'stu_id': workSecondAuthorInfo.stu_id,
+                           'degree': DEGREE[workSecondAuthorInfo.degree],
+                           'phone': workSecondAuthorInfo.phone,
+                           'email': workSecondAuthorInfo.user.email})
+    else:
+        workSecondAuthorInfo = ''
+
+    if (workAuthor.third_auth_id):
+        workThirdAuthorInfo = Student.objects.get(user_id=workAuthor.third_auth_id)
+        authorList.append({'name': workThirdAuthorInfo.name,
+                           'stu_id': workThirdAuthorInfo.stu_id,
+                           'degree': DEGREE[workThirdAuthorInfo.degree],
+                           'phone': workThirdAuthorInfo.phone,
+                           'email': workThirdAuthorInfo.user.email})
+    else:
+        workThirdAuthorInfo = ''
+
+    if (workAuthor.forth_auth_id):
+        workForthAuthorInfo = Student.objects.get(user_id=workAuthor.forth_auth_id)
+        authorList.append({'name': workForthAuthorInfo.name,
+                           'stu_id': workForthAuthorInfo.stu_id,
+                           'degree': DEGREE[workForthAuthorInfo.degree],
+                           'phone': workForthAuthorInfo.phone,
+                           'email': workForthAuthorInfo.user.email})
+    else:
+        workFourthAuthorInfo = ''
+
+    if (workAuthor.fifth_auth_id):
+        workFifthAuthorInfo = Student.objects.get(user_id=workAuthor.fifth_auth_id)
+        authorList.append({'name': workFifthAuthorInfo.name,
+                           'stu_id': workFifthAuthorInfo.stu_id,
+                           'degree': DEGREE[workFifthAuthorInfo.degree],
+                           'phone': workFifthAuthorInfo.phone,
+                           'email': workFifthAuthorInfo.user.email})
+    else:
+        workFifthAuthorInfo = ''
+
+    information = {'workInfo': workInfo}
+    information['workAppendix']= workAppendix
+    information['workAuthor'] = workAuthor
+    information['authorList'] = authorList
+    information['username'] = user_name
+    information['useridentity'] = user_identity
+
+    return render(request, '../templates/viewWorkInfo.html', information)
 
 def searchstu(request):
     DEGREE_MAP = {
