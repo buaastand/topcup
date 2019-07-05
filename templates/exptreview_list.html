@@ -14,24 +14,23 @@
 
     <!-- 引入css-->
     <link rel="stylesheet" href="../static/css/NavName.css">
-    <link rel="stylesheet" href="../static/css/assignwork_list.css" type="text/css">
+    <link rel="stylesheet" href="../static/css/exptreview_list.css" type="text/css">
 </head>
 
 <body style="margin: 0; background: #F5F7FA">
     {% include 'NavMenu.html' %} 
     
-    <div id="AssignworkList" style="width: 100%">
+    <div id="ExptreviewList" style="width: 100%">
         <div class="buttonArea">
-            <el-button type="primary" @click="selectExpert">为选中的作品分配专家</el-button>
+             <el-button type="primary" @click="selectExpert">为选中的分配更换专家</el-button>
         </div>
-
+        
         <div class="tableArea">
             <el-table
                 ref="multipleTable"
-                :data="displayWork"
+                :data="displayReview"
                 tooltip-effect="light"
                 style="width: 1000px;"
-                @selection-change="whandleSelectionChange"
                 @filter-change="test"
                 >
                 <el-table-column
@@ -44,6 +43,36 @@
                     width="60">
                 </el-table-column>
                 <el-table-column
+                    label="分配时间"
+                    prop="init_date"
+                    width="120"
+                    column-key="init_date"
+                    sortable>
+                </el-table-column>
+                <el-table-column
+                    label="专家ID"
+                    prop="expert_id"
+                    width="100"
+                    column-key="expert_id"
+                    sortable>
+                </el-table-column>
+                <el-table-column
+                    label="专家名称"
+                    prop="expert_name"
+                    width="120"
+                    column-key="expert_name"
+                    sortable>
+                    <template slot-scope="scope">
+                        <el-popover trigger="hover" placement="bottom-start">
+                            <p>邮箱: {[ scope.row.email ]}</p>
+                            <p>领域: {[ scope.row.expert_field ]}</p>
+                            <div slot="reference" class="name-wrapper">
+                                <el-tag size="medium">{[ scope.row.expert_name ]}</el-tag>
+                            </div>
+                        </el-popover>
+                    </template>
+                </el-table-column>
+                <el-table-column
                     label="作品ID"
                     prop="work_id"
                     width="120"
@@ -52,25 +81,27 @@
                 </el-table-column>
                 <el-table-column
                     label="作品名称"
-                    prop="title"
-                    width="400"
-                    column-key="title"
-                    sortable
-                    show-overflow-tooltip>
-                </el-table-column>
-                <el-table-column
-                    label="作品类别"
                     prop="work_type"
                     column-key="work_type"
-                    :filters="typeFilters"
-                    :filter-method="filterHandler"
-                    width="200">
+                    width="340"
+                    sortable
+                    show-overflow-tooltip>
+                    <template slot-scope="scope">
+                        <el-popover trigger="hover" placement="bottom-start">
+                            <p>类型: {[ scope.row.work_type ]}</p>
+                            <p>领域: {[ scope.row.work_field ]}</p>
+                            <div slot="reference" class="name-wrapper">
+                                <el-tag size="medium">{[ scope.row.work_name ]}</el-tag>
+                            </div>
+                        </el-popover>
+                    </template>
                 </el-table-column>
                 <el-table-column
-                    label="作品领域"
-                    prop="field"
-                    column-key="field"
-                    :filters="fieldFilters"
+                    label="评审状态"
+                    prop="review_state"
+                    width="100"
+                    column-key="review_state"
+                    :filters="stateFilters"
                     :filter-method="filterHandler"
                     >
                 </el-table-column>
@@ -79,17 +110,17 @@
 
         <div style="width:100%; margin-top: 10px; text-align: center">
             <el-pagination
-              @size-change="whandleSizeChange"
-              @current-change="whandleCurrentChange"
-              :current-page="currentWorkPage"
-              :page-sizes="[10, 30, 100, totalWork]"
-              :page-size="workPageSize"
+              @size-change="rhandleSizeChange"
+              @current-change="rhandleSizeChange"
+              :current-page="currentReviewPage"
+              :page-sizes="[10, 30, 100, totalReview]"
+              :page-size="reviewPageSize"
               layout="total, sizes, prev, pager, next, jumper"
-              :total="totalWork">
+              :total="totalReview">
             </el-pagination>
         </div>
 
-        <el-dialog
+        <!-- <el-dialog
             title="可选专家"
             :visible.sync="dialogVisible"
             width="800px"
@@ -131,48 +162,47 @@
             <el-button @click="dialogVisible = false">取消</el-button>
             <el-button type="primary" @click="matchWorksAndExperts">确认分配</el-button>
         </span>
-        </el-dialog>
+        </el-dialog> -->
     </div>
 
     <script>
-        const ALL_WORK_TYPE = ['科技发明制作', '调查报告和学术论文'];
-        const ALL_FIELD = ['A', 'B', 'C', 'D', 'E', 'F'];
-        var assList = new Vue({
-            el: '#AssignworkList',
+        const ALL_REVIEW_STATE = [0, 1, 2, 3, 4];
+        var exptReviewList = new Vue({
+            el: '#ExptreviewList',
             data: {
+                exptReviewTable: {{ review_ret|safe }},
+                filterReview: {{ review_ret|safe }},
+
                 dialogVisible: false,
                 loading:false,
 
-                workFilters: {
-                    'work_type': ALL_WORK_TYPE,
-                    'field': ALL_FIELD
+                
+                currentReviewPage: 1,
+                reviewPageSize: 10,
+
+                reviewFilters: {
+                    'review_state': ALL_REVIEW_STATE
                 },
 
-                workTableData: {{ worklist | safe }},
-                filterWork: {{ worklist | safe }},
-                currentWorkPage: 1,
-                workPageSize: 10,
-
-                expertTableData: {{ expertlist | safe }},
                 totalExpert: 0,
                 currentExpPage: 1,
 
-                wmultipleSelection: [],
+                rmultipleSelection: [],
                 emultipleSelection: [],
 
                 typeFilters: [{ text: '科技发明制作', value: '科技发明制作' }, 
                     { text: '调查报告和学术论文', value: '调查报告和学术论文' }],
 
-                fieldFilters: [{ text: 'A', value: 'A' }, { text: 'B', value: 'B' }, 
-                    { text: 'C', value: 'C' }, { text: 'D', value: 'D' }, 
-                    { text: 'E', value: 'E' }, { text: 'F', value: 'F' }]
+                stateFilters: [{ text: '0', value: 0 }, { text: '1', value: 1 }, 
+                    { text: '2', value: 2 }, { text: '3', value: 3 }, 
+                    { text: '4', value: 4 }]
             },
             computed: {
-                displayWork: function () {
-                    return this.filterWork.slice((this.currentWorkPage-1)*this.workPageSize,this.currentWorkPage*this.workPageSize);
+                displayReview: function () {
+                    return this.filterReview.slice((this.currentReviewPage-1)*this.reviewPageSize,this.currentReviewPage*this.reviewPageSize);
                 },
-                totalWork: function () {
-                    return this.filterWork.length;
+                totalReview: function () {
+                    return this.filterReview.length;
                 }
             },
             methods: {
@@ -186,8 +216,8 @@
                     }
                 },
                 whandleSelectionChange(val) {
-                    this.wmultipleSelection = val;
-                    // console.log(this.wmultipleSelection["0"]['work_id']);
+                    this.rmultipleSelection = val;
+                    // console.log(this.rmultipleSelection["0"]['work_id']);
                 },
                 etoggleSelection(rows) {
                     if (rows) {
@@ -205,14 +235,14 @@
                     const property = column['property'];
                     return row[property] === value;
                 },
-                whandleSizeChange(val) {
-                    this.workPageSize = val;
+                rhandleSizeChange(val) {
+                    this.reviewPageSize = val;
                 },
-                whandleCurrentChange(val) {
-                    this.currentWorkPage = val;
+                rhandleSizeChange(val) {
+                    this.currentReviewPage = val;
                 },
                 selectExpert() {
-                    if (this.wmultipleSelection.length > 0) {
+                    if (this.rmultipleSelection.length > 0) {
                         this.dialogVisible = true;
                     }
                     else{
@@ -236,12 +266,12 @@
                         return;
                     }
 
-                    var wm_length = this.wmultipleSelection.length;
+                    var wm_length = this.rmultipleSelection.length;
                     selected_work = [];
                     selected_expert = [];
 
                     for (var i = 0; i < wm_length; i++) {
-                        selected_work.push(this.wmultipleSelection[i]['work_id'])
+                        selected_work.push(this.rmultipleSelection[i]['work_id'])
                     }
                     for (var i = 0; i < em_length; i++) {
                         selected_expert.push(this.emultipleSelection[i]['expert_id'])
@@ -275,49 +305,33 @@
                     });
                 },
                 test(filters){
-                    // console.log(this.workTableData);
-                    this.filterWork = [];
+                    // console.log(this.exptReviewTable);
+                    this.filterReview = [];
                     var filtered;
 
-                    if(filters['work_type']){
-                        if(filters['work_type'].length == 0){
-                            this.workFilters['work_type'] = ALL_WORK_TYPE;
+                    if(filters['review_state']){
+                        if(filters['review_state'].length == 0){
+                            this.reviewFilters['review_state'] = ALL_REVIEW_STATE;
                         }
-                        else this.workFilters['work_type'] = filters['work_type'];
-                    }
-                    if(filters['field']){
-                        if(filters['field'].length == 0){
-                            this.workFilters['field'] = ALL_FIELD;
-                        }
-                        else this.workFilters['field'] = filters['field'];
+                        else this.reviewFilters['review_state'] = filters['review_state'];
                     }
 
-                    for (var i = 0; i < this.workTableData.length; i++) {
-                        filtered = 0;
-                        for (var j = 0; j < this.workFilters['work_type'].length; j++) {
-                            if (this.workTableData[i]['work_type'] == this.workFilters['work_type'][j]) {
-                                filtered = 1;
+                    for (var i = 0; i < this.exptReviewTable.length; i++) {
+                        for (var j = 0; j < this.reviewFilters['review_state'].length; j++) {
+                            if (this.exptReviewTable[i]['review_state'] == this.reviewFilters['review_state'][j]) {
+                                this.filterReview.push(this.exptReviewTable[i]['review_state']);
                                 break;
-                            }
-                        }
-
-                        if (filtered == 1) {
-                            for (var j = 0; j < this.workFilters['field'].length; j++) {
-                                if (this.workTableData[i]['field'] == this.workFilters['field'][j]) {
-                                    this.filterWork.push(this.workTableData[i])
-                                    break;
-                                }
                             }
                         }
                     }
                     //console.log(filters);
-                    this.currentWorkPage = 1;
-                    // console.log(this.workTableData);
+                    this.currentReviewPage = 1;
+                    // console.log(this.exptReviewTable);
                 }
             },
             delimiters: ["{[", "]}"]
         });
-        assList.totalExpert=assList.expertTableData.length;
+        // assList.totalExpert=assList.expertTableData.length;
         // console.log(assList.expertTableData);
     </script>
 </body>

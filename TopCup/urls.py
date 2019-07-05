@@ -21,6 +21,7 @@ from TopCup import settings
 from users.views import ExpertManage
 
 from django.urls import path,re_path
+from operation.views import ExpertReviewView, ExptreviewListView
 
 import competition.views as Cpt
 import techworks.views as Tch
@@ -68,7 +69,9 @@ urlpatterns = [
     #re_path(r'^static/(?P<path>.*)$', serve, {"document_root":STATIC_ROOT}),
 
     path('assign_work/', AssignWorkListView.as_view()),
-    path('assign_expert/',AssignExpertView.as_view()),
+    path('assign_expert/', AssignExpertView.as_view()),
+
+    path('exptreview_list/', ExptreviewListView.as_view()),
 ]
 
 #urlpatterns += staticfiles_urlpatterns()

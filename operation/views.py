@@ -173,7 +173,9 @@ class AssignWorkListView(View):
     """
     def get(self,request):
         cpt_id = request.GET.get('cpt_id','')
-        worklist_origin = WorkInfo.objects.all()
+        worklist_origin = WorkInfo.objects.all().exclude(work_id__in=
+            Review.objects.all().values_list('work_id', flat=True))
+        # to do: 1.属于某个比赛的作品 2.
         WORKTYPE_MAP = {
             1: "科技发明制作",
             2: "调查报告和学术论文"
@@ -195,7 +197,8 @@ class AssignWorkListView(View):
                 'field':FIELD_MAP[work.field],
             })
 
-        expertlist_origin = Expert.objects.all()
+        expertlist_origin = Expert.objects.all().exclude(user__id__in=
+            Review.objects.all().values_list('expert__user__id', flat=True))
         expertlist_ret = []
         for expert in expertlist_origin:
             expertlist_ret.append({
@@ -206,7 +209,7 @@ class AssignWorkListView(View):
             })
 
         user_name,user_identity = GetUserIdentitiy(request)
-        return render(request,'assignwork_list.html',{'expertlist':expertlist_ret,'worklist':worklist_ret,'useridentity':user_identity,'username':user_name})
+        return render(request,'assignwork_list.html',{'expertlist':expertlist_ret, 'worklist':worklist_ret , 'useridentity':user_identity,'username':user_name})
 
 
 class AssignExpertView(View):
@@ -218,13 +221,20 @@ class AssignExpertView(View):
 
     def post(self,request):
         expert_list = request.POST.get('selected_expert')
+        expert_list = json.loads(expert_list)
         work_list = request.POST.get('selected_work')
+        work_list = json.loads(work_list)
+
         for expert_id in expert_list:
             for work_id in work_list:
+                work_i = WorkInfo.objects.get(work_id=work_id) #数据库是否存在work_id相同的多个比赛
+                expert_i = Expert.objects.get(user_id=expert_id)
+
                 review = Review()
-                review.work = work_id
-                review.expert = expert_id
-                review.add_time = datetime.date.today
+                review.work = work_i
+                review.expert = expert_i
+                review.add_time = datetime.date.today()
+                review.score = -1
                 review.review_status = 0 #邮件刚刚发出的状态
                 review.save()
         cpt_name = WorkInfo.objects.get(work_id=work_list[0]).registration.competition.title
@@ -233,9 +243,9 @@ class AssignExpertView(View):
         # ref：https://www.cnblogs.com/lovealways/p/6701662.html
         import smtplib
         from email.mime.text import MIMEText
-        sender = '1102616394@qq.com'
-        passwd = 'zkgiepqbxtrubahb'
-        s = smtplib.SMTP_SSL('smtp.qq.com', 465)
+        sender = 'topcup2019@163.com'
+        passwd = '123456zxcvbn'
+        s = smtplib.SMTP_SSL('smtp.163.com', 465)
         s.login(sender, passwd)
         for expert_id in expert_list:
             receiver = Expert.objects.get(user_id=expert_id).user.email
@@ -248,8 +258,40 @@ class AssignExpertView(View):
             try:
                 s.sendmail(sender,receiver,msg.as_string())
             except:
+                return JsonResponse({'Message':1})
                 pass
         s.quit()
+        return JsonResponse({'Message':0})
 
+class ExptreviewListView(View):
+    """
+    展示比赛已分配专家
+    """
+    def get(self, request):
+        cpt_id = request.GET.get('cpt_id','')
+        user_name,user_identity = GetUserIdentitiy(request)
+        context = {}
+        context['username'] = user_name
+        context['useridentity'] = user_identity
 
+        # 从Review表中选出该比赛的review
+        reviews = Review.objects.all()
+        review_ret = []
+        for review_i in reviews:
+            review_ret.append(
+                {
+                    'init_date': str(review_i.add_time),
+                    'expert_id': review_i.expert.user.id,
+                    'expert_name': review_i.expert.name,
+                    'expert_field': review_i.expert.field,
+                    'email': review_i.expert.user.email,
+                    'work_id': review_i.work.work_id,
+                    'work_name': review_i.work.title,
+                    'work_type':review_i.work.work_type,
+                    'work_field': review_i.work.field,
+                    'review_state': review_i.review_status
+                }
+            )
+        context['review_ret'] = review_ret
+        return render(request, 'exptreview_list.html', context)
 
