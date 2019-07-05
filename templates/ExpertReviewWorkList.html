@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TopCup专家查看个人待审作品列表</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="../static/css/submit_techwork.css">
+    <link rel="stylesheet" href="../static/css/NavName.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+        <meta name="csrf-token" content="{{ csrf_token }}">
+
+</head>
+<body style="margin: 0; background: #F5F7FA">
+{% include 'NavMenu.html' %}
+<div id="expert_reviewlist" class="background" style="height: 800px; width: 1200px;">
+    <el-container>
+        <el-header>
+            <h1 style="font-weight: bold">
+                评审任务：(比赛名称)
+            </h1>
+
+        </el-header>
+
+        <el-main>
+        <template>
+          <el-tabs v-model="Type" @tab-click="handleClick">
+            <el-tab-pane label="科技发明制作" name="invention">
+                <template>
+                <el-table :data="inventionList" :default-sort = "{prop: 'tag', order: 'descending'}">
+                    <el-table-column prop="id"     label="编号" width="80px" align="center"></el-table-column>
+                    <el-table-column prop="title"  label="作品名称" width="200px" align="center"></el-table-column>
+                    <el-table-column prop="keywords"  label="关键词" width="300px" align="center"></el-table-column>
+                    <el-table-column prop="score"  label="分数" width="100px" align="center"></el-table-column>
+                    <el-table-column prop="tag"    label="状态" width="150px" align="center" sortable>
+                         <template slot-scope="scope">
+                                <el-tag :type="scope.row.tag === '未评审' ? 'danger' : 'success'" effect="dark" >
+                                    {% verbatim myblock %}
+                                    {{scope.row.tag}}
+                                    {% endverbatim myblock %}
+                                </el-tag>
+                         </template>
+                    </el-table-column>
+                    <el-table-column>
+                        <template slot-scope="scope">
+                            <el-button size="mini" type="warning" @click="opendialog(scope.row.id)" style="float: right">评分</el-button>
+                            <el-button size="mini" type="danger" @click="dowloadZip(scope.row.id)" style="float: right; margin-right: 10px">下载</el-button>
+                            <el-button size="mini" type="primary" @click="viewWork(scope.row.id)" style="float: right;">详情</el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </template>
+            </el-tab-pane>
+            <el-tab-pane label="调查报告和学术论文" name="report" >
+                <template>
+                <el-table :data="reportList" :default-sort = "{prop: 'tag', order: 'descending'}">
+                    <el-table-column prop="id"     label="编号" width="80px" align="center"></el-table-column>
+                    <el-table-column prop="title"  label="作品名称" width="200px" align="center"></el-table-column>
+                    <el-table-column prop="keywords"  label="关键词" width="300px" align="center"></el-table-column>
+                    <el-table-column prop="score"  label="分数" width="100px" align="center"></el-table-column>
+                    <el-table-column prop="tag"    label="状态" width="150px" align="center" sortable sort-orders="descending">
+                         <template slot-scope="scope">
+                                <el-tag :type="scope.row.tag === '未评审' ? 'danger' : 'success'" effect="dark" >
+                                    {% verbatim myblock %}
+                                    {{scope.row.tag}}
+                                    {% endverbatim myblock %}
+                                </el-tag>
+                         </template>
+                    </el-table-column>
+                    <el-table-column>
+                        <template slot-scope="scope">
+                            <el-button size="mini" type="warning" @click="opendialog(scope.row.id)" style="float: right">评分</el-button>
+                            <el-button size="mini" type="danger" @click="dowloadZip(scope.row.id)" style="float: right; margin-right: 10px">下载</el-button>
+                            <el-button size="mini" type="primary" @click="viewWork(scope.row.id)" style="float: right;">详情</el-button>
+                        </template>
+                    </el-table-column>
+                </el-table>
+            </template>
+            </el-tab-pane>
+          </el-tabs>
+        </template>
+        </el-main>
+
+        <el-footer v-if="Type == 'invention' ">
+            <div style="margin: 25px auto; text-align: center">
+                <el-pagination
+                    @current-change="handleCurrentChange"
+                    :current-page={{num1}}
+                    :page-size="10"
+                    layout="total, prev, pager, next, jumper"
+                    :total={{total1}}>
+                </el-pagination>
+            </div>
+        </el-footer>
+        <el-footer v-if="Type == 'report' ">
+            <div style="margin: 25px auto; text-align: center">
+                <el-pagination
+                    @current-change="handleCurrentChange"
+                    :current-page={{num2}}
+                    :page-size="10"
+                    layout="total, prev, pager, next, jumper"
+                    :total={{total2}}>
+                </el-pagination>
+            </div>
+        </el-footer>
+    </el-container>
+
+        <el-dialog title="评审" :visible.sync="dialogFormVisible" width="500px">
+          <el-form :model="judge">
+            <el-form-item label="评分(百分制)" label-width="100px">
+               <el-input-number v-model="judge.score"
+                                :precision="1" :step="0.1" :max="100" :min="0" :controls="false">
+               </el-input-number>
+            </el-form-item>
+            <el-form-item label="评审意见" label-width="100px">
+              <el-input v-model="judge.comment" placeholder="请输入您对作品的意见与看法"
+                        :autosize="{ minRows: 5, maxRows: 10}"
+                        autocomplete="off"
+                        type="textarea"></el-input>
+            </el-form-item>
+          </el-form>
+          <div slot="footer" class="dialog-footer">
+            <el-button @click="dialogFormVisible = false">取 消</el-button>
+            <el-button type="primary" @click="reviewWork(judge)">确 定</el-button>
+          </div>
+        </el-dialog>
+</div>
+</body>
+
+<script>
+    {#console.log(JSON.parse( "{{worklist}}")['worklist']);#}
+    var app = new Vue({
+    el: '#expert_reviewlist',
+    data: {
+        Type:'invention',
+        inventionList: {{ invention | safe }},
+        reportList: {{ report | safe }},
+        judge:{
+            score:'',
+            comment:''
+        },
+        dialogTableVisible: false,
+        dialogFormVisible: false,
+    },
+    methods: {
+        opendialog(id){
+            console.log(id);
+            this.dialogFormVisible = true;
+            this.id =id;
+        },
+        reviewWork(judge) {     // 评分
+            console.log(this.expert_id);
+            axios.get('/judge/',{params:{id:this.id, score:judge.score, comment:judge.comment}})
+            .then(response=> {
+                  console.log(response);
+                  this.dialogFormVisible = false;
+                  this.$message.success('评审成功');
+                  window.location.href="/reviewworklist/";
+              })
+            .catch(error=>{
+                this.$message.error('网络异常: 评分失败');
+                console.log(error);
+              });
+        },
+        dowloadZip(id) {     // 下载附件
+            // 调用函数查找合作者信息
+            axios.get('/downloadZip/', {params: {id: id}})
+                .then(response => {
+                    window.open(response.request.responseURL);
+                    this.$message.success('打开附件压缩包');
+                })
+                .catch(error => {
+                    this.$message.error('该作品未上传附件');
+                    console.log(error);
+                });
+        },
+        viewWork(id){       // 查看详情
+            window.location="/work_review/?id="+id;
+        },
+        handleCurrentChange(val) {
+            window.open("/reviewworklist?page="+val,"_self");
+        },
+
+    }
+})
+
+</script>
+
+</html>

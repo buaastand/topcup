@@ -60,8 +60,6 @@ urlpatterns = [
     path('judge_work/', ExpertReviewView.show),
     path('judge/', ExpertReviewView.judge),
 
-    path('work_list/work_info/', Tch.work_info),
-
     path('work_list/', ExpertReviewView.list),
     #re_path(r'^static/(?P<path>.*)$', serve, {"document_root":STATIC_ROOT}),
 ]
