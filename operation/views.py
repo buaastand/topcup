@@ -1,3 +1,4 @@
+# -*-coding:utf-8 -*-
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
@@ -5,6 +6,8 @@ from django.views.generic.base import View
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 import datetime, zipfile, tempfile, os
 from wsgiref.util import FileWrapper
+from django.utils.encoding import escape_uri_path
+from django.db.models import Q
 
 from django.db import transaction
 from competition.views import GetUserIdentitiy
@@ -35,18 +38,47 @@ def DownLoadZip(request):
     temp.seek(0)
     wrapper = FileWrapper(temp)
     response = HttpResponse(wrapper, content_type='application/zip')
-    response['Content-Disposition'] = 'attachment; filename=' + 'TEST' + '.zip' # 压缩包名称有问题
+    filename = str(review.id) + '_' + work.title + '.zip'
+    response['Content-Disposition'] = "attachment; filename*=utf-8''{}".format(escape_uri_path(filename))  # 压缩包名称有问题
     response['Content-Length'] = data
     return response
 
 
 def Judge(request):
     review = Review.objects.get(id=request.GET.get('id'))
-    review.score = request.GET.get('score')
-    review.comment = request.GET.get('comment')
+    review.score = request.GET.get('score', review.score)
+    review.comment = request.GET.get('comment', review.comment)
     review.review_status = 3
     review.save()
     return render(request, 'ExpertReviewWorkList.html')
+
+
+def sumbitReview(request):
+    user_id = request.user.id
+    review_list = Review.objects.filter(expert__user_id=user_id)
+    status = 1
+    for review in review_list:
+        if review.review_status == 2:
+            status = 0
+            break
+    if status == 1:
+        for review in review_list:
+            review.review_status = 4
+            review.save()
+    ret={'status': status}
+    return JsonResponse(ret)
+
+
+def NextReviewWork(request):
+    review = Review.objects.get(id=request.GET.get('id'))
+    type = WorkInfo.objects.get(id=review.work_id).work_type
+    expertid = review.expert_id
+    review_list = Review.objects.filter(Q(work__work_type=type) & Q(expert__user_id=expertid) & Q(review_status=2))
+    if len(review_list):
+        ret = {'nextid': review_list[0].id}
+    else:
+        ret = {'nextid': 0}
+    return JsonResponse(ret)
 
 
 class ExpertReviewListView(View):
@@ -70,6 +102,7 @@ class ExpertReviewListView(View):
                     'title': work.title,
                     'keywords': work.keywords,
                     'score': review.score,
+                    'comment':review.comment,
                     'tag': TAG_MAP[review.review_status]
                 })
             else:
@@ -78,6 +111,7 @@ class ExpertReviewListView(View):
                     'title': work.title,
                     'keywords': work.keywords,
                     'score': review.score,
+                    'comment': review.comment,
                     'tag': TAG_MAP[review.review_status]
                 })
 
