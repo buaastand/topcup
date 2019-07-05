@@ -1,4 +1,5 @@
 from django.db import models
+
 from competition.models import CompetitionRegistration
 
 
@@ -29,6 +30,7 @@ class WorkInfo(models.Model):
     avg_score = models.FloatField(verbose_name="平均分")
     if_defense = models.BooleanField(default=False, verbose_name="是否答辩")
     submitted = models.BooleanField(default=False,verbose_name="是否已提交")
+    labels = models.CharField(max_length=255, verbose_name="作品标签", default="{\"labels\":[]}")
 
     class Meta:
         verbose_name = "作品"

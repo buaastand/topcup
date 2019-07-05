@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>科技竞赛平台</title>
+    <!-- 引入vue.js,axios.js -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+    <script src="https://cdn.staticfile.org/vue-resource/1.5.1/vue-resource.min.js"></script>
+
+    <!-- 引入element.ui-->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+    <!-- 引入css-->
+    <link rel="stylesheet" href="../static/css/NavName.css">
+    <link rel="stylesheet" href="../static/css/exptreview_list.css" type="text/css">
+</head>
+
+<body style="margin: 0; background: #F5F7FA">
+    {% include 'NavMenu.html' %} 
+    
+    <div id="ExptreviewList" style="width: 100%">
+        <div class="buttonArea">
+             <el-button type="primary" @click="selectExpert">为选中的分配更换专家</el-button>
+        </div>
+        
+        <div class="tableArea">
+            <el-table
+                ref="multipleTable"
+                :data="displayReview"
+                tooltip-effect="light"
+                style="width: 1000px;"
+                @filter-change="test"
+                >
+                <el-table-column
+                    type="selection"
+                    width="40">
+                </el-table-column>
+                <el-table-column
+                    type="index"
+                    label="序号"
+                    width="60">
+                </el-table-column>
+                <el-table-column
+                    label="分配时间"
+                    prop="init_date"
+                    width="120"
+                    column-key="init_date"
+                    sortable>
+                </el-table-column>
+                <el-table-column
+                    label="专家ID"
+                    prop="expert_id"
+                    width="100"
+                    column-key="expert_id"
+                    sortable>
+                </el-table-column>
+                <el-table-column
+                    label="专家名称"
+                    prop="expert_name"
+                    width="120"
+                    column-key="expert_name"
+                    sortable>
+                    <template slot-scope="scope">
+                        <el-popover trigger="hover" placement="bottom-start">
+                            <p>邮箱: {[ scope.row.email ]}</p>
+                            <p>领域: {[ scope.row.expert_field ]}</p>
+                            <div slot="reference" class="name-wrapper">
+                                <el-tag size="medium">{[ scope.row.expert_name ]}</el-tag>
+                            </div>
+                        </el-popover>
+                    </template>
+                </el-table-column>
+                <el-table-column
+                    label="作品ID"
+                    prop="work_id"
+                    width="120"
+                    column-key="work_id"
+                    sortable>
+                </el-table-column>
+                <el-table-column
+                    label="作品名称"
+                    prop="work_type"
+                    column-key="work_type"
+                    width="340"
+                    sortable
+                    show-overflow-tooltip>
+                    <template slot-scope="scope">
+                        <el-popover trigger="hover" placement="bottom-start">
+                            <p>类型: {[ scope.row.work_type ]}</p>
+                            <p>领域: {[ scope.row.work_field ]}</p>
+                            <div slot="reference" class="name-wrapper">
+                                <el-tag size="medium">{[ scope.row.work_name ]}</el-tag>
+                            </div>
+                        </el-popover>
+                    </template>
+                </el-table-column>
+                <el-table-column
+                    label="评审状态"
+                    prop="review_state"
+                    width="100"
+                    column-key="review_state"
+                    :filters="stateFilters"
+                    :filter-method="filterHandler"
+                    >
+                </el-table-column>
+          </el-table>
+        </div>
+
+        <div style="width:100%; margin-top: 10px; text-align: center">
+            <el-pagination
+              @size-change="rhandleSizeChange"
+              @current-change="rhandleSizeChange"
+              :current-page="currentReviewPage"
+              :page-sizes="[10, 30, 100, totalReview]"
+              :page-size="reviewPageSize"
+              layout="total, sizes, prev, pager, next, jumper"
+              :total="totalReview">
+            </el-pagination>
+        </div>
+
+        <!-- <el-dialog
+            title="可选专家"
+            :visible.sync="dialogVisible"
+            width="800px"
+            :before-close="handleClose"
+            v-loading="loading">
+            <div style="width: 740px; margin:0 auto 0 auto">
+                <el-table ref="multipleTable" 
+                    :data="expertTableData" 
+                    tooltip-effect="light" 
+                    style="width: 740px"
+                    max-height="100%"
+                    @selection-change="ehandleSelectionChange">
+                    <el-table-column type="selection" width="40px">
+                    </el-table-column>
+                    <el-table-column type="index" label="序号" width="60px">
+                    </el-table-column>
+                    <el-table-column 
+                        label="专家姓名" 
+                        prop="name" 
+                        style="width:120px"
+                        column-key="name"
+                        sortable>
+                    </el-table-column>
+                    <el-table-column label="专家领域" prop="field" width="180px" :filters="fieldFilters" :filter-method="filterHandler">
+                    </el-table-column>
+                    <el-table-column 
+                        label="专家邮箱" 
+                        width="300px" 
+                        prop="email"
+                        column-key="email"
+                        ortable 
+                        show-overflow-tooltip>
+                    </el-table-column>
+                    <el-table-column class-name="expert_id" label="" prop="expert_id" width="40px">
+                    </el-table-column>
+                </el-table>
+            </div>
+        <span slot="footer" class="dialog-footer">
+            <el-button @click="dialogVisible = false">取消</el-button>
+            <el-button type="primary" @click="matchWorksAndExperts">确认分配</el-button>
+        </span>
+        </el-dialog> -->
+    </div>
+
+    <script>
+        const ALL_REVIEW_STATE = [0, 1, 2, 3, 4];
+        var exptReviewList = new Vue({
+            el: '#ExptreviewList',
+            data: {
+                exptReviewTable: {{ review_ret|safe }},
+                filterReview: {{ review_ret|safe }},
+
+                dialogVisible: false,
+                loading:false,
+
+                
+                currentReviewPage: 1,
+                reviewPageSize: 10,
+
+                reviewFilters: {
+                    'review_state': ALL_REVIEW_STATE
+                },
+
+                totalExpert: 0,
+                currentExpPage: 1,
+
+                rmultipleSelection: [],
+                emultipleSelection: [],
+
+                typeFilters: [{ text: '科技发明制作', value: '科技发明制作' }, 
+                    { text: '调查报告和学术论文', value: '调查报告和学术论文' }],
+
+                stateFilters: [{ text: '0', value: 0 }, { text: '1', value: 1 }, 
+                    { text: '2', value: 2 }, { text: '3', value: 3 }, 
+                    { text: '4', value: 4 }]
+            },
+            computed: {
+                displayReview: function () {
+                    return this.filterReview.slice((this.currentReviewPage-1)*this.reviewPageSize,this.currentReviewPage*this.reviewPageSize);
+                },
+                totalReview: function () {
+                    return this.filterReview.length;
+                }
+            },
+            methods: {
+                wtoggleSelection(rows) {
+                    if (rows) {
+                        rows.forEach(row => {
+                            this.$refs.wmultipleTable.toggleRowSelection(row);
+                        });
+                    } else {
+                        this.$refs.wmultipleTable.clearSelection();
+                    }
+                },
+                whandleSelectionChange(val) {
+                    this.rmultipleSelection = val;
+                    // console.log(this.rmultipleSelection["0"]['work_id']);
+                },
+                etoggleSelection(rows) {
+                    if (rows) {
+                        rows.forEach(row => {
+                            this.$refs.emultipleTable.toggleRowSelection(row);
+                        });
+                    } else {
+                        this.$refs.emultipleTable.clearSelection();
+                    }
+                },
+                ehandleSelectionChange(val) {
+                    this.emultipleSelection = val;
+                },
+                filterHandler(value, row, column) {
+                    const property = column['property'];
+                    return row[property] === value;
+                },
+                rhandleSizeChange(val) {
+                    this.reviewPageSize = val;
+                },
+                rhandleSizeChange(val) {
+                    this.currentReviewPage = val;
+                },
+                selectExpert() {
+                    if (this.rmultipleSelection.length > 0) {
+                        this.dialogVisible = true;
+                    }
+                    else{
+                        this.$message.error('请至少选择一个参赛作品！');
+                    }
+                },
+                handleClose(done) {
+                    this.$confirm('确认关闭？')
+                    .then(_ => {
+                        done();
+                    })
+                    .catch(_ => {});
+                },
+                matchWorksAndExperts(){
+                    this.loading = true;
+
+                    var em_length = this.emultipleSelection.length;
+                    if (em_length < 3) {
+                        this.$message.error('请至少选择三名专家！');
+                        this.loading = false;
+                        return;
+                    }
+
+                    var wm_length = this.rmultipleSelection.length;
+                    selected_work = [];
+                    selected_expert = [];
+
+                    for (var i = 0; i < wm_length; i++) {
+                        selected_work.push(this.rmultipleSelection[i]['work_id'])
+                    }
+                    for (var i = 0; i < em_length; i++) {
+                        selected_expert.push(this.emultipleSelection[i]['expert_id'])
+                    }
+                    // console.log(selected_work);
+                    // console.log(selected_expert);
+                    
+                    this.$http
+                    .post(
+                        '../assign_expert/',
+                        {'selected_work': JSON.stringify(selected_work),
+                        'selected_expert': JSON.stringify(selected_expert),},
+                        {emulateJSON:true}
+                    )
+                    .then(response => {
+                        console.log(response);
+                        if(response.body.Message == 0){
+                            this.$message({message:'分配成功！', type:'success'});
+                            window.open('../assign_work/', '_self');
+                        }
+                        else{
+                            this.$message.error('分配失败！');
+                        }
+                        this.loading = false;
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        console.log(error);
+                        this.$message.error('分配失败！');
+                        this.dialogVisible = false;
+                        this.loading = false;
+                    });
+                },
+                test(filters){
+                    // console.log(this.exptReviewTable);
+                    this.filterReview = [];
+                    var filtered;
+
+                    if(filters['review_state']){
+                        if(filters['review_state'].length == 0){
+                            this.reviewFilters['review_state'] = ALL_REVIEW_STATE;
+                        }
+                        else this.reviewFilters['review_state'] = filters['review_state'];
+                    }
+
+                    for (var i = 0; i < this.exptReviewTable.length; i++) {
+                        for (var j = 0; j < this.reviewFilters['review_state'].length; j++) {
+                            if (this.exptReviewTable[i]['review_state'] == this.reviewFilters['review_state'][j]) {
+                                this.filterReview.push(this.exptReviewTable[i]['review_state']);
+                                break;
+                            }
+                        }
+                    }
+                    //console.log(filters);
+                    this.currentReviewPage = 1;
+                    // console.log(this.exptReviewTable);
+                }
+            },
+            delimiters: ["{[", "]}"]
+        });
+        // assList.totalExpert=assList.expertTableData.length;
+        // console.log(assList.expertTableData);
+    </script>
+</body>
+
+</html>

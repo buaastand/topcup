@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TopCup作品详情</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="../static/css/submit_techwork.css">
+    <link rel="stylesheet" href="../static/css/NavName.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+        <meta name="csrf-token" content="{{ csrf_token }}">
+</head>
+<body style="margin: 0px;font-size:14px;color: #606266;">
+{% include 'NavMenu.html' %}
+<div id="work_review" style="margin: 0">
+    <div style="width: 140vh;min-width:1000px;margin: 5vh auto 5vh auto;
+                box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);padding: 2% 2% 50px 2%">
+        <div style="color:#303133;font-weight: bold;font-size: 24px;margin:3% 5% 5% 5%">
+            <i class="el-icon-tickets" style="margin-right: 5px;padding-right: 5px;padding-bottom: 2px"></i>作品详细信息
+        </div>
+
+            <el-collapse v-model="activeNames" @change="handleChange" style="margin: 5%">
+              <el-collapse-item name="work_info">
+                  <div slot="title" style="font-size: 20px;font-weight: bold; color: #303133">
+                      作品基本信息
+                  </div>
+
+                  <div id="form" style="width: 85%; margin-left:5%;margin-top: 20px">
+                    <el-form  ref="workForm" :model="workForm" label-width="80px">
+                      <el-form-item label="作品全称:" >
+                        <div>{{ work.title }}</div>
+                      </el-form-item>
+
+                      <el-form-item label="作品类别:" prop="type">
+                          {% if work.work_type == 1 %}
+                          <div>科技发明制作</div>
+                          {% else %}
+                          <div>调查报告和学术论文</div>
+                          {% endif %}
+                      </el-form-item>
+
+                      <el-form-item label="专业领域:" prop="field">
+                          {% if work.field == 1 %}
+                          <div>A.机械与控制（包括机械、仪器仪表、自动化控制、工程、交通、建筑等）</div>
+                          {% elif work.field == 2 %}
+                          <div>B.信息技术（包括计算机、电信、通讯、电子等</div>
+                          {% elif work.field == 3 %}
+                          <div>C.数理（包括数学、物理、地球与空间科学等）</div>
+                          {% elif work.field == 4 %}
+                          <div>D.生命科学(包括生物､农学､药学､医学､健康､卫生､食品等)</div>
+                          {% elif work.field == 5 %}
+                          <div>E.能源化工（包括能源、材料、石油、化学、化工、生态、环保等</div>
+                          {% elif work.field == 6 %}
+                          <div>F.哲学社会科学（包括哲学、经济、社会、法律、教育、管理</div>
+                          {% endif %}
+                      </el-form-item>
+
+                      <el-form-item prop="detail" label="总体说明:" >
+                          {{ work.detail }}
+                      </el-form-item>
+                      <el-form-item label="创新点:" prop="innovation">
+                          {{ work.innovation }}
+                      </el-form-item>
+                      <el-form-item label="关键词:" prop="keywords">
+                          {{ work.keywords }}
+                      </el-form-item>
+
+
+
+                    </el-form>
+                  </div>
+              </el-collapse-item>
+
+              <el-collapse-item name="docu_list">
+                  <div slot="title" style="font-weight: bold;font-size: 20px">
+                      作品文档
+                  </div>
+                <div style="margin-left: 5%">
+                    {%  for file in docu %}
+                        <a href={{ file.url }} target="_blank" style="font-size: 16px">{{ file.name }}</a><br>
+                    {% endfor %}
+                </div>
+              </el-collapse-item>
+
+              <el-collapse-item name="photo_list">
+                  <div slot="title" style="font-weight: bold;font-size: 20px">
+                      作品图片
+                  </div>
+                  {% for file in photo %}
+                  <div style="padding-left: 25px">
+                    <div onclick="dialogVisible=true" style="float: left;margin: 20px 20px 20px">
+                        <el-image style="width: 140px; height: 140px" src={{ file.url }} fit="cover"></el-image>
+                    </div>
+                  </div>
+                  {% endfor %}
+              </el-collapse-item>
+
+              <el-collapse-item name="video_list">
+                  <div slot="title" style="font-weight: bold;font-size: 20px">
+                      作品视频
+                  </div>
+                <div style="margin:3% 5%">
+                    {% for file in video %}
+                    <video src={{ file.url }} controls="controls" width="90%"></video>
+                    {% endfor %}
+                </div>
+              </el-collapse-item>
+
+              <el-collapse-item name="review">
+                  <div slot="title" style="font-weight: bold;font-size: 20px">
+                      评审意见
+                  </div>
+
+                  <el-form :model="judge" style="width: 80%">
+                    <el-form-item label="评分" label-width="100px">
+                       <el-input-number v-model="judge.score"
+                                         :step="1" :max="100" :min="0" :controls="false">
+                       </el-input-number>
+                        <p style="margin: 0; color: red; font-weight: bold">百分制，评分范围为0 — 100</p>
+                    </el-form-item>
+                    <el-form-item label="评审意见" label-width="100px">
+                      <el-input v-model="judge.comment" placeholder="请输入您对作品的意见与看法"
+                                :autosize="{ minRows: 5, maxRows: 10}"
+                                autocomplete="off"
+                                type="textarea"></el-input>
+                    </el-form-item>
+                      <el-form-item>
+                    <el-button type="primary" @click="reviewWork()" style="float: right; margin-bottom: 25px">保存</el-button>
+                  </el-form-item>
+                  </el-form>
+
+              </el-collapse-item>
+            </el-collapse>
+
+            <el-button type="success" @click="dowloadZip()" style="margin-left: 5%">打包下载附件</el-button>
+            <el-button type="warning" @click="returnList()" style="margin-left: 60%">返回</el-button>
+            <el-button type="danger" @click="">下一个</el-button>
+    </div>
+</div>
+
+</body>
+
+<script>
+  var app = new Vue({
+  el: '#work_review',
+  data:{
+        activeIndex: '1',
+        activeIndex2: '1',
+        dialogVisible: false,
+        activeNames: ['work_info','docu_list','photo_list','video_list','review'],
+        workForm:[],
+        judge: {
+            score: {{ score | default_if_none:'' }},
+            comment: "{{ comment | default_if_none:'' }}"
+        },
+  },
+  methods: {
+      reviewWork() {     // 评分
+              axios.get('/judge/',{params:{ id:{{ id }}, score:this.judge.score, comment:this.judge.comment}})
+          .then(response=> {
+              console.log(response);
+              this.dialogFormVisible = false;
+              this.$message.success('评审成功');
+          })
+          .catch(error=> {
+              this.$message.error('网络异常: 评分失败');
+              console.log(error);
+          });
+        },
+
+      dowloadZip() {     // 下载附件
+            // 调用函数查找合作者信息
+            axios.get('/downloadZip/', {params: {id: {{id}} }})
+            .then(response => {
+                window.open(response.request.responseURL);
+                this.$message.success('打开附件压缩包');
+            })
+            .catch(error => {
+                this.$message.error('该作品未上传附件');
+                console.log(error);
+            });
+        },
+      returnList(){     // 返回列表页
+          window.location.href='/reviewworklist';
+      },
+
+      handleChange(activeNames){
+        for( i in activeNames){
+          if(i === 'video_list'){
+              document.getElementById('video').pause();
+          }
+        }
+      }
+    }
+  })
+</script>
+
+</html>

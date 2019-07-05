@@ -46,27 +46,41 @@ def CompetitionDetail(request):
     temp=datetime.date.today()
     now_time =temp
     if now_time<cptDetail.init_date:
-        status_type="0"
+        status_type="-1"
     elif now_time<cptDetail.submit_end_date:
-        status_type="1"
+        status_type="0"
     elif now_time<cptDetail.check_end_date:
-        status_type="2"
+        status_type="1"
     elif now_time<cptDetail.review_end_date:
-        status_type="3"
+        status_type="2"
     elif now_time<cptDetail.defense_end_date:
-        status_type="4"
+        status_type="3"
     else:
-        status_type="5"
+        status_type="4"
 
     context['status_type']=status_type
     context['useridentity'] = user_identity
     context['username'] = user_name
     return render(request,"../templates/CompetitionDetail.html",context)
 
+def CompetitionUpdate():
+    cptList = Competition.objects.all()
+    now_time = datetime.date.today()
+    for i in cptList:
+        if now_time < i.init_date:
+            i.status = 0
+        elif now_time < i.finish_date:
+            i.status = 1
+        else:
+            i.status = 2
+        i.save()
+
 def CompetitionList(request):
     order = '0'
     selected = '0'
     total = '0'
+
+    CompetitionUpdate()
 
     if 'order' in request.GET:
         order = request.GET['order']
@@ -82,10 +96,8 @@ def CompetitionList(request):
         cptList = Competition.objects.filter(status=2)
     elif selected == '3':
         cptList = Competition.objects.filter(status=0)
-    elif user_identity == 3:
-        cptList = Competition.objects.all()
     else:
-        cptList = Competition.objects.filter(status__gt=0)
+        cptList = Competition.objects.all()
 
     total = len(cptList)
     if order == '1':
@@ -96,16 +108,6 @@ def CompetitionList(request):
         cptList = cptList.order_by("-finish_date")
     else:
         cptList = cptList.order_by("init_date")
-
-    now_time = datetime.date.today()
-    for i in cptList:
-        if now_time < i.init_date:
-            i.status = 0
-        elif now_time < i.finish_date:
-            i.status = 1
-        else:
-            i.status = 2
-        i.save()
 
     paginator = Paginator(cptList, 6) # 每页6条
     page = request.GET.get('page')
@@ -179,7 +181,7 @@ def CompetitionFormPost(request):
     
     print(detail_img)
     if detail_img is None:
-        detail_img = 'img/detailimg.jpg'
+        detail_img = 'competition/img/detailimg.jpg'
     
     print(detail_img)
     try:

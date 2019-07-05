@@ -10,7 +10,7 @@
     width: 100%;
     height: 100%;
     position: relative;
-    background-image: url('../image/detailimg.jpg');
+    /*background-image: url('../image/detailimg.jpg');*/
 }
 
 .beauty-left {
