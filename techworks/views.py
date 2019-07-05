@@ -1,7 +1,20 @@
-from django.shortcuts import render, HttpResponse
+import datetime
+import json
+import os
+import random
+import re
+import time
+
+import convertapi
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db import transaction
+from django.db.models import Q
 from django.http.response import JsonResponse
+from django.shortcuts import render, HttpResponse
 from django.views import View
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+
 from .models import WorkInfo, Appendix
 from django.db.models import Q
 from competition.models import CompetitionRegistration, Competition
@@ -13,14 +26,108 @@ import datetime, time, random
 import json
 import docx
 from docx import Document
-import re
-import convertapi
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
-
 from docx.shared import Pt
+
+from competition.models import CompetitionRegistration, Competition
+from competition.views import GetUserIdentitiy
+from users.models import Student
+from .models import WorkInfo, Appendix
 
 
 # Create your views here.
+@csrf_exempt
+def work_info(request):
+    DEGREE = ['大专','大学本科','硕士研究生','博士研究生']
+    user_name, user_identity = GetUserIdentitiy(request)
+    information = {}
+    workInfo = WorkInfo.objects.get(id=request.GET['work_id'])
+    documentlist = []
+    photolist = []
+    videolist = []
+    for i in Appendix.objects.filter(work_id=request.GET['work_id']):
+        if i.appendix_type == 1:
+            documentlist.append(i)
+        elif i.appendix_type == 2:
+            photolist.append(i)
+        else:
+            videolist.append(i)
+    workAuthor = CompetitionRegistration.objects.get(id=request.GET['work_id'])
+    workFirstAuthorInfo = Student.objects.get(user_id=workAuthor.first_auth_id)
+    labelList = json.loads(workInfo.labels)['labels']
+    labellist = list(map(int, labelList))
+    authorList = []
+
+    firstAuthor = {}
+    firstAuthor['name'] = workFirstAuthorInfo.name
+    firstAuthor['stu_id'] = workFirstAuthorInfo.stu_id
+    firstAuthor['birthdate'] = str(workFirstAuthorInfo.birthdate.year) + "-"
+    if workFirstAuthorInfo.birthdate.month < 10:
+        firstAuthor['birthdate'] = firstAuthor['birthdate'] + "0" + str(workFirstAuthorInfo.birthdate.month)
+    else:
+        firstAuthor['birthdate'] = firstAuthor['birthdate'] + str(workFirstAuthorInfo.birthdate.month)
+    firstAuthor['degree'] = DEGREE[workFirstAuthorInfo.degree]
+    firstAuthor['major'] = workFirstAuthorInfo.major
+    firstAuthor['enroll_time'] = str(workFirstAuthorInfo.enroll_time)
+    firstAuthor['address'] = workFirstAuthorInfo.address
+    firstAuthor['phone'] = workFirstAuthorInfo.phone
+    firstAuthor['email'] = workFirstAuthorInfo.user.email
+
+
+    if(workAuthor.second_auth_id):
+        workSecondAuthorInfo = Student.objects.get(user_id=workAuthor.second_auth_id)
+        authorList.append({'name': workSecondAuthorInfo.name,
+                           'stu_id': workSecondAuthorInfo.stu_id,
+                           'degree': DEGREE[workSecondAuthorInfo.degree],
+                           'phone': workSecondAuthorInfo.phone,
+                           'email': workSecondAuthorInfo.user.email})
+    else:
+        workSecondAuthorInfo = ''
+
+    if (workAuthor.third_auth_id):
+        workThirdAuthorInfo = Student.objects.get(user_id=workAuthor.third_auth_id)
+        authorList.append({'name': workThirdAuthorInfo.name,
+                           'stu_id': workThirdAuthorInfo.stu_id,
+                           'degree': DEGREE[workThirdAuthorInfo.degree],
+                           'phone': workThirdAuthorInfo.phone,
+                           'email': workThirdAuthorInfo.user.email})
+    else:
+        workThirdAuthorInfo = ''
+
+    if (workAuthor.forth_auth_id):
+        workForthAuthorInfo = Student.objects.get(user_id=workAuthor.forth_auth_id)
+        authorList.append({'name': workForthAuthorInfo.name,
+                           'stu_id': workForthAuthorInfo.stu_id,
+                           'degree': DEGREE[workForthAuthorInfo.degree],
+                           'phone': workForthAuthorInfo.phone,
+                           'email': workForthAuthorInfo.user.email})
+    else:
+        workForthAuthorInfo = ''
+
+    if (workAuthor.fifth_auth_id):
+        workFifthAuthorInfo = Student.objects.get(user_id=workAuthor.fifth_auth_id)
+        authorList.append({'name': workFifthAuthorInfo.name,
+                           'stu_id': workFifthAuthorInfo.stu_id,
+                           'degree': DEGREE[workFifthAuthorInfo.degree],
+                           'phone': workFifthAuthorInfo.phone,
+                           'email': workFifthAuthorInfo.user.email})
+    else:
+        workFifthAuthorInfo = ''
+
+    information = {'workInfo': workInfo}
+    information['documentlist'] = documentlist
+    information['photolist'] = photolist
+    information['videolist'] = videolist
+    information['workAuthor'] = workAuthor
+    information['authorList'] = authorList
+    information['labellist'] = labellist
+    information['username'] = user_name
+    information['useridentity'] = user_identity
+    information['firstAuthor'] = firstAuthor
+
+    return render(request, '../templates/viewWorkInfo.html', information)
+
 def searchstu(request):
     DEGREE_MAP = {
         1: "大专",
@@ -126,7 +233,7 @@ class TechWorkView(View):
                     first_auth=Student.objects.get(user__username=username),
                     competition=Competition.objects.get(id=comptition_id))
                 registration.save()
-                work_cnt = int(time.time())*100 + random.randint(0, 10000)
+                work_cnt = int(int(str(int(time.time()))[4:]) * 100 + random.randint(0, 100))
                 work = WorkInfo.objects.create(registration=registration, title="", detail="", innovation="",
                                                keywords="", avg_score=0, work_id=work_cnt, work_type=1,
                                                field=1)
@@ -162,11 +269,11 @@ class TechWorkView(View):
             filelist = Appendix.objects.filter(work__work_id=work.work_id)
 
             for file in filelist:
-                if (file.appendix_type == 0):
+                if file.appendix_type == 0:
                     file_docu.append({"name": file.filename, "url": file.file.url})
-                if (file.appendix_type == 1):
+                elif file.appendix_type == 1:
                     file_photo.append({"name": file.filename, "url": file.file.url})
-                if (file.appendix_type == 2):
+                elif file.appendix_type == 2:
                     file_video.append({"name": file.filename, "url": file.file.url})
 
         user_name, user_identity = GetUserIdentitiy(request)
@@ -273,6 +380,26 @@ class TechWorkView(View):
         #     baseuser.email = email
         #     baseuser.save()
 
+def insert(document, paragraph, font, size, content, center=False):
+    # 用于对docx文档的文字插入，font为字体，size为字号，content为内容
+    p = document.paragraphs
+    run = p[paragraph].add_run(content)
+    run.font.name = font
+    run.font.size = Pt(size)
+    run._element.rPr.rFonts.set(qn('w:eastAsia'), font)
+    if center == True:
+        p[paragraph].paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+def insert_chart(document, table, row, column, font, size, content, clear=False):
+    p = document.tables
+    if clear == True:
+        for i in p[table].cell(row, column).paragraphs:
+            i.clear()
+            i.text = ''
+    run = p[table].cell(row, column).paragraphs[0].add_run(content)
+    run.font.name = font
+    run.font.size = Pt(size)
+    run._element.rPr.rFonts.set(qn('w:eastAsia'), font)
 
 
 def generatePdf(request):
@@ -284,17 +411,22 @@ def generatePdf(request):
         registration = work_info.registration
         # 获取段落文字
         para = document.paragraphs
-        para[0].text = re.sub("（系统自动生成）", workid, para[0].text)
-        para[0].font
-        para[8].text = re.sub("（名称）", work_info.title, para[8].text)
+        para[0].clear()
+        insert(document, 0, '楷体_GB2312', 15, '作品编码：  ' + workid)
+        para[7].clear()
+        insert(document, 7, '楷体_GB2312', 15, '        作品名称：  ' + work_info.title)
+        para[8].clear()
+        insert(document, 8, '楷体_GB2312', 15, '        院系名称：  ' + registration.first_auth.department + '（签章）')
+
         if (work_info.work_type == 1):
-            para[12].text = re.sub("□", "☑", para[12].text)
+            para[11].clear()
+            insert(document, 11, '楷体_GB2312', 14, '☑科技发明制作')
         elif (work_info.work_type == 2):
-            para[13].text = re.sub("□", "☑", para[13].text)
+            para[12].clear()
+            insert(document, 12, '楷体_GB2312', 14, '☑调查报告和学术论文')
 
         tables = document.tables  # 获取文件中的表格集
         table = tables[0]  # 获取文件中的第一个表格
-        leng = len(table.rows)
         company = []
 
         if registration.first_auth is not None:
@@ -309,63 +441,69 @@ def generatePdf(request):
             company.append(registration.fifth_auth)
 
         # 表格1
-        table.cell(0, 3).text = auth.name
-        table.cell(0, 6).text = auth.stu_id
-        table.cell(0, 8).text = auth.birthdate.strftime("%Y-%m-%d")
-        # 替换学历
 
+        insert_chart(document, 0, 0, 3, '仿宋_GB2312', 14, auth.name)
+        insert_chart(document, 0, 0, 6, '仿宋_GB2312', 14, auth.stu_id)
+        insert_chart(document, 0, 0, 8, '仿宋_GB2312', 14, auth.birthdate.strftime("%Y-%m-%d"))
+
+
+        # 替换学历
         degreechange = r"（  ）"
         if (auth.degree == 1):
-            table.cell(1, 3).text = re.sub(degreechange, "（A）", table.cell(1, 3).text)
+            insert_chart(document, 0, 1, 3, '仿宋_GB2312', 14, '（ A ）A大专  B大学本科  C硕士研究生  D博士研究生', True)
         elif (auth.degree == 2):
-            table.cell(1, 3).text = re.sub(degreechange, "（B）", table.cell(1, 3).text)
+            insert_chart(document, 0, 1, 3, '仿宋_GB2312', 14, '（ B ）A大专  B大学本科  C硕士研究生  D博士研究生', True)
         elif (auth.degree == 3):
-            table.cell(1, 3).text = re.sub(degreechange, "（C）", table.cell(1, 3).text)
+            insert_chart(document, 0, 1, 3, '仿宋_GB2312', 14, '（ C ）A大专  B大学本科  C硕士研究生  D博士研究生', True)
         elif (auth.degree == 4):
-            table.cell(1, 3).text = re.sub(degreechange, "（D）", table.cell(1, 3).text)
+            insert_chart(document, 0, 1, 3, '仿宋_GB2312', 14, '（ D ）A大专  B大学本科  C硕士研究生  D博士研究生', True)
         # 第一作者
-        table.cell(2, 3).text = auth.major
-        table.cell(2, 8).text = auth.enroll_time.strftime("%Y-%m-%d")
-        table.cell(3, 4).text = work_info.title
-        table.cell(4, 3).text = auth.address
-        table.cell(4, 8).text = auth.phone
-        table.cell(5, 8).text = auth.user.email
+        insert_chart(document, 0, 2, 3, '仿宋_GB2312', 14, auth.major)
+        insert_chart(document, 0, 2, 8, '仿宋_GB2312', 14, auth.enroll_time.strftime("%Y-%m-%d"))
+        insert_chart(document, 0, 3, 4, '仿宋_GB2312', 14, work_info.title)
+        insert_chart(document, 0, 4, 3, '仿宋_GB2312', 14, auth.address)
+        insert_chart(document, 0, 4, 8, '仿宋_GB2312', 14, auth.phone)
+        insert_chart(document, 0, 5, 8, '仿宋_GB2312', 14, auth.user.email)
+
         # 其他合作者
         row = 7
         for i in company:
-            table.cell(row, 1).text = i.name
-            table.cell(row, 2).text = i.stu_id
+            insert_chart(document, 0, row, 1, '仿宋_GB2312', 14, i.name)
+            insert_chart(document, 0, row, 2, '仿宋_GB2312', 14, i.stu_id)
             if (i.degree == 1):
-                table.cell(row, 3).text = "大专"
+                insert_chart(document, 0, row, 3, '仿宋_GB2312', 14, '大专')
             elif (i.degree == 2):
-                table.cell(row, 3).text = "大学本科"
+                insert_chart(document, 0, row, 3, '仿宋_GB2312', 14, '大学本科')
             elif (i.degree == 3):
-                table.cell(row, 3).text = "硕士研究生"
+                insert_chart(document, 0, row, 3, '仿宋_GB2312', 14, '硕士研究生')
             elif (i.degree == 4):
-                table.cell(row, 3).text = "博士研究生"
-            table.cell(row, 6).text = i.phone
-            table.cell(row, 7).text = i.user.email
+                insert_chart(document, 0, row, 3, '仿宋_GB2312', 14, '博士研究生')
+            insert_chart(document, 0, row, 6, '仿宋_GB2312', 14, i.phone)
+            insert_chart(document, 0, row, 7, '仿宋_GB2312', 14, i.user.email)
             row = row + 1
         # 表格2
         table2 = tables[1]  # 获取文件中的第二个表格
-        table2.cell(0, 1).text = work_info.title
+        insert_chart(document, 1, 0, 1, '仿宋_GB2312', 14, work_info.title)
         fieldchange = r"（  ）"
         if (work_info.field == 1):
-            table2.cell(1, 1).text = re.sub(fieldchange, "（A）", table2.cell(1, 1).text)
+            table2.cell(1, 1).text = re.sub(fieldchange, "（A）\n", table2.cell(1, 1).text)
         elif (work_info.field == 2):
-            table2.cell(1, 1).text = re.sub(fieldchange, "（B）", table2.cell(1, 1).text)
+            table2.cell(1, 1).text = re.sub(fieldchange, "（B）\n", table2.cell(1, 1).text)
         elif (work_info.field == 3):
-            table2.cell(1, 1).text = re.sub(fieldchange, "（C）", table2.cell(1, 1).text)
+            table2.cell(1, 1).text = re.sub(fieldchange, "（C）\n", table2.cell(1, 1).text)
         elif (work_info.field == 4):
-            table2.cell(1, 1).text = re.sub(fieldchange, "（D）", table2.cell(1, 1).text)
+            table2.cell(1, 1).text = re.sub(fieldchange, "（D）\n", table2.cell(1, 1).text)
         elif (work_info.field == 5):
-            table2.cell(1, 1).text = re.sub(fieldchange, "（E）", table2.cell(1, 1).text)
+            table2.cell(1, 1).text = re.sub(fieldchange, "（E）\n", table2.cell(1, 1).text)
         elif (work_info.field == 6):
-            table2.cell(1, 1).text = re.sub(fieldchange, "（F）", table2.cell(1, 1).text)
+            table2.cell(1, 1).text = re.sub(fieldchange, "（F）\n", table2.cell(1, 1).text)
 
-        table2.cell(2, 1).text = work_info.detail
-        table2.cell(3, 1).text = work_info.innovation
-        table2.cell(4, 1).text = work_info.keywords
+        field_temp = table2.cell(1, 1).text
+        insert_chart(document, 1, 1, 1, '仿宋_GB2312', 14, field_temp, True)
+
+        insert_chart(document, 1, 2, 1, '仿宋_GB2312', 14, work_info.detail, True)
+        insert_chart(document, 1, 3, 1, '仿宋_GB2312', 14, work_info.innovation, True)
+        insert_chart(document, 1, 4, 1, '仿宋_GB2312', 14, work_info.keywords, True)
         labellist = json.loads(work_info.labels)['labels']
         labellist=list(map(int,labellist))
         labellist.sort(reverse=True)
@@ -384,12 +522,22 @@ def generatePdf(request):
         for check, opt in zip(checklist, opt_list):
             check_result += check + opt
         table2.cell(*position).text = check_result
-        document.save('static/pdf/fulltable.docx')
+
+        if work_info.work_type == 2:
+            temp = document.tables[1].cell(6, 1).paragraphs[0].text
+            insert_chart(document, 1, 6, 1, '仿宋_GB2312', 14, temp, True)
+        else:
+            temp = document.tables[1].cell(5, 1).paragraphs[0].text
+            insert_chart(document, 1, 5, 1, '仿宋_GB2312', 14, temp, True)
+        if not os.path.exists('media/pdf/'):
+            os.mkdir('media/pdf/')
+        document.save('media/pdf/'+workid+'.docx')
+
         convertapi.api_secret = 'D1kgtEI0Qc5VTJpb'
         convertapi.convert('pdf', {
-            'File': 'static/pdf/fulltable.docx'
-        }, from_format='docx').save_files('static/pdf/fulltable.pdf')
+            'File': 'media/pdf/'+workid+'.docx'
+        }, from_format='docx').save_files('media/pdf/'+workid+'.pdf')
 
 
-    return JsonResponse({'ret': 'Reply for work_id'})
+    return JsonResponse({'url': '/media/pdf/'+workid+'.pdf'})
 
