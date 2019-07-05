@@ -45,7 +45,7 @@
                     </el-table-column>
                     <el-table-column>
                         <template slot-scope="scope">
-                            <el-button size="mini" type="warning" @click="opendialog(scope.row.id)" style="float: right">评分</el-button>
+                            <el-button size="mini" type="warning" @click="opendialog(scope.row.id, scope.row.score, scope.row.comment)" style="float: right">评分</el-button>
                             <el-button size="mini" type="danger" @click="dowloadZip(scope.row.id)" style="float: right; margin-right: 10px">下载</el-button>
                             <el-button size="mini" type="primary" @click="viewWork(scope.row.id)" style="float: right;">详情</el-button>
                         </template>
@@ -59,7 +59,14 @@
                     <el-table-column prop="id"     label="编号" width="80px" align="center"></el-table-column>
                     <el-table-column prop="title"  label="作品名称" width="200px" align="center"></el-table-column>
                     <el-table-column prop="keywords"  label="关键词" width="300px" align="center"></el-table-column>
-                    <el-table-column prop="score"  label="分数" width="100px" align="center"></el-table-column>
+                    <el-table-column prop="score"  label="分数" width="100px" align="center">
+
+                                <el-popover trigger="hover" placement="top">
+                                  <p>评论意见: {{ scope.row.comment }}</p>
+                                </el-popover>
+
+                    </el-table-column>
+
                     <el-table-column prop="tag"    label="状态" width="150px" align="center" sortable sort-orders="descending">
                          <template slot-scope="scope">
                                 <el-tag :type="scope.row.tag === '未评审' ? 'danger' : 'success'" effect="dark" >
@@ -71,7 +78,7 @@
                     </el-table-column>
                     <el-table-column>
                         <template slot-scope="scope">
-                            <el-button size="mini" type="warning" @click="opendialog(scope.row.id)" style="float: right">评分</el-button>
+                            <el-button size="mini" type="warning" @click="opendialog(scope.row.id, scope.row.score, scope.row.comment)" style="float: right">评分</el-button>
                             <el-button size="mini" type="danger" @click="dowloadZip(scope.row.id)" style="float: right; margin-right: 10px">下载</el-button>
                             <el-button size="mini" type="primary" @click="viewWork(scope.row.id)" style="float: right;">详情</el-button>
                         </template>
@@ -82,6 +89,8 @@
           </el-tabs>
         </template>
         </el-main>
+
+        <el-button type="primary" @click="submitReview" style="margin:auto ;width: 25%" >提交</el-button>
 
         <el-footer v-if="Type == 'invention' ">
             <div style="margin: 25px auto; text-align: center">
@@ -110,15 +119,16 @@
         <el-dialog title="评审" :visible.sync="dialogFormVisible" width="500px">
           <el-form :model="judge">
             <el-form-item label="评分(百分制)" label-width="100px">
-               <el-input-number v-model="judge.score"
-                                :precision="1" :step="0.1" :max="100" :min="0" :controls="false">
+               <el-input-number v-model="judge.score" :step="1" :max="100" :min="0" :controls="false">
                </el-input-number>
+                <p style="margin: 0; color: red; font-weight: bold">百分制，评分范围为: 0 — 100</p>
             </el-form-item>
             <el-form-item label="评审意见" label-width="100px">
               <el-input v-model="judge.comment" placeholder="请输入您对作品的意见与看法"
                         :autosize="{ minRows: 5, maxRows: 10}"
                         autocomplete="off"
-                        type="textarea"></el-input>
+                        type="textarea"
+                        value={{ comment }}></el-input>
             </el-form-item>
           </el-form>
           <div slot="footer" class="dialog-footer">
@@ -137,21 +147,18 @@
         Type:'invention',
         inventionList: {{ invention | safe }},
         reportList: {{ report | safe }},
-        judge:{
-            score:'',
-            comment:''
-        },
+        judge:[],
         dialogTableVisible: false,
         dialogFormVisible: false,
     },
     methods: {
-        opendialog(id){
-            console.log(id);
-            this.dialogFormVisible = true;
+        opendialog(id, score,comment){
             this.id =id;
+            this.judge.score = score;
+            this.judge.comment = comment;
+            this.dialogFormVisible = true;
         },
         reviewWork(judge) {     // 评分
-            console.log(this.expert_id);
             axios.get('/judge/',{params:{id:this.id, score:judge.score, comment:judge.comment}})
             .then(response=> {
                   console.log(response);
@@ -182,6 +189,18 @@
         handleCurrentChange(val) {
             window.open("/reviewworklist?page="+val,"_self");
         },
+
+        submitReview(){
+            axios.get('/submitReview/')
+            .then(response => {
+                window.open(response.request.responseURL);
+                this.$message.success('提交成功: 感谢您对本次比赛的支持与帮助！');
+            })
+            .catch(error => {
+                this.$message.error('网络异常：提交失败');
+                console.log(error);
+            });
+        }
 
     }
 })

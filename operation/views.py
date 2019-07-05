@@ -31,18 +31,27 @@ def DownLoadZip(request):
     temp.seek(0)
     wrapper = FileWrapper(temp)
     response = HttpResponse(wrapper, content_type='application/zip')
-    response['Content-Disposition'] = 'attachment; filename=' + 'TEST' + '.zip' # 压缩包名称有问题
+    response['Content-Disposition'] = 'attachment; filename=' + 'TEST' + '.zip'  # 压缩包名称有问题
     response['Content-Length'] = data
     return response
 
 
 def Judge(request):
     review = Review.objects.get(id=request.GET.get('id'))
-    review.score = request.GET.get('score')
-    review.comment = request.GET.get('comment')
+    review.score = request.GET.get('score', review.score)
+    review.comment = request.GET.get('comment', review.comment)
     review.review_status = 3
     review.save()
-    return render(request, 'ExpertReviewWorkList.html')
+    return render(request, 'ExpertReviewWorkList.html', {'score': review.score, 'comment': review.comment})
+
+
+def sumbitReview(request):
+    pass
+    # user_id = request.user.id
+    # review_list = Review.objects.filter(expert__user_id=user_id)
+
+
+
 
 
 class ExpertReviewListView(View):
@@ -66,6 +75,7 @@ class ExpertReviewListView(View):
                     'title': work.title,
                     'keywords': work.keywords,
                     'score': review.score,
+                    'comment':review.comment,
                     'tag': TAG_MAP[review.review_status]
                 })
             else:
@@ -74,6 +84,7 @@ class ExpertReviewListView(View):
                     'title': work.title,
                     'keywords': work.keywords,
                     'score': review.score,
+                    'comment': review.comment,
                     'tag': TAG_MAP[review.review_status]
                 })
 
