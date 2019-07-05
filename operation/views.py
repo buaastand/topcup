@@ -210,4 +210,35 @@ class AssignExpertView(View):
         s.quit()
         return JsonResponse({'Message':0})
 
+class ExptreviewListView(View):
+    """
+    展示比赛已分配专家
+    """
+    def get(self, request):
+        cpt_id = request.GET.get('cpt_id','')
+        user_name,user_identity = GetUserIdentitiy(request)
+        context = {}
+        context['username'] = user_name
+        context['useridentity'] = user_identity
+
+        # 从Review表中选出该比赛的review
+        reviews = Review.objects.all()
+        review_ret = []
+        for review_i in reviews:
+            review_ret.append(
+                {
+                    'init_date': str(review_i.add_time),
+                    'expert_id': review_i.expert.user.id,
+                    'expert_name': review_i.expert.name,
+                    'expert_field': review_i.expert.field,
+                    'email': review_i.expert.user.email,
+                    'work_id': review_i.work.work_id,
+                    'work_name': review_i.work.title,
+                    'work_type':review_i.work.work_type,
+                    'work_field': review_i.work.field,
+                    'review_state': review_i.review_status
+                }
+            )
+        context['review_ret'] = review_ret
+        return render(request, 'exptreview_list.html', context)
 
