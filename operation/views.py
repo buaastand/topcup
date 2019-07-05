@@ -6,13 +6,17 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 import datetime, zipfile, tempfile, os
 from wsgiref.util import FileWrapper
 
+from django.db import transaction
 from competition.views import GetUserIdentitiy
 from competition.models import Competition
 from techworks.models import WorkInfo, Appendix
 from users.models import Expert
 from .models import Review
 from TopCup.settings import MEDIA_ROOT
+from django.db.models.aggregates import Count,Avg
 import json
+from decimal import *
+
 
 
 # Create your views here.
@@ -295,3 +299,60 @@ class ExptreviewListView(View):
         context['review_ret'] = review_ret
         return render(request, 'exptreview_list.html', context)
 
+class DefenseWorkListView(View):
+    """
+    展示待遴选作品列表
+    """
+    def get(self,request):
+        cpt_id = request.GET.get('cpt_id','')
+        worklist_origin = WorkInfo.objects.all().exclude(work_id__in=
+            Review.objects.all().values_list('work_id', flat=True))
+        #求每个作品的平均分并填表
+        scorelist=Review.objects.values('work').annotate(avgscore=Avg('score')).values("work","avgscore")
+        worklist=WorkInfo.objects.all()
+        for i in worklist:
+            try:
+                i.avg_score=Decimal(scorelist.get(work = i)['avgscore']).quantize(Decimal('0.00'))
+            except:
+                i.avg_score = 0
+            i.save()
+
+
+            # i.avg_score=scorelist.filter('work' == i.work_id)
+            # i.save()
+
+        # to do: 1.属于某个比赛的作品 2.
+        WORKTYPE_MAP = {
+            1: "科技发明制作",
+            2: "调查报告和学术论文"
+        }
+        FIELD_MAP = {
+            1: "A",
+            2: "B",
+            3: "C",
+            4: "D",
+            5: "E",
+            6: "F",
+        }
+        worklist_ret = []
+        for work in worklist_origin:
+            worklist_ret.append({
+                'work_id':work.work_id,
+                'title':work.title,
+                'work_type':WORKTYPE_MAP[work.work_type],
+                'field':FIELD_MAP[work.field],
+                'avgscore':work.avg_score
+            })
+        user_name,user_identity = GetUserIdentitiy(request)
+        return render(request,'defensework_list.html',{ 'worklist':worklist_ret , 'useridentity':user_identity,'username':user_name})
+
+    def post(self,request):
+        defenseWorkList=json.loads(request.body)
+        with transaction.atomic():
+            for item in defenseWorkList:
+                work = WorkInfo.objects.get(work_id=item.get("work_id"))
+                work.if_defense = True
+                work.save()
+        # print(request.data)
+
+        return JsonResponse({'Message': 0})
