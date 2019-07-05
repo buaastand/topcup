@@ -129,7 +129,7 @@ class TechWorkView(View):
                     first_auth=Student.objects.get(user__username=username),
                     competition=Competition.objects.get(id=comptition_id))
                 registration.save()
-                work_cnt = int(time.time())*100 + random.randint(0, 10000)
+                work_cnt = int(int(str(int(time.time()))[4:])*100 + random(0,100))
                 work = WorkInfo.objects.create(registration=registration, title="", detail="", innovation="",
                                                keywords="", avg_score=0, work_id=work_cnt, work_type=1,
                                                field=1)
