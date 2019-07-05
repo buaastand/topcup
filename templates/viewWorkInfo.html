@@ -165,7 +165,12 @@
       <div slot="title" style="font-weight: bold;font-size: 16px">
           作品文档
       </div>
-      {% for i in workAppendix %}
+  {% if not documentlist %}
+      <div  style="margin-left: 5%;margin-top: 1%">
+          暂无
+      </div>
+  {% endif %}
+      {% for i in documentlist %}
     <div v-if="{{ i.appendix_type}} == '1'" style="margin-left: 5%"><a href={{ i.file }} target="_blank">{{ i.filename }}</a></div>
       {% endfor %}
   </el-collapse-item>
@@ -177,7 +182,13 @@
 
 <div style="padding-left: 25px">
 
-    {% for i in workAppendix %}
+{% if not photolist %}
+      <div  style="margin-left: 2%;margin-top: 1%">
+          暂无
+      </div>
+  {% endif %}
+
+    {% for i in photolist %}
 <div v-if="{{ i.appendix_type}} == '2'" onclick="Ctor.handleClick('{{ i.file }}')" style="float: left;margin-left:20px;margin-bottom:20px;margin-top:20px">
       <el-image
       style="width: 140px; height: 140px"
@@ -199,7 +210,14 @@
       <div slot="title" style="font-weight: bold;font-size: 16px">
           作品视频
       </div>
-      {% for i in workAppendix %}
+
+  {% if not videolist %}
+      <div style="margin-left: 5%;margin-top: 1%">
+          暂无
+      </div>
+  {% endif %}
+
+      {% for i in videolist %}
     <div v-if="{{ i.appendix_type}} == '3'" style="margin-left: 5%;margin-top: 3%;"><video src="{{ i.file }}" id="video" controls width="90%"></video></div>
   {% endfor %}
   </el-collapse-item>

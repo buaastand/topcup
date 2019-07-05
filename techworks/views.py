@@ -29,7 +29,16 @@ def work_info(request):
     user_name, user_identity = GetUserIdentitiy(request)
     information = {}
     workInfo = WorkInfo.objects.get(id=request.GET['work_id'])
-    workAppendix = Appendix.objects.filter(work_id=request.GET['work_id'])
+    documentlist = []
+    photolist = []
+    videolist = []
+    for i in Appendix.objects.filter(work_id=request.GET['work_id']):
+        if i.appendix_type == 1:
+            documentlist.append(i)
+        elif i.appendix_type == 2:
+            photolist.append(i)
+        else:
+            videolist.append(i)
     workAuthor = CompetitionRegistration.objects.get(id=request.GET['work_id'])
     workFirstAuthorInfo = Student.objects.get(user_id=workAuthor.first_auth_id)
     labelList = json.loads(workInfo.labels)['labels']
@@ -93,7 +102,9 @@ def work_info(request):
         workFifthAuthorInfo = ''
 
     information = {'workInfo': workInfo}
-    information['workAppendix']= workAppendix
+    information['documentlist'] = documentlist
+    information['photolist'] = photolist
+    information['videolist'] = videolist
     information['workAuthor'] = workAuthor
     information['authorList'] = authorList
     information['labellist'] = labellist
