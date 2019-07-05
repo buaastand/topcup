@@ -183,63 +183,60 @@
                 </h2>
                 <el-row>
                     <el-col :span="6" :offset="4">
-                        <el-form-item label-width="0">
-                            <el-upload
-                                    action=""
-                                    multiple
-                                    accept=".pdf"
-                                    :limit="3"
-                                    :on-exceed="handleExceed"
-                                    :on-change="document_path_file"
-                                    {% if work.submitted %}:on-remove="deleteFile"{% endif %}
-                                    :file-list="techworkForm.document_list"
-                                    :on-preview="downloadFile"
-                                    :auto-upload="false"
-                                    :before-upload="beforeDocumentUpload">
-                                <el-button type="info" round {% if work.submitted %}disabled{% endif %}>文档+</el-button>
-                                <div slot="tip" class="el-upload__tip">只能上传pdf文件，且不超过2M</div>
-                            </el-upload>
-                        </el-form-item>
+                     <el-form-item label-width="0">
+                    <el-upload
+                          action=""
+                          multiple
+                          accept=".pdf"
+                          :on-exceed="handleExceed"
+                          :on-change="document_path_file"
+                          {% if work.submitted == 0 %}:on-remove="deleteFile"{% endif %}
+                          :file-list="techworkForm.document_list"
+                          :on-preview="downloadFile"
+                          :auto-upload="false"
+                          :before-upload="beforeDocumentUpload">
+                          <el-button type="info" round {% if work.submitted %}disabled{% endif %}>文档+</el-button>
+                          <div slot="tip" class="el-upload__tip">只能上传pdf文件，且不超过2M</div>
+                        </el-upload>
+                    </el-form-item>
                     </el-col>
                     <el-col :span="6">
                         <el-form-item label-width="0">
-                            <el-upload
-                                    action=""
-                                    multiple
-                                    accept=".jpg, .png"
-                                    :limit="5"
-                                    :on-exceed="handleExceed"
-                                    :on-change="photo_path_file"
-                                    {% if work.submitted %}:on-remove="deleteFile"{% endif %}
-                                    :file-list="techworkForm.photo_list"
-                                    :on-preview="downloadFile"
-                                    :auto-upload="false"
-                                    :before-upload="beforeImageUpload">
-                                <el-button type="info" round {% if work.submitted %}disabled{% endif %}>图片+</el-button>
-                                <div slot="tip" class="el-upload__tip" {% if work.submitted %}disabled{% endif %}>
-                                    只能上传jpg/png文件，且不超过2M
-                                </div>
-                            </el-upload>
-                        </el-form-item>
+                    <el-upload
+                          action=""
+                          multiple
+                          accept=".jpg, .png"
+                          :limit="5"
+                          :on-exceed="handleExceed"
+                          :on-change="photo_path_file"
+                          {% if work.submitted == 0 %}:on-remove="deleteFile"{% endif %}
+                          :file-list="techworkForm.photo_list"
+                          :on-preview="downloadFile"
+                          :auto-upload="false"
+                          :before-upload="beforeImageUpload">
+                          <el-button type="info" round {% if work.submitted %}disabled{% endif %}>图片+</el-button>
+                          <div slot="tip" class="el-upload__tip" {% if work.submitted %}disabled{% endif %}>只能上传jpg/png文件，且不超过2M</div>
+                        </el-upload>
+                </el-form-item>
                     </el-col>
                     <el-col :span="6">
-                        <el-form-item label-width="0">
-                            <el-upload
-                                    action=""
-                                    multiple
-                                    accept=".mp4"
-                                    :limit="1"
-                                    :on-exceed="handleExceed"
-                                    :on-change="video_path_file"
-                                    {% if work.submitted %}:on-remove="deleteFile"{% endif %}
-                                    :file-list="techworkForm.video_list"
-                                    :on-preview="downloadFile"
-                                    :auto-upload="false"
-                                    :before-upload="beforeVideoUpload">
-                                <el-button type="info" round {% if work.submitted %}disabled{% endif %}>视频+</el-button>
-                                <div slot="tip" class="el-upload__tip">只能上传MP4文件</div>
-                            </el-upload>
-                        </el-form-item>
+                <el-form-item label-width="0">
+                    <el-upload
+                          action=""
+                          multiple
+                          accept=".mp4"
+                          :limit="1"
+                          :on-exceed="handleExceed"
+                          :on-change="video_path_file"
+                          {% if work.submitted == 0 %}:on-remove="deleteFile"{% endif %}
+                          :file-list="techworkForm.video_list"
+                          :on-preview="downloadFile"
+                          :auto-upload="false"
+                          :before-upload="beforeVideoUpload">
+                          <el-button type="info" round {% if work.submitted %}disabled{% endif %}>视频+</el-button>
+                          <div slot="tip" class="el-upload__tip">只能上传MP4文件</div>
+                        </el-upload>
+                </el-form-item>
                     </el-col>
                 </el-row>
 
@@ -252,7 +249,7 @@
                                style="width: 100px;float: right; margin-right: 20px"
                                {% if work.submitted %}disabled{% endif %}>暂存
                     </el-button>
-                
+
                     {% if work.submitted %}
                         <el-button type="primary" @click="generatePdf"
                                    style="width: 100px;float: right; margin-right: 20px">生成PDF

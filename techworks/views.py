@@ -40,11 +40,13 @@ def searchstu(request):
     }}
     return JsonResponse(ret)
 
+
 def deletework(request):
     work_id = request.GET.get('work_id')
     work = WorkInfo.objects.filter(work_id=work_id)
     work.delete()
     return HttpResponse(status=200)
+
 
 # @login_required(login_url='/login/')
 # @method_decorator(login_required,name='dispatch')
@@ -163,11 +165,11 @@ class TechWorkView(View):
             filelist = Appendix.objects.filter(work__work_id=work.work_id)
 
             for file in filelist:
-                if (file.appendix_type == 0):
+                if file.appendix_type == 0:
                     file_docu.append({"name": file.filename, "url": file.file.url})
-                if (file.appendix_type == 1):
+                elif file.appendix_type == 1:
                     file_photo.append({"name": file.filename, "url": file.file.url})
-                if (file.appendix_type == 2):
+                elif file.appendix_type == 2:
                     file_video.append({"name": file.filename, "url": file.file.url})
 
         user_name, user_identity = GetUserIdentitiy(request)
@@ -180,7 +182,6 @@ class TechWorkView(View):
         try:
             with transaction.atomic():
                 work_id = int(request.POST.get('work_id'))
-                print(work_id)
                 work = WorkInfo.objects.get(work_id=work_id)
                 registration = work.registration
                 AUTH_MAP = {
