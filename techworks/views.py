@@ -280,7 +280,6 @@ def insert(document, paragraph, font, size, content, center=False):
     p = document.paragraphs
     run = p[paragraph].add_run(content)
     run.font.name = font
-    # run.font.color.rgb = RGBColor(54, 95, 145)  # 颜色设置，这里是用RGB颜色
     run.font.size = Pt(size)
     run._element.rPr.rFonts.set(qn('w:eastAsia'), font)
     if center == True:
@@ -292,10 +291,8 @@ def insert_chart(document, table, row, column, font, size, content, clear=False)
         for i in p[table].cell(row, column).paragraphs:
             i.clear()
             i.text = ''
-        # p[table].cell(row, column).paragraphs[0].clear()
     run = p[table].cell(row, column).paragraphs[0].add_run(content)
     run.font.name = font
-    # run.font.color.rgb = RGBColor(54, 95, 145)  # 颜色设置，这里是用RGB颜色
     run.font.size = Pt(size)
     run._element.rPr.rFonts.set(qn('w:eastAsia'), font)
 
@@ -311,20 +308,17 @@ def generatePdf(request):
         para = document.paragraphs
         para[0].clear()
         insert(document, 0, '楷体_GB2312', 15, '作品编码：  ' + workid)
-        # para[0].text = re.sub("（系统自动生成）", workid, para[0].text)
+        para[7].clear()
+        insert(document, 7, '楷体_GB2312', 15, '        作品名称：  ' + work_info.title)
         para[8].clear()
-        insert(document, 8, '楷体_GB2312', 15, '        作品名称：  ' + work_info.title)
-        para[9].clear()
-        insert(document, 9, '楷体_GB2312', 15, '        院系名称：  ' + registration.first_auth.department + '（签章）')
+        insert(document, 8, '楷体_GB2312', 15, '        院系名称：  ' + registration.first_auth.department + '（签章）')
 
         if (work_info.work_type == 1):
-            para[12].clear()
-            insert(document, 12, '楷体_GB2312', 14, '☑科技发明制作')
-            # para[12].text = re.sub("□", "☑", para[12].text)
+            para[11].clear()
+            insert(document, 11, '楷体_GB2312', 14, '☑科技发明制作')
         elif (work_info.work_type == 2):
-            para[13].clear()
-            insert(document, 13, '楷体_GB2312', 14, '☑调查报告和学术论文')
-            # para[13].text = re.sub("□", "☑", para[13].text)
+            para[12].clear()
+            insert(document, 12, '楷体_GB2312', 14, '☑调查报告和学术论文')
 
         tables = document.tables  # 获取文件中的表格集
         table = tables[0]  # 获取文件中的第一个表格
@@ -343,16 +337,12 @@ def generatePdf(request):
 
         # 表格1
 
-        # table.cell(0, 3).text = auth.name
-        # table.cell(0, 6).text = auth.stu_id
-        # table.cell(0, 8).text = auth.birthdate.strftime("%Y-%m-%d")
         insert_chart(document, 0, 0, 3, '仿宋_GB2312', 14, auth.name)
         insert_chart(document, 0, 0, 6, '仿宋_GB2312', 14, auth.stu_id)
         insert_chart(document, 0, 0, 8, '仿宋_GB2312', 14, auth.birthdate.strftime("%Y-%m-%d"))
 
 
         # 替换学历
-        #（  ）A大专  B大学本科  C硕士研究生  D博士研究生（  ）A大专  B大学本科  C硕士研究生  D博士研究生
         degreechange = r"（  ）"
         if (auth.degree == 1):
             insert_chart(document, 0, 1, 3, '仿宋_GB2312', 14, '（ A ）A大专  B大学本科  C硕士研究生  D博士研究生', True)
@@ -363,12 +353,6 @@ def generatePdf(request):
         elif (auth.degree == 4):
             insert_chart(document, 0, 1, 3, '仿宋_GB2312', 14, '（ D ）A大专  B大学本科  C硕士研究生  D博士研究生', True)
         # 第一作者
-        # table.cell(2, 3).text = auth.major
-        # table.cell(2, 8).text = auth.enroll_time.strftime("%Y-%m-%d")
-        # table.cell(3, 4).text = work_info.title
-        # table.cell(4, 3).text = auth.address
-        # table.cell(4, 8).text = auth.phone
-        # table.cell(5, 8).text = auth.user.email
         insert_chart(document, 0, 2, 3, '仿宋_GB2312', 14, auth.major)
         insert_chart(document, 0, 2, 8, '仿宋_GB2312', 14, auth.enroll_time.strftime("%Y-%m-%d"))
         insert_chart(document, 0, 3, 4, '仿宋_GB2312', 14, work_info.title)
@@ -381,29 +365,20 @@ def generatePdf(request):
         for i in company:
             insert_chart(document, 0, row, 1, '仿宋_GB2312', 14, i.name)
             insert_chart(document, 0, row, 2, '仿宋_GB2312', 14, i.stu_id)
-            # table.cell(row, 1).text = i.name
-            # table.cell(row, 2).text = i.stu_id
             if (i.degree == 1):
                 insert_chart(document, 0, row, 3, '仿宋_GB2312', 14, '大专')
-                # table.cell(row, 3).text = "大专"
             elif (i.degree == 2):
                 insert_chart(document, 0, row, 3, '仿宋_GB2312', 14, '大学本科')
-                # table.cell(row, 3).text = "大学本科"
             elif (i.degree == 3):
                 insert_chart(document, 0, row, 3, '仿宋_GB2312', 14, '硕士研究生')
-                # table.cell(row, 3).text = "硕士研究生"
             elif (i.degree == 4):
                 insert_chart(document, 0, row, 3, '仿宋_GB2312', 14, '博士研究生')
-                # table.cell(row, 3).text = "博士研究生"
             insert_chart(document, 0, row, 6, '仿宋_GB2312', 14, i.phone)
             insert_chart(document, 0, row, 7, '仿宋_GB2312', 14, i.user.email)
-            # table.cell(row, 6).text = i.phone
-            # table.cell(row, 7).text = i.user.email
             row = row + 1
         # 表格2
         table2 = tables[1]  # 获取文件中的第二个表格
         insert_chart(document, 1, 0, 1, '仿宋_GB2312', 14, work_info.title)
-        # table2.cell(0, 1).text = work_info.title
         fieldchange = r"（  ）"
         if (work_info.field == 1):
             table2.cell(1, 1).text = re.sub(fieldchange, "（A）\n", table2.cell(1, 1).text)
@@ -424,9 +399,6 @@ def generatePdf(request):
         insert_chart(document, 1, 2, 1, '仿宋_GB2312', 14, work_info.detail, True)
         insert_chart(document, 1, 3, 1, '仿宋_GB2312', 14, work_info.innovation, True)
         insert_chart(document, 1, 4, 1, '仿宋_GB2312', 14, work_info.keywords, True)
-        # table2.cell(2, 1).text = work_info.detail
-        # table2.cell(3, 1).text = work_info.innovation
-        # table2.cell(4, 1).text = work_info.keywords
         labellist = json.loads(work_info.labels)['labels']
         labellist=list(map(int,labellist))
         labellist.sort(reverse=True)
@@ -453,13 +425,13 @@ def generatePdf(request):
             temp = document.tables[1].cell(5, 1).paragraphs[0].text
             insert_chart(document, 1, 5, 1, '仿宋_GB2312', 14, temp, True)
 
-        document.save('static/pdf/fulltable.docx')
+        document.save('media/pdf/'+workid+'.docx')
 
         convertapi.api_secret = 'D1kgtEI0Qc5VTJpb'
         convertapi.convert('pdf', {
-            'File': 'static/pdf/fulltable.docx'
-        }, from_format='docx').save_files('static/pdf/fulltable.pdf')
+            'File': 'media/pdf/'+workid+'.docx'
+        }, from_format='docx').save_files('media/pdf/'+workid+'.pdf')
 
 
-    return JsonResponse({'ret': 'Reply for work_id'})
+    return JsonResponse({'url': '/media/pdf/'+workid+'.pdf'})
 

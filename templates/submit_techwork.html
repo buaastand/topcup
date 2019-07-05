@@ -507,8 +507,9 @@
                         }
                     };
                     axios.post('../generatepdf/', formData, config)
-                        .then(function (response) {
-                            console.log(response);
+                        .then(res=>{
+                            console.log(res);
+                            window.open(res.data.url);
                         })
                         .catch(function (response) {
 
