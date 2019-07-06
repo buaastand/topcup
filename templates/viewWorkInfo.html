@@ -80,18 +80,18 @@
               {{ workInfo.keywords }}
           </el-form-item>
             {% if workInfo.work_type == 1 %}
-
                 <el-form-item label="展示形式" prop="way">
                 {% for i in labellist %}
                     <el-tag >{[ wayArray[ {{ i }} ] ]}</el-tag>
                 {% endfor %}
                 </el-form-item>
-            {% else %}<el-form-item label="调查方式" prop="method">
+            {% else %}
+                <el-form-item label="调查方式" prop="method">
                 {% for i in labellist %}
-             <el-tag style="margin-left: 5px">{[ methodArray[{{ i }}] ]}</el-tag>
+                <el-tag style="margin-left: 5px">{[ methodArray[{{ i }}] ]}</el-tag>
                 {% endfor %}
             {% endif %}
-            </el-form-item>
+                </el-form-item>
             </el-form>
 
 
