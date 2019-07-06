@@ -196,7 +196,24 @@
                     this.currentWorkPage = val;
                 },
                 handledownload() {
-                    
+                    if(this.wmultipleSelection) {
+                        var id_list = [];
+                        this.wmultipleSelection.forEach(index => {
+                            id_list.push(index.id);
+                        });
+                        console.log(id_list);
+                        axios.get('/downloadBatchZip/', {params: {id_list: JSON.stringify(id_list), status:0} })
+                        .then(response => {
+                            console.log(response);
+                            window.open(response.request.responseURL);
+                            this.$message.success('下载成功');
+                        })
+                    .catch(error => {
+                        this.$message.error('选中项目不包含附件');
+                        console.log(error);
+                        });
+                    }
+
                 },
                 selectExpert() {
                     if (this.wmultipleSelection.length > 0) {
