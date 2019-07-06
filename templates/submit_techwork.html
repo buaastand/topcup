@@ -58,12 +58,12 @@
                 <el-form-item prop="company_table" label-width="50px">
                     <template>
                         <el-table :data="techworkForm.company_table">
-                            <el-table-column prop="id" type="index" label="序号"></el-table-column>
-                            <el-table-column prop="stu_id" label="学号"></el-table-column>
-                            <el-table-column prop="name" label="姓名"></el-table-column>
-                            <el-table-column prop="degree" label="学历"></el-table-column>
-                            <el-table-column prop="phone" label="联系电话"></el-table-column>
-                            <el-table-column prop="email" label="邮箱"></el-table-column>
+                            <el-table-column prop="id" type="index" label="序号" width="50px"></el-table-column>
+                            <el-table-column prop="stu_id" label="学号" width="100px"></el-table-column>
+                            <el-table-column prop="name" label="姓名" width="100px"></el-table-column>
+                            <el-table-column prop="degree" label="学历" width="100px"></el-table-column>
+                            <el-table-column prop="phone" label="联系电话" width="150px"></el-table-column>
+                            <el-table-column prop="email" label="邮箱" width="200px"></el-table-column>
                             <el-table-column>
                                 <template slot-scope="scope">
                                     <el-button size="mini" type="danger" @click="deleteCompany(scope.$index)"

@@ -19,13 +19,16 @@ from django.shortcuts import render
 from django.utils.encoding import escape_uri_path
 from django.views.generic.base import View
 
+from apscheduler.schedulers.background import BackgroundScheduler
+from django_apscheduler.jobstores import DjangoJobStore,register_events,register_job
+
 from TopCup.settings import MEDIA_ROOT
 from competition.models import Competition
 from competition.views import GetUserIdentitiy
 from techworks.models import WorkInfo, Appendix
 from users.models import Expert
 from .models import Review
-
+from TopCup.settings import sender,passwd,smtp_server,hour,minute
 
 # Create your views here.
 
@@ -407,6 +410,7 @@ class AssignExpertView(View):
         # ref：https://www.cnblogs.com/lovealways/p/6701662.html
         import smtplib
         from email.mime.text import MIMEText
+        s = smtplib.SMTP_SSL(smtp_server, 465)
         sender = 'topcup2019@163.com'
         passwd = '123456zxcvbn'
         host = request.get_host()
@@ -677,6 +681,7 @@ class ReassignExpertView(View):
         passwd = '123456zxcvbn'
         host = request.get_host()
         s = smtplib.SMTP_SSL('smtp.163.com', 465)
+        s = smtplib.SMTP_SSL(smtp_server, 465)
         s.login(sender, passwd)
         for expert_id in originExpert_expt.values():
             arg = [expert_id, cpt_id, 1]
@@ -743,3 +748,91 @@ class InvitationView(View):
             raise Exception("Bad hash!")
         data = pickle.loads(zlib.decompress(base64.b64decode(text)))
         return data
+        return JsonResponse({'Message':0})
+
+
+def notify_expert():
+    from datetime import datetime, date, timedelta
+    one_week_later = date.today() + timedelta(days=24)  # for test
+    one_day_later = date.today() + timedelta(days=1)
+
+    one_week_set = Review.objects.filter(review_status=0,
+                                         work__registration__competition__review_end_date=one_week_later)
+    one_week_expert = {}
+    for review in one_week_set:
+        one_week_expert[review.expert.user.email] = {
+            'expt_name': review.expert.name,
+            'title': review.work.registration.competition.title
+        }
+    # print(23333)
+    # 发邮件
+    import smtplib
+    from email.mime.text import MIMEText
+    s = smtplib.SMTP_SSL(smtp_server, 465)
+    s.login(sender, passwd)
+    for k, v in one_week_expert.items():
+        receiver = k
+        subject = '"' + v['title'] + '"竞赛' + '作品评审提醒'
+        content = '尊敬的' + v['expt_name'] + ": 距\"" + v['title'] + '\"' + '作品评审结束还有一周，请尽快完成！'
+        msg = MIMEText(content)
+        msg['Subject'] = subject
+        msg['From'] = sender
+        msg['To'] = receiver
+        try:
+            s.sendmail(sender, receiver, msg.as_string())
+        except Exception as e:
+            print(e)
+
+
+    one_day_set = Review.objects.filter(review_status=0,
+                                        work__registration__competition__review_end_date=one_day_later)
+    one_day_expert = {}
+    for review in one_day_set:
+        one_day_expert[review.expert.user.email] = {
+            'expt_name': review.expert.name,
+            'title': review.work.registration.competition.title
+        }
+
+    for k, v in one_day_expert.items():
+        receiver = k
+        subject = '"' + v['title'] + '"竞赛' + '作品评审提醒'
+        content = '尊敬的' + v['expt_name'] + ": 距\"" + v['title'] + '\"' + '作品评审结束还有一天，请尽快完成！'
+        msg = MIMEText(content)
+        msg['Subject'] = subject
+        msg['From'] = sender
+        msg['To'] = receiver
+        try:
+            s.sendmail(sender, receiver, msg.as_string())
+        except:
+            pass
+    s.quit()
+
+from apscheduler.schedulers.background import BackgroundScheduler
+
+sched = BackgroundScheduler()
+
+sched.add_job(notify_expert,'cron',hour=hour,minute=minute)
+
+
+def deamon_notify():
+    try:
+        sched.start()
+    except Exception as e:
+        print(e)
+        sched.shutdown()
+        deamon_notify()
+
+deamon_notify()
+
+# try:
+#     scheduler = BackgroundScheduler()
+#     scheduler.add_jobstore(DjangoJobStore(),'default')
+#     @register_job(scheduler,"cron", day_of_week='*', hour='19', minute='50', second='0')
+#
+#
+#
+#     register_events(scheduler)
+#     scheduler.start()
+# except Exception as e:
+#     print(e)
+#     scheduler.shutdown()
