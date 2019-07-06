@@ -321,7 +321,11 @@ class ExptTreetableView(View):
                     {
                         'work_id': review_i.work.work_id,
                         'work_name': review_i.work.title,
+<<<<<<< HEAD
                         'work_type':review_i.work.work_type,
+=======
+                        'work_type': review_i.work.work_type,
+>>>>>>> 962584e276e064e865d126ebcaf94b8ae808bc5b
                         'work_field': review_i.work.field,
                         'review_state': review_i.review_status,
                     }
@@ -361,12 +365,14 @@ class ReassignExpertView(View):
         originExpert_expt = json.loads(originExpert_expt)
 
         # 为review更换专家
-        for origin_expert_id in originExpert_expt.keys():
-            # 用ID拿expert
-            new_expert_id = originExpert_expt[origin_expert_id]
-            new_expert = Expert.objects.filter(user__id=new_expert_id)
-            origin_expert = Expert.objects.filter(user__id=origin_expert_id)
+        try:
+            for origin_expert_id in originExpert_expt.keys():
+                # 用ID拿expert
+                new_expert_id = originExpert_expt[origin_expert_id]
+                new_expert = Expert.objects.get(user__id=new_expert_id)
+                origin_expert = Expert.objects.get(user__id=origin_expert_id)
 
+<<<<<<< HEAD
             # try:
             for work_id in originExpert_work[origin_expert_id]:
                 review = Review.objects.get(Q(expert=origin_expert) & Q(work__work_id=work_id))
@@ -399,4 +405,42 @@ class ReassignExpertView(View):
         #         return JsonResponse({'Message':1})
         #         pass
         # s.quit()
+=======
+                for work_id in originExpert_work[origin_expert_id]:
+                    work = WorkInfo.objects.get(work_id=work_id)
+                    if Review.objects.filter(expert=new_expert, work=work).exists():
+                        continue
+                    else:
+                        review = Review.objects.get(expert=origin_expert, work=work)
+                        review.expert = new_expert
+                        review.review_status = 0
+                        review.save()
+
+        except Exception as e:
+            print(e)
+            return JsonResponse({'Message':1})
+            pass
+                
+        # ref：https://www.cnblogs.com/lovealways/p/6701662.html
+        import smtplib
+        from email.mime.text import MIMEText
+        sender = 'topcup2019@163.com'
+        passwd = '123456zxcvbn'
+        s = smtplib.SMTP_SSL('smtp.163.com', 465)
+        s.login(sender, passwd)
+        for expert_id in originExpert_expt.values():
+            receiver = Expert.objects.get(user_id=expert_id).user.email
+            subject = '邀请参加科技竞赛作品评审'
+            content = "<p>尊敬的"+'\"'+Expert.objects.get(user_id=expert_id).name+'\"'+"：</p>"+"<p>邀请您参与TopCup科技竞赛作品评审</p>"+"<p><a href=''>接受</a></p> <p><a href=''>拒绝</a></p>"
+            msg = MIMEText(content, "html", "utf-8")
+            msg['Subject'] = subject
+            msg['From'] = sender
+            msg['To'] = receiver
+            try:
+                s.sendmail(sender,receiver,msg.as_string())
+            except:
+                return JsonResponse({'Message':1})
+                pass
+        s.quit()
+>>>>>>> 962584e276e064e865d126ebcaf94b8ae808bc5b
         return JsonResponse({'Message':0})
