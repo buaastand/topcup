@@ -26,6 +26,8 @@
     <div id="AssignworkList" style="width: 100%">
         <div class="buttonArea">
             <el-button type="primary" @click="selectExpert" style="margin-left: 5%">批量通过选中的作品</el-button>
+            <el-button type="primary" @click="handledownload" style="margin-left: 5%">打包下载选中作品的附件</el-button>
+
         </div>
 
         <div class="tableArea">
@@ -192,6 +194,9 @@
                 },
                 whandleCurrentChange(val) {
                     this.currentWorkPage = val;
+                },
+                handledownload() {
+                    
                 },
                 selectExpert() {
                     if (this.wmultipleSelection.length > 0) {
