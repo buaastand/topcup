@@ -403,7 +403,7 @@
 
                             formData.append('deleteList', JSON.stringify({"deletelist": deleteList}));
                             console.log(deleteList);
-                            formData.append('csrfmiddlewaretoken', "{{ csrf_token }}")
+
                             // 记得配置请求头中 Content-Type 为'multipart/form-data'
                             let config = {
                                 headers: {
@@ -498,6 +498,7 @@
                     console.log(_this.work_id);
                     let formData = new FormData();
                     formData.append('workid', _this.work_id);
+                    formData.append('csrfmiddlewaretoken', "{{ csrf_token }}")
                     let config = {
                         headers: {
                             'Content-Type': 'multipart/form-data'

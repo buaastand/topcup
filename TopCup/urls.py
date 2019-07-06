@@ -28,7 +28,7 @@ import techworks.views as Tch
 import operation.views as Opt
 from django.views.generic import RedirectView
 
-from operation.views import AssignWorkListView,AssignExpertView
+from operation.views import AssignWorkListView,AssignExpertView,DefenseWorkListView
 
 urlpatterns = [
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root':settings.MEDIA_ROOT}),
@@ -74,6 +74,7 @@ urlpatterns = [
     path('assign_work/', AssignWorkListView.as_view()),
     path('assign_expert/', AssignExpertView.as_view()),
 
+    path('defense_work/', DefenseWorkListView.as_view()),
     path('exptreview_list/', ExptreviewListView.as_view()),
     path('review_exptree/', ExptTreetableView.as_view()),
 ]

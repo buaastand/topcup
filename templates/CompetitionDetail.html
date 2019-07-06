@@ -58,7 +58,36 @@
                     <div class="cptdetailtext">定时任务补偿</div>
                 </el-tab-pane>
                 <el-tab-pane label="答辩名单">
-                    <div class="cptdetailtext">定时任务补偿</div>
+                    <div class="cptdetailtext">
+                        <div style="width: 740px; margin:0 auto 0 auto">
+                            <el-table ref="multipleTable"
+                                      :data="defense_work_list"
+                                      tooltip-effect="light"
+                                      style="width: 740px"
+                                      max-height="100%">
+                                <el-table-column
+                                        label="作品ID"
+                                        prop="work_id"
+                                        width="120"
+                                        sortable>
+                                </el-table-column>
+                                <el-table-column
+                                        label="作品名称"
+                                        prop="title"
+                                        width="200">
+                                </el-table-column>
+                                <el-table-column
+                                        label="作品类别"
+                                        prop="work_type"
+                                        width="200">
+                                </el-table-column>
+                                <el-table-column
+                                        label="作品领域"
+                                        prop="field">
+                                </el-table-column>
+                            </el-table>
+                        </div>
+                    </div>
                 </el-tab-pane>
                 <el-tab-pane label="比赛结果">
                     <div class="cptdetailtext">{{ cptDetail.result_details }}</div>
@@ -73,6 +102,9 @@
             <el-button type="text" style="text-decoration:underline" >评价作品</el-button>
             {% endif %}
             {% if useridentity == 3 %}
+                {% if status_type == '3' %}
+                    <el-button type="text" style="text-decoration:underline" @click="DefenseChoose({{ cptDetail.id }})">遴选答辩名单</el-button>
+                {% endif %}
             <el-button type="text" style="text-decoration:underline" @click="CptChange({{ cptDetail.id }})">管理比赛</el-button>
             {% endif %}
         </div>
@@ -84,6 +116,9 @@
 <script>
     var CptDetail = new Vue({
         el: '#cptdetail',
+        data:{
+            defense_work_list:{{ defenseworklist|safe }},
+        },
         methods:{
             techworksubmit(val){
                 if( {{ status_type }} === 0)
@@ -97,7 +132,10 @@
             },
             CptChange(val){
                 window.open('/cptchange/?cptid='+val,"_self")
-            }
+            },
+            DefenseChoose(val){
+                window.open('/defense_work/?cptid='+val,"_self")
+            },
         }
     })
 </script>
