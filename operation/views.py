@@ -20,7 +20,6 @@ from django.utils.encoding import escape_uri_path
 from django.views.generic.base import View
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from django_apscheduler.jobstores import DjangoJobStore,register_events,register_job
 
 from TopCup.settings import MEDIA_ROOT
 from competition.models import Competition
@@ -411,10 +410,10 @@ class AssignExpertView(View):
         import smtplib
         from email.mime.text import MIMEText
         s = smtplib.SMTP_SSL(smtp_server, 465)
-        sender = 'topcup2019@163.com'
-        passwd = '123456zxcvbn'
+        # sender = 'topcup2019@163.com'
+        # passwd = '123456zxcvbn'
         host = request.get_host()
-        s = smtplib.SMTP_SSL('smtp.163.com', 465)
+        # s = smtplib.SMTP_SSL('smtp.163.com', 465)
         s.login(sender, passwd)
         for expert_id in expert_list:
             arg = [expert_id, cpt_id, 1]
@@ -677,10 +676,10 @@ class ReassignExpertView(View):
         # ref：https://www.cnblogs.com/lovealways/p/6701662.html
         import smtplib
         from email.mime.text import MIMEText
-        sender = 'topcup2019@163.com'
-        passwd = '123456zxcvbn'
+        # sender = 'topcup2019@163.com'
+        # passwd = '123456zxcvbn'
         host = request.get_host()
-        s = smtplib.SMTP_SSL('smtp.163.com', 465)
+        # s = smtplib.SMTP_SSL('smtp.163.com', 465)
         s = smtplib.SMTP_SSL(smtp_server, 465)
         s.login(sender, passwd)
         for expert_id in originExpert_expt.values():
