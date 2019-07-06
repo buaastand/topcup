@@ -1,0 +1,100 @@
+#app {
+    background-color: #F5F7FA;
+}
+
+.formArea {
+    width: 800px;
+    margin-top: 20px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 50px;
+    padding-bottom: 50px;
+    padding-left: 30px;
+    padding-right: 30px;
+
+}
+
+.el-form-item__label {
+    text-align: left;
+}
+
+.boxCard {
+    width: 1000px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.buttonArea {
+    width: auto;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.previewPicUploader {
+    width: 108px;
+    height: 80px;
+}
+
+.previewPicUploader .el-upload{
+    border: 1px dashed #d9d9d9;
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.previewPicUploader .el-upload:hover {
+    border-color: #409EFF;
+}
+
+.previewPicUploaderIcon {
+    font-size: 28px;
+    color: #8c939d;
+    width: 108px;
+    height: 80px;
+    text-align: center;
+}
+
+.previewPic {
+    width: 108px;
+    height: 80px;
+    display: block;
+}
+
+.detailPicUploader {
+    width: 500px;
+    height: 130px;
+}
+
+.detailPicUploader .el-upload{
+    border: 1px dashed #d9d9d9;
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.detailPicUploader .el-upload:hover {
+    border-color: #409EFF;
+}
+
+.detailPicUploaderIcon {
+    font-size: 28px;
+    color: #8c939d;
+    width: 500px;
+    height: 130px;
+    text-align: center;
+}
+
+.detailPic {
+    width: 500px;
+    height: 130px;
+    display: block;
+}
+
+.el-icon-plus.previewPicUploaderIcon::before {
+    margin-top: auto;
+    margin-bottom: auto;
+}

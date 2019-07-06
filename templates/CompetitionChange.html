@@ -11,7 +11,7 @@
     <script src="https://cdn.staticfile.org/vue-resource/1.5.1/vue-resource.min.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <!-- 引入cpt_init.css-->
-    <link rel="stylesheet" href="..\static\css\CompetitionInit.css" type="text/css"/>
+    <link rel="stylesheet" href="..\static\css\CompetitionChange.css" type="text/css"/>
     <link rel="stylesheet" href="../static/css/NavName.css">
 
     <meta charset="UTF-8">
@@ -57,7 +57,16 @@
                         </el-col>
                     </el-form-item>
                     <div class="buttonArea">
-                        <el-button type="primary" @click="dialogVisible = true">确认修改</el-button>
+                    <el-row>
+                            <el-button type="primary" @click="dialogVisible = true">确认修改</el-button>
+                            {% if status_type == '3' %}
+                                <el-button type="primary"  @click="DefenseChoose({{ cptDetail.id }})">遴选答辩名单</el-button>
+                            {% endif %}
+                            {% if status_type == '4'%}
+                                <el-button type="primary"  @click="FinalResult({{ cptDetail.id }})">发布比赛结果</el-button>
+                            {% endif %}
+                    </el-row>
+
                     </div>
                 </el-form>
             </div>
@@ -202,6 +211,7 @@
 
 
                 return {
+                    competition_id:{{ cptDetail.id }},
                     labelPosition: 'left',
                     dialogVisible: false,
                     form: {
@@ -243,6 +253,12 @@
                 };
             },
             methods: {
+                DefenseChoose(val){
+                    window.open('/defense_work/?cptid='+val)
+                },
+                FinalResult(val){
+                    window.open('/final_result/?id='+val, '_self')
+                },
                 onSubmit(val, formName) {
                     disable = true;
                     dialogVisible = false;
