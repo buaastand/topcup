@@ -54,16 +54,14 @@ def DownLoadZip(request):
 def DownloadBatchZip(request):
     status = request.GET.get('status')
     work_list = []
-    id_list = []
+    id_list = json.loads(request.GET.get('id_list'))
     if status == '0':
-        id_list = json.loads(request.GET.get('id_list'))
         for id in id_list:
             review = Review.objects.get(id=id)
             work_list.append(WorkInfo.objects.get(id=review.work_id))
-
-    else:       # !!!
-        work = WorkInfo.objects.get(id = request.GET.get('id'))
-        id = work.work_id
+    else:
+        for id in id_list:
+            work_list.append(WorkInfo.objects.get(id=id))
 
     Temp = tempfile.TemporaryFile()
     Archive = zipfile.ZipFile(Temp, 'w', zipfile.ZIP_DEFLATED)
