@@ -54,16 +54,14 @@ def DownLoadZip(request):
 def DownloadBatchZip(request):
     status = request.GET.get('status')
     work_list = []
-    id_list = []
+    id_list = json.loads(request.GET.get('id_list'))
     if status == '0':
-        id_list = json.loads(request.GET.get('id_list'))
         for id in id_list:
             review = Review.objects.get(id=id)
             work_list.append(WorkInfo.objects.get(id=review.work_id))
-
-    else:       # !!!
-        work = WorkInfo.objects.get(id = request.GET.get('id'))
-        id = work.work_id
+    else:
+        for id in id_list:
+            work_list.append(WorkInfo.objects.get(id=id))
 
     Temp = tempfile.TemporaryFile()
     Archive = zipfile.ZipFile(Temp, 'w', zipfile.ZIP_DEFLATED)
@@ -111,6 +109,23 @@ def sumbitReview(request):
         for review in review_list:
             review.review_status = 4
             review.save()
+
+        # update work review status
+        review_list = Review.objects.filter(expert__user_id=user_id)
+        for review in review_list:
+            work_reviews = Review.objects.filter(work=review.work)
+            review_finish = 1
+            if len(work_reviews) < 3:
+                review_finish = 0
+            else:
+                for r in work_reviews:
+                    if r.review_status != 4:
+                        review_finish = 0
+                        break
+            if review_finish == 1:
+                review.work.review_status = 1
+                review.work.save()
+
     ret={'status': status}
     return JsonResponse(ret)
 
@@ -220,6 +235,7 @@ class ExpertReviewView(View):
         user_name, user_identity = GetUserIdentitiy(request)
         return render(request, 'ExpertReviewWork.html', {'work': work, 'id': review.id,
                                                          'score': review.score, 'comment':review.comment,
+                                                         'tag': review.review_status,
                                                          'show_list': show, 'invest_list': invest,
                                                          'docu': file_docu, 'photo': file_photo, 'video': file_video,
                                                          'username': user_name, 'useridentity': user_identity})
