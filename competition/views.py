@@ -46,6 +46,7 @@ def CompetitionDetail(request):
     user_name, user_identity = GetUserIdentitiy(request)
     cptDetail=Competition.objects.get(id= request.GET['id'])
     context = {'cptDetail':cptDetail}
+
     temp=datetime.date.today()
     now_time =temp
     if now_time<cptDetail.init_date:
@@ -239,9 +240,25 @@ def CompetitionChange(request):
     context = {}
     cptDetail = Competition.objects.get(id = request.GET['cptid'])
 
+    temp = datetime.date.today()
+    now_time = temp
+    if now_time < cptDetail.init_date:
+        status_type = "-1"
+    elif now_time < cptDetail.submit_end_date:
+        status_type = "0"
+    elif now_time < cptDetail.check_end_date:
+        status_type = "1"
+    elif now_time < cptDetail.review_end_date:
+        status_type = "2"
+    elif now_time < cptDetail.defense_end_date:
+        status_type = "3"
+    else:
+        status_type = "4"
+
     context = {'cptDetail': cptDetail}
     context['username'] = user_name
     context['useridentity'] = user_identity
+    context['status_type'] = status_type
 
     return render(request,'../templates/CompetitionChange.html', context)
 
@@ -286,6 +303,8 @@ class CompetitionFinalResult(View):
             appendix.append({"name": name_list[len(name_list) - 1], "url": competition.end_appendix.url})
         except:
             name = ''
+            competition.end_appendix.delete()
+            competition.save()
         return render(request, 'final_result.html', {'id': competition_id, 'detail': competition.result_details,
                                                      'appendix': appendix})
         # try:
