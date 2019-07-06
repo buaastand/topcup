@@ -14,7 +14,7 @@
       <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
       <script src="https://cdn.staticfile.org/vue-resource/1.5.1/vue-resource.min.js"></script>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>作品详情页</title>
 </head>
 <body style="margin: 0; background: #F5F7FA; font-size:14px; color: #606266;">
 {% include "NavMenu.html" %}
@@ -304,18 +304,18 @@
         document.getElementById('video').pause();
       },
       handlenext(){
-        window.location.href="../../work_list/work_info/?work_id="+{{ nextid }};
+        window.location.href="../../check_work/work_info/?work_id="+{{ nextid }};
       },
       passWork(newStatus) {
         this.$http
-          .post('../../work_list/check_work/?work_id=' + {{workInfo.id}}, {'status': newStatus}, {emulateJSON: true})
+          .post('../../check_work/check_info/?work_id=' + {{workInfo.id}}, {'status': newStatus}, {emulateJSON: true})
           .then((res=> {
                     if(res.status == 200 && res.data.Message == 1){
                         this.$message({
                         type:'info',
                         message:'初审成功！'
                         });
-                        window.open("/work_list","_self")
+                        window.open("/check_work","_self")
                     }
                     else{
                         console.log("post fail")

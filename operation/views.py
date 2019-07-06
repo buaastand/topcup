@@ -19,6 +19,52 @@ import json
 
 
 # Create your views here.
+
+class CheckWorkListView(View):
+    """
+    展示待评审作品列表
+    """
+    def get(self,request):
+        cpt_id = request.GET.get('cpt_id','')
+        worklist_origin = WorkInfo.objects.filter(check_status=-1)
+        # to do: 1.属于某个比赛的作品 2.
+        WORKTYPE_MAP = {
+            1: "科技发明制作",
+            2: "调查报告和学术论文"
+        }
+        FIELD_MAP = {
+            1: "A",
+            2: "B",
+            3: "C",
+            4: "D",
+            5: "E",
+            6: "F",
+        }
+        worklist_ret = []
+        for work in worklist_origin:
+            worklist_ret.append({
+                'id':work.id,
+                'work_id':work.work_id,
+                'title':work.title,
+                'work_type':WORKTYPE_MAP[work.work_type],
+                'field':FIELD_MAP[work.field],
+            })
+
+
+        user_name,user_identity = GetUserIdentitiy(request)
+        return render(request,'check_worklist.html',{'worklist':worklist_ret , 'useridentity':user_identity,'username':user_name})
+
+    def post(self,request):
+
+        work_list = request.POST.get('selected_work')
+        work_list = json.loads(work_list)
+
+        for work_id in work_list:
+            work_i = WorkInfo.objects.get(work_id=work_id) #数据库是否存在work_id相同的多个比赛
+            work_i.check_status = 1
+            work_i.save()
+        return JsonResponse({'Message':0})
+
 def DownLoadZip(request):
     status = request.GET.get('status')
     print(status)
