@@ -11,6 +11,7 @@
          <!-- 引入组件库 -->
       <script src="https://unpkg.com/vue/dist/vue.js"></script>
       <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+      <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
       <script src="https://cdn.staticfile.org/vue-resource/1.5.1/vue-resource.min.js"></script>
     <meta charset="UTF-8">
     <title>Title</title>
@@ -223,9 +224,29 @@
   {% endfor %}
   </el-collapse-item>
 </el-collapse>
-<el-button type="success" @click="zipDownload()" style="margin-left: 5%">打包下载附件</el-button>
-<el-button type="primary" @click="passWork()" style="margin-left: 60%">通过</el-button>
-<el-button type="danger" @click="rejectWork()">打回</el-button>
+<el-button type="success" @click="downloadZip({{ workInfo.id }})" style="margin-left: 5%">打包下载附件</el-button>
+{% if workInfo.check_status == -1 %}
+<el-button type="primary" @click="dialogVisiblePass = true" style="margin-left: 60%">通过</el-button>
+<el-dialog title="确认" :visible.sync="dialogVisiblePass" width="30%">
+    <span>确认通过？</span>
+    <span slot="footer">
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="passWork(1)">确认</el-button>
+    </span>
+</el-dialog>
+<el-button type="danger" @click="dialogVisibleReject = true">打回</el-button>
+<el-dialog title="确认" :visible.sync="dialogVisibleReject" width="30%">
+    <span>确认打回？</span>
+    <span slot="footer">
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="passWork(0)">确认</el-button>
+    </span>
+</el-dialog>
+{% else %}
+<el-button type="primary" @click="dialogVisiblePass = true" style="margin-left: 60%" disabled>通过</el-button>
+<el-button type="danger" @click="dialogVisibleReject = true" disabled>打回</el-button>
+
+{% endif %}
 
 
 
@@ -254,7 +275,9 @@
            keywords:'',}
         ],
           temp_url:'',
-
+          status: {{ workInfo.check_status|safe }},
+          dialogVisiblePass: false,
+          dialogVisibleReject: false,
       };
     },
     methods: {
@@ -270,10 +293,42 @@
         }
         console.log(activeNames)
         document.getElementById('video').pause();
-      }
-
-
-    }, delimiters: ['{[',']}']
+      },
+      passWork(newStatus) {
+        this.$http
+          .post('../../work_list/check_work/?work_id=' + {{workInfo.id}}, {'status': newStatus}, {emulateJSON: true})
+          .then((res=> {
+                    if(res.status == 200 && res.data.Message == 1){
+                        this.$message({
+                        type:'info',
+                        message:'初审成功！'
+                        });
+                        window.open("/work_list","_self")
+                    }
+                    else{
+                        console.log("post fail")
+                        this.$message({
+                        type:'info',
+                        message:'初审失败！'
+                        });
+                    }
+                })
+                
+          )},
+          downloadZip(id) {     // 下载附件
+            // 调用函数查找合作者信息
+            console.log(id)
+            axios.get('../../../downloadZip', {params: {id: id, status: 1}})
+                .then(response => {
+                    window.open(response.request.responseURL);
+                    this.$message.success('打开附件压缩包');
+                })
+                .catch(error => {
+                    this.$message.error('该作品未上传附件');
+                    console.log(error);
+                });
+        },
+      }, delimiters: ['{[',']}']
   }
 
 var Ctor = Vue.extend(Main)

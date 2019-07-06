@@ -20,8 +20,14 @@ import json
 
 # Create your views here.
 def DownLoadZip(request):
-    review = Review.objects.get(id = request.GET.get('id'))
-    work = WorkInfo.objects.get(id=review.work_id)
+    status = request.GET.get('status')
+    print(status)
+    if status == '0':
+        review = Review.objects.get(id = request.GET.get('id'))
+        work = WorkInfo.objects.get(id=review.work_id)
+    else: 
+        work = WorkInfo.objects.get(id = request.GET.get('id'))
+
     appendix_list = Appendix.objects.filter(work__work_id=work.work_id)
     temp = tempfile.TemporaryFile()
     archive = zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED)
@@ -34,7 +40,7 @@ def DownLoadZip(request):
     temp.seek(0)
     wrapper = FileWrapper(temp)
     response = HttpResponse(wrapper, content_type='application/zip')
-    filename = str(review.id) + '_' + work.title + '.zip'
+    filename = work.title + '.zip'
     response['Content-Disposition'] = "attachment; filename*=utf-8''{}".format(escape_uri_path(filename))  # 压缩包名称有问题
     response['Content-Length'] = data
     return response
