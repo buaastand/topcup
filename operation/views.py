@@ -237,6 +237,7 @@ class ExpertReviewView(View):
         user_name, user_identity = GetUserIdentitiy(request)
         return render(request, 'ExpertReviewWork.html', {'work': work, 'id': review.id,
                                                          'score': review.score, 'comment':review.comment,
+                                                         'tag': review.review_status,
                                                          'show_list': show, 'invest_list': invest,
                                                          'docu': file_docu, 'photo': file_photo, 'video': file_video,
                                                          'username': user_name, 'useridentity': user_identity})
