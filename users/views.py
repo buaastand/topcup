@@ -1,23 +1,23 @@
 
 import json
 
-from users.models import Expert
-from users import models
+import xlrd  # excel读工具
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.backends import ModelBackend
+from django.contrib.auth.hashers import make_password
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-import xlrd #excel读工具
+from django.db.models import Q
+from django.http import HttpResponseRedirect, JsonResponse
 # Create your views here.
 from django.shortcuts import render
-from django.contrib.auth import authenticate,login,logout
-from django.contrib.auth.backends import ModelBackend
-from django.db.models import Q
-from django.views.generic.base import View
-from django.contrib.auth.hashers import make_password
-from django.http import HttpResponse,HttpResponseRedirect,JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.urls import reverse
+from django.views.generic.base import View
 
-from .models import BaseUser,Student
-from .forms import RegisterForm,LoginForm,ModifyPwdForm
+from users import models
+from users.models import Expert
+from .forms import RegisterForm, LoginForm, ModifyPwdForm
+from .models import BaseUser, Student
+
 
 class UserBackend(ModelBackend):
     """
@@ -168,11 +168,11 @@ class UpdatePwdView(View):
                 if pwd1 == pwd2:
                     user.password = make_password(pwd1)
                     re_dict['msg'] = True
-                    JsonResponse(re_dict,safe=False)
+                    return JsonResponse(re_dict, safe=False)
                 else:
                     re_dict['msg'] = False
                     re_dict['detail'] = '新密码两次输入不一致'
-                    JsonResponse(re_dict,safe=False)
+                    return JsonResponse(re_dict, safe=False)
             else:
                 # 原密码错误
                 re_dict['msg'] = False
