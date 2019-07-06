@@ -89,6 +89,13 @@ def CompetitionDetail(request):
     context['defenseworklist']=defense_WorkList_ret
     return render(request,"../templates/CompetitionDetail.html",context)
 
+def WorkdefenseChange(request):
+    work_id = json.loads(request.body)
+    Work=WorkInfo.objects.get(work_id=work_id['workid'])
+    Work.if_defense=0
+    Work.save()
+    return JsonResponse({'Message': 1})
+
 def CompetitionUpdate():
     cptList = Competition.objects.all()
     now_time = datetime.date.today()

@@ -83,7 +83,16 @@
                                 </el-table-column>
                                 <el-table-column
                                         label="作品领域"
-                                        prop="field">
+                                        prop="field"
+                                        width="100">
+                                </el-table-column>
+                                <el-table-column>
+                                        <template slot-scope="scope">
+                                            <el-button
+                                              size="mini"
+                                              type="danger"
+                                              @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+                                        </template>
                                 </el-table-column>
                             </el-table>
                         </div>
@@ -134,8 +143,23 @@
                 window.open('/cptchange/?cptid='+val,"_self")
             },
             DefenseChoose(val){
-                window.open('/defense_work/?cptid='+val,"_self")
+                window.open('/defense_work/?cptid='+val)
             },
+            handleDelete(index, row) {
+                axios
+                    .post("/workdefensechange/",{workid:row.work_id},{headers: {'X-CSRFtoken':'{{ csrf_token }}'}})
+                    .then(res=>{
+                        if(res.status==200 && res.data.Message == 1)
+                        {
+                            this.$message.success('删除成功！');
+                            this.defense_work_list.splice(index,1);
+                        }
+                        else {
+                            this.$message.success('删除失败！');
+                        }
+                    })
+                    .catch()
+            }
         }
     })
 </script>
