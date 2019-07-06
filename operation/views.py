@@ -34,8 +34,10 @@ class CheckWorkListView(View):
     展示待评审作品列表
     """
     def get(self,request):
-        cpt_id = request.GET.get('cpt_id','')
-        worklist_origin = WorkInfo.objects.filter(check_status=-1)
+        cpt_id = request.GET.get('cptid','')
+        print(cpt_id)
+        worklist_origin = WorkInfo.objects.filter(registration__competition=Competition.objects.get(id=cpt_id), check_status=-1)
+
         # to do: 1.属于某个比赛的作品 2.
         WORKTYPE_MAP = {
             1: "科技发明制作",
