@@ -72,6 +72,8 @@ urlpatterns = [
     path('assign_expert/', AssignExpertView.as_view()),
 
     path('exptreview_list/', ExptreviewListView.as_view()),
+
+    path('final_result/', Cpt.CompetitionFinalResult.as_view()),
 ]
 
 #urlpatterns += staticfiles_urlpatterns()

@@ -4,7 +4,7 @@ from django.core import serializers
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-
+from django.db import transaction
 import datetime
 from .models import Competition
 from users.models import Expert
@@ -17,7 +17,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from competition.models import Competition
-
+from django.views.generic.base import View
+from techworks.models import Appendix
 
 # Create your views here.
 def GetUserIdentitiy(request):
@@ -246,4 +247,48 @@ def CompetitionChangePost(request):
     except:
         return JsonResponse({'Message': 0})
     return JsonResponse({'Message': 1})
+
+class CompetitionFinalResult(View):
+
+    def get(self, request):
+        competition_id = request.GET.get('id', 45)
+        competition = Competition.objects.get(id=competition_id)
+        appendix = []
+        try:
+            name = competition.end_appendix.name
+            name_list = competition.end_appendix.name.split('/')
+            appendix.append({"name": name_list[len(name_list) - 1], "url": competition.end_appendix.url})
+        except:
+            name = ''
+        return render(request, 'final_result.html', {'id': competition_id, 'detail': competition.result_details,
+                                                     'appendix': appendix})
+        # try:
+        #
+        # except:
+        #     return JsonResponse({'message':'找不到比赛'})
+
+    def post(self, request):
+        competition_id = request.POST.get('id')
+        competition = Competition.objects.get(id=competition_id)
+        competition.result_details = request.POST.get('detail')
+        try:
+            name = competition.end_appendix.name
+            competition.end_appendix.delete()
+            competition.save()
+        except:
+            name = ''
+        competition.end_appendix = request.FILES.get('end_appendix')
+        competition.save()
+        # try:
+        #     with transaction.atomic():
+        #         competition_id = request.POST.get('id')
+        #         competition = Competition.objects.get(id=competition_id)
+        #         competition.result_details = request.POST.get('detail')
+        #         competition.end_appendix = request.FILES.get('end_appendix')
+        #         print(competition.end_appendix.filename)
+        #         competition.save()
+        #     return JsonResponse({'message':'SUCCESS'})
+        # except:
+        return JsonResponse({'message':'ERROR'})
+
 

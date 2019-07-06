@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TopCup作品填报</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="../static/css/final_result.css">
+    <link rel="stylesheet" href="../static/css/NavName.css">
+    <link rel="icon" href="../static/images/favicon.ico" type="image/x-icon"/>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+</head>
+<body style="margin: 0; background: #F5F7FA">
+{% include 'NavMenu.html' %}
+<div id="final_result" class="background">
+    <el-container>
+        <el-header>
+            <h1>
+                比赛结果录入
+            </h1>
+        </el-header>
+
+        <el-main>
+            <el-form action="" method="post" autocomplete="off"
+                     model="fianl_result_Form"
+                     :rules="rules"
+                     status-icon
+                     ref="fianl_result_Form"
+                     label-width="20%"
+                     label="right">
+                <h2 style="margin-left: 20%;margin-bottom: 0">
+                    比赛结果详情
+                </h2>
+                <p></p>
+
+
+                <el-form-item prop="detail">
+                    <el-input
+                            type="textarea" style="width: 80%"
+                            v-model="final_result_form.detail"
+                            maxlength="800"
+                            show-word-limit
+                            :autosize="{ minRows: 10, maxRows: 10}">
+                    </el-input>
+                </el-form-item>
+
+                <p></p>
+                <el-row style="margin-left: 20%;margin-bottom: 0">
+                    <el-form-item label-width="0">
+                    <p></p>
+                    <el-upload
+                          action=""
+                          :limit="1"
+{#                          accept=".pdf,.doc,.docx,.xls,.xlsx"#}
+                          :on-exceed="handleExceed"
+                          :on-change="document_path_file"
+                          :file-list="final_result_form.document_list"
+                          :on-preview="downloadFile"
+                          :auto-upload="false"
+                          :before-upload="beforeDocumentUpload">
+                          <el-button type="info" round >上传文件</el-button>
+                          <div slot="tip" class="el-upload__tip">文件大小不超过4MB</div>
+                        </el-upload>
+
+                    </el-form-item>
+                    </el-form-item>
+
+                </el-row>
+                <el-form-item label-width="0">
+                    <el-button type="success" @click="onSubmit()"
+                               style="width: 100px;float: right; margin-right: 150px">
+
+                        提交</el-button>
+
+
+                </el-form-item>
+            </el-form>
+
+        </el-main>
+    </el-container>
+</div>
+
+</body>
+
+<script>
+    function toRaw(f) {
+        return f.raw
+    }
+    var deleteList = [];
+
+    var app = new Vue({
+        el: '#final_result',
+        data: {
+            competition_id:{{ id }},
+            document_path:[],
+            final_result_form:{
+                detail:'{{ detail }}',
+                document_list:{{ appendix|safe }},
+            }
+        },
+    methods: {
+
+                onSubmit() {   // 提交
+                    url = "/final_result/";
+                    let formData = new FormData();
+                    formData.append('id', {{ id }});
+                    formData.append('detail', this.final_result_form.detail);
+                    if (this.document_path[0])
+                        formData.append('end_appendix', this.document_path[0]);
+                    formData.append('csrfmiddlewaretoken', "{{ csrf_token }}");
+                   // 记得配置请求头中 Content-Type 为'multipart/form-data'
+                    let config = {
+                         headers: {
+                              'Content-Type': 'multipart/form-data'
+                            }
+                    };
+                    let _this = this;
+                   axios.post(url, formData, config).then(function (response) {
+                       _this.$message.success('提交成功');
+                         setTimeout(function () {
+                            window.location.reload();
+                         }, 500);
+                   }).catch(function (response) {
+                       
+                   })
+                },
+                beforeDocumentUpload(file){
+                    const isLt4M = file.size / 1024 / 1024 < 4;
+                    if (!isLt4M) {
+                        this.$message.error('上传文件不能超过 4MB!');
+                    }
+                },
+                handleExceed(files, fileList) {   // 上传文件数量限制提醒
+                    this.$message.warning('上传文件数量超标');
+                },
+                deleteFile(file) {
+                    console.log(file);
+                    deleteList.push(file.url);
+                },
+                downloadFile(file) {
+                    window.open(file.url);
+                },
+                document_path_file(file, fileList) {
+                    // 秘钥上传组件 on-change 事件
+                    this.document_path = fileList.map(toRaw);
+                },
+            }})
+
+</script>
+
+</html>
