@@ -19,15 +19,14 @@ from django.shortcuts import render
 from django.utils.encoding import escape_uri_path
 from django.views.generic.base import View
 
-from apscheduler.schedulers.background import BackgroundScheduler
-
 from TopCup.settings import MEDIA_ROOT
+from TopCup.settings import sender, passwd, smtp_server, hour, minute
 from competition.models import Competition
 from competition.views import GetUserIdentitiy
 from techworks.models import WorkInfo, Appendix
 from users.models import Expert
 from .models import Review
-from TopCup.settings import sender,passwd,smtp_server,hour,minute
+
 
 # Create your views here.
 
@@ -92,7 +91,7 @@ def DownLoadZip(request):
     temp = tempfile.TemporaryFile()
     archive = zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED)
     for appendix in appendix_list:
-        target_file = os.path.join(MEDIA_ROOT, str(appendix.file)).replace('\\', '/')
+        target_file = os.path.join(MEDIA_ROOT, str(appendix.file))
         archive.write(target_file, appendix.filename)
 
     archive.close()
@@ -108,6 +107,8 @@ def DownLoadZip(request):
 
 def DownloadBatchZip(request):
     status = request.GET.get('status')
+    if not os.path.exists(os.path.join(MEDIA_ROOT, 'compressed')):
+        os.mkdir(os.path.join(MEDIA_ROOT, 'compressed'))
     work_list = []
     id_list = json.loads(request.GET.get('id_list'))
     if status == '0':
@@ -122,14 +123,14 @@ def DownloadBatchZip(request):
     Archive = zipfile.ZipFile(Temp, 'w', zipfile.ZIP_DEFLATED)
     for work in work_list:
         appendix_list = Appendix.objects.filter(work__work_id=work.work_id)
-        temp = tempfile.TemporaryFile(dir=MEDIA_ROOT+'\\compressed', delete=False)
+        temp = tempfile.TemporaryFile(dir=os.path.join(MEDIA_ROOT, 'compressed'), delete=False)
         archive = zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED)
         for appendix in appendix_list:
-            target_file = os.path.join(MEDIA_ROOT, str(appendix.file)).replace('\\', '/')
+            target_file = os.path.join(MEDIA_ROOT, str(appendix.file))
             archive.write(target_file, appendix.filename)
         archive.close()
         temp.seek(0)
-        target_file = os.path.join(MEDIA_ROOT + '/compressed', str(temp.name)).replace('\\', '/')
+        target_file = os.path.join(MEDIA_ROOT, '/compressed', str(temp.name))
         Archive.write(target_file, str(work.title)+'.zip')
 
     Archive.close()
@@ -751,7 +752,7 @@ class InvitationView(View):
 
 
 def notify_expert():
-    from datetime import datetime, date, timedelta
+    from datetime import date, timedelta
     one_week_later = date.today() + timedelta(days=24)  # for test
     one_day_later = date.today() + timedelta(days=1)
 

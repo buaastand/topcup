@@ -445,15 +445,34 @@
                             confirmButtonText: '确定'
                         })
                     } else {     // 调用函数查找合作者信息
-                        axios.get('/stusearch/', {params: {stu_id: search}})
-                            .then(response => {
-                                console.log(response)
-                                this.techworkForm.company_table.push(response.data['student'])
-                            })
-                            .catch(error => {
-                                this.$message.error('查无此人: 请确保合作者已注册为网站用户');
-                                console.log(error);
-                            });
+                        var canadd = 1;
+                        if (search == "{{ work.registration.first_auth.stu_id }}") {
+                            canadd = 0;
+                        } else {
+                            for (var author in this.techworkForm.company_table) {
+                                console.log(this.techworkForm.company_table[author]);
+                                if (this.techworkForm.company_table[author].stu_id == search) {
+
+                                    canadd = 0;
+                                    break;
+                                }
+                                //if (author)
+                            }
+                        }
+                        if (canadd == 0) {
+                            this.$message.error('作者已在列表中');
+                        } else {
+                            axios.get('/stusearch/', {params: {stu_id: search}})
+                                .then(response => {
+                                    console.log(response)
+                                    this.techworkForm.company_table.push(response.data['student'])
+                                })
+                                .catch(error => {
+                                    this.$message.error('查无此人: 请确保合作者已注册为网站用户');
+                                    console.log(error);
+                                });
+                        }
+
                         {#this.$alert(search, {#}
                         {#    confirmButtonText: '确定'#}
                         {# })#}

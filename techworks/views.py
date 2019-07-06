@@ -61,7 +61,7 @@ def work_info(request):
         firstAuthor['birthdate'] = firstAuthor['birthdate'] + "0" + str(workFirstAuthorInfo.birthdate.month)
     else:
         firstAuthor['birthdate'] = firstAuthor['birthdate'] + str(workFirstAuthorInfo.birthdate.month)
-    firstAuthor['degree'] = DEGREE[workFirstAuthorInfo.degree]
+    firstAuthor['degree'] = DEGREE[workFirstAuthorInfo.degree - 1]
     firstAuthor['major'] = workFirstAuthorInfo.major
     firstAuthor['enroll_time'] = str(workFirstAuthorInfo.enroll_time)
     firstAuthor['address'] = workFirstAuthorInfo.address
@@ -120,6 +120,7 @@ def work_info(request):
     information['useridentity'] = user_identity
     information['firstAuthor'] = firstAuthor
     information['nextid'] = nextid
+    information['cptid'] = workAuthor.competition.id
 
     return render(request, '../templates/viewWorkInfo.html', information)
 
