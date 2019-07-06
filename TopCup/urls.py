@@ -21,14 +21,14 @@ from TopCup import settings
 from users.views import ExpertManage
 
 from django.urls import path,re_path
-from operation.views import ExpertReviewView, ExptreviewListView
+from operation.views import ExpertReviewView, ExptreviewListView, ExptTreetableView
 
 import competition.views as Cpt
 import techworks.views as Tch
 import operation.views as Opt
 from django.views.generic import RedirectView
 
-from operation.views import AssignWorkListView,AssignExpertView
+from operation.views import AssignWorkListView,AssignExpertView,DefenseWorkListView
 
 urlpatterns = [
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root':settings.MEDIA_ROOT}),
@@ -62,7 +62,10 @@ urlpatterns = [
 
     path('reviewworklist/', Opt.ExpertReviewListView.as_view()),
     path('downloadZip/', Opt.DownLoadZip),
+    path('downloadBatchZip/',Opt.DownloadBatchZip),
     path('judge/', Opt.Judge),
+    path('submitReview/',Opt.sumbitReview),
+    path('nextReviewWork/',Opt.NextReviewWork),
 
     path('work_list/', Opt.ExpertReviewListView.as_view()),
     path('work_review/', Opt.ExpertReviewView.as_view()),
@@ -71,7 +74,9 @@ urlpatterns = [
     path('assign_work/', AssignWorkListView.as_view()),
     path('assign_expert/', AssignExpertView.as_view()),
 
+    path('defense_work/', DefenseWorkListView.as_view()),
     path('exptreview_list/', ExptreviewListView.as_view()),
+    path('review_exptree/', ExptTreetableView.as_view()),
 
     path('final_result/', Cpt.CompetitionFinalResult.as_view()),
 ]

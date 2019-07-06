@@ -1,24 +1,38 @@
-from django.http import JsonResponse, HttpResponse
-from django.shortcuts import render
-from django.views.decorators.csrf import csrf_exempt
-from django.views.generic.base import View
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-import datetime, zipfile, tempfile, os
+# -*-coding:utf-8 -*-
+import datetime
+import json
+import os
+import tempfile
+import zipfile
 from wsgiref.util import FileWrapper
 
-from competition.views import GetUserIdentitiy
+from django.core.paginator import Paginator
+from django.db import transaction
+from django.db.models import Q
+from django.http import JsonResponse, HttpResponse
+from django.shortcuts import render
+from django.utils.encoding import escape_uri_path
+from django.views.generic.base import View
+
+from TopCup.settings import MEDIA_ROOT
 from competition.models import Competition
+from competition.views import GetUserIdentitiy
 from techworks.models import WorkInfo, Appendix
 from users.models import Expert
 from .models import Review
-from TopCup.settings import MEDIA_ROOT
-import json
 
 
 # Create your views here.
 def DownLoadZip(request):
-    review = Review.objects.get(id = request.GET.get('id'))
-    work = WorkInfo.objects.get(id=review.work_id)
+    status = request.GET.get('status')
+    if status == '0':
+        review = Review.objects.get(id = request.GET.get('id'))
+        work = WorkInfo.objects.get(id=review.work_id)
+        id = review.id
+    else:
+        work = WorkInfo.objects.get(id = request.GET.get('id'))
+        id = work.work_id
+
     appendix_list = Appendix.objects.filter(work__work_id=work.work_id)
     temp = tempfile.TemporaryFile()
     archive = zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED)
@@ -31,18 +45,86 @@ def DownLoadZip(request):
     temp.seek(0)
     wrapper = FileWrapper(temp)
     response = HttpResponse(wrapper, content_type='application/zip')
-    response['Content-Disposition'] = 'attachment; filename=' + 'TEST' + '.zip' # 压缩包名称有问题
+    filename = str(id) + '_' + work.title + '.zip'
+    response['Content-Disposition'] = "attachment; filename*=utf-8''{}".format(escape_uri_path(filename))  # 压缩包名称有问题
+    response['Content-Length'] = data
+    return response
+
+
+def DownloadBatchZip(request):
+    status = request.GET.get('status')
+    work_list = []
+    id_list = []
+    if status == '0':
+        id_list = json.loads(request.GET.get('id_list'))
+        for id in id_list:
+            review = Review.objects.get(id=id)
+            work_list.append(WorkInfo.objects.get(id=review.work_id))
+
+    else:       # !!!
+        work = WorkInfo.objects.get(id = request.GET.get('id'))
+        id = work.work_id
+
+    Temp = tempfile.TemporaryFile()
+    Archive = zipfile.ZipFile(Temp, 'w', zipfile.ZIP_DEFLATED)
+    for work in work_list:
+        appendix_list = Appendix.objects.filter(work__work_id=work.work_id)
+        temp = tempfile.TemporaryFile(dir=MEDIA_ROOT+'\\compressed', delete=False)
+        archive = zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED)
+        for appendix in appendix_list:
+            target_file = os.path.join(MEDIA_ROOT, str(appendix.file)).replace('\\', '/')
+            archive.write(target_file, appendix.filename)
+        archive.close()
+        temp.seek(0)
+        target_file = os.path.join(MEDIA_ROOT + '/compressed', str(temp.name)).replace('\\', '/')
+        Archive.write(target_file, str(work.title)+'.zip')
+
+    Archive.close()
+    data = Temp.tell()
+    Temp.seek(0)
+    wrapper = FileWrapper(Temp)
+    response = HttpResponse(wrapper, content_type='application/zip')
+    filename = 'TopCup作品集.zip'
+    response['Content-Disposition'] = "attachment; filename*=utf-8''{}".format(escape_uri_path(filename))
     response['Content-Length'] = data
     return response
 
 
 def Judge(request):
     review = Review.objects.get(id=request.GET.get('id'))
-    review.score = request.GET.get('score')
-    review.comment = request.GET.get('comment')
+    review.score = request.GET.get('score', review.score)
+    review.comment = request.GET.get('comment', review.comment)
     review.review_status = 3
     review.save()
     return render(request, 'ExpertReviewWorkList.html')
+
+
+def sumbitReview(request):
+    user_id = request.user.id
+    review_list = Review.objects.filter(expert__user_id=user_id)
+    status = 1
+    for review in review_list:
+        if review.review_status == 2:
+            status = 0
+            break
+    if status == 1:
+        for review in review_list:
+            review.review_status = 4
+            review.save()
+    ret={'status': status}
+    return JsonResponse(ret)
+
+
+def NextReviewWork(request):
+    review = Review.objects.get(id=request.GET.get('id'))
+    type = WorkInfo.objects.get(id=review.work_id).work_type
+    expertid = review.expert_id
+    review_list = Review.objects.filter(Q(work__work_type=type) & Q(expert__user_id=expertid) & Q(review_status=2))
+    if len(review_list):
+        ret = {'nextid': review_list[0].id}
+    else:
+        ret = {'nextid': 0}
+    return JsonResponse(ret)
 
 
 class ExpertReviewListView(View):
@@ -66,6 +148,7 @@ class ExpertReviewListView(View):
                     'title': work.title,
                     'keywords': work.keywords,
                     'score': review.score,
+                    'comment':review.comment,
                     'tag': TAG_MAP[review.review_status]
                 })
             else:
@@ -74,6 +157,7 @@ class ExpertReviewListView(View):
                     'title': work.title,
                     'keywords': work.keywords,
                     'score': review.score,
+                    'comment': review.comment,
                     'tag': TAG_MAP[review.review_status]
                 })
 
@@ -98,36 +182,45 @@ class ExpertReviewView(View):
         id = request.GET.get('id')
         username = request.user.username
         work = None
-        show_list = []
-        invest_list = []
+        show = []
+        invest = []
         file_docu = []
         file_photo = []
         file_video = []
+        SHOW_MAP = {1: "实物、产品", 2: "模型", 3: "图纸", 4: "磁盘", 5: "现场演示", 6: "图片", 7: "录像", 8: "样品"}
+        INVEST_MAP = {1: "走访", 2: "问卷", 3: "现场采访", 4: "人员介绍", 5: "个别交谈", 6: "亲临实践", 7: "会议",
+                      8: "图片、照片", 9: "书报刊物", 10: "统计报表", 11: "影视资料", 12: "文件", 13: "集体组织", 14: "自发",
+                      15: "其他"}
         if id is None:
             return HttpResponse(status=400)     #作品不存在
 
         else:
+            show_list = []
+            invest_list = []
             review = Review.objects.get(id=id)
             work = WorkInfo.objects.get(id=review.work_id)
 
             if work.work_type == 1:
                 show_list = json.loads(work.labels)['labels']
+                for i in show_list:
+                    show.append(SHOW_MAP[int(i)])
             else:
                 invest_list = json.loads(work.labels)['labels']
-
+                for i in show_list:
+                    invest.append(INVEST_MAP[int(i)])
             filelist = Appendix.objects.filter(work__work_id=work.work_id)
             for file in filelist:
-                if file.appendix_type == 0:
+                if file.appendix_type == 1:
                     file_docu.append({"name": file.filename, "url": file.file.url})
-                elif file.appendix_type == 1:
-                    file_photo.append({"name": file.filename, "url": file.file.url})
                 elif file.appendix_type == 2:
+                    file_photo.append({"name": file.filename, "url": file.file.url})
+                elif file.appendix_type == 3:
                     file_video.append({"name": file.filename, "url": file.file.url})
 
         user_name, user_identity = GetUserIdentitiy(request)
         return render(request, 'ExpertReviewWork.html', {'work': work, 'id': review.id,
                                                          'score': review.score, 'comment':review.comment,
-                                                         'show_list': show_list, 'invest_list': invest_list,
+                                                         'show_list': show, 'invest_list': invest,
                                                          'docu': file_docu, 'photo': file_photo, 'video': file_video,
                                                          'username': user_name, 'useridentity': user_identity})
 
@@ -197,8 +290,9 @@ class AssignWorkListView(View):
                 'field':FIELD_MAP[work.field],
             })
 
+        # 专家拒绝了待处理
         expertlist_origin = Expert.objects.all().exclude(user__id__in=
-            Review.objects.all().values_list('expert__user__id', flat=True))
+            Review.objects.filter(review_status__lt=4).values_list('expert__user__id', flat=True))
         expertlist_ret = []
         for expert in expertlist_origin:
             expertlist_ret.append({
@@ -210,7 +304,6 @@ class AssignWorkListView(View):
 
         user_name,user_identity = GetUserIdentitiy(request)
         return render(request,'assignwork_list.html',{'expertlist':expertlist_ret, 'worklist':worklist_ret , 'useridentity':user_identity,'username':user_name})
-
 
 class AssignExpertView(View):
     """
@@ -265,9 +358,19 @@ class AssignExpertView(View):
 
 class ExptreviewListView(View):
     """
-    展示比赛已分配专家
+    展示已分配的专家-作品对
     """
     def get(self, request):
+
+        FIELD_MAP = {
+            1: "A",
+            2: "B",
+            3: "C",
+            4: "D",
+            5: "E",
+            6: "F",
+        }
+
         cpt_id = request.GET.get('cpt_id','')
         user_name,user_identity = GetUserIdentitiy(request)
         context = {}
@@ -293,5 +396,145 @@ class ExptreviewListView(View):
                 }
             )
         context['review_ret'] = review_ret
+
+        #待选专家
+        expertlist_origin = Expert.objects.all().exclude(user__id__in=
+        Review.objects.all().values_list('expert__user__id', flat=True))
+        expertlist_ret = []
+        for expert in expertlist_origin:
+            expertlist_ret.append({
+                'expert_id':expert.user.id,
+                'name':expert.name,
+                'field':FIELD_MAP[expert.field],
+                'email':expert.user.email,
+            })
+        context['expertlist'] = expertlist_ret
+
         return render(request, 'exptreview_list.html', context)
 
+class DefenseWorkListView(View):
+    """
+    展示待遴选作品列表
+    """
+    def get(self,request):
+        cpt_id = request.GET['cptid']
+        print(cpt_id)
+        Cpt=Competition.objects.get(id=cpt_id)
+        worklist_origin = WorkInfo.objects.filter(registration__competition=Cpt)
+        #求每个作品的平均分并填表
+        # scorelist=Review.objects.values('work').annotate(avgscore=Avg('score')).values("work","avgscore")
+        # worklist=WorkInfo.objects.all()
+        # for i in worklist:
+        #     try:
+        #         i.avg_score=Decimal(scorelist.get(work = i)['avgscore']).quantize(Decimal('0.00'))
+        #     except:
+        #         i.avg_score = 0
+        #     i.save()
+
+
+            # i.avg_score=scorelist.filter('work' == i.work_id)
+            # i.save()
+
+        # to do: 1.属于某个比赛的作品 2.
+        WORKTYPE_MAP = {
+            1: "科技发明制作",
+            2: "调查报告和学术论文"
+        }
+        FIELD_MAP = {
+            1: "A",
+            2: "B",
+            3: "C",
+            4: "D",
+            5: "E",
+            6: "F",
+        }
+        worklist_ret = []
+        for work in worklist_origin:
+            if work.if_defense==0:
+                worklist_ret.append({
+                    'work_id':work.work_id,
+                    'title':work.title,
+                    'work_type':WORKTYPE_MAP[work.work_type],
+                    'field':FIELD_MAP[work.field],
+                    'avgscore':work.avg_score
+                })
+        user_name,user_identity = GetUserIdentitiy(request)
+        return render(request,'defensework_list.html',{ 'worklist':worklist_ret , 'useridentity':user_identity,'username':user_name,'cpt_id':cpt_id})
+
+    def post(self, request):
+        defenseWorkList = json.loads(request.body)
+        with transaction.atomic():
+            for item in defenseWorkList:
+                work = WorkInfo.objects.get(work_id=item.get("work_id"))
+                work.if_defense = True
+                work.save()
+        # print(request.data)
+
+        return JsonResponse({'Message': 0})
+
+class ExptTreetableView(View):
+    """
+    以专家为主体展示已分配到某个专家的作品列表
+    """
+    def get(self, request):
+        FIELD_MAP = {
+            1: "A",
+            2: "B",
+            3: "C",
+            4: "D",
+            5: "E",
+            6: "F",
+        }
+
+        cpt_id = request.GET.get('cpt_id','')
+        user_name,user_identity = GetUserIdentitiy(request)
+        context = {}
+        context['username'] = user_name
+        context['useridentity'] = user_identity
+
+        # 从Review表中选出该比赛的review
+        reviews = Review.objects.all()
+        expt_tree_ret = {}
+
+        # 以专家ID为key, value为专家信息和需要评审的作品列表
+        for review_i in reviews:
+            temp_expt_id = review_i.expert.user.id
+            if temp_expt_id in expt_tree_ret.keys():
+                expt_tree_ret[temp_expt_id]['works'].append(
+                    {
+                        'work_id': review_i.work.work_id,
+                        'work_name': review_i.work.title,
+                        'work_type':review_i.work.work_type,
+                        'work_field': review_i.work.field,
+                        'review_state': review_i.review_status,
+                    }
+                )
+            else:
+                expt_tree_ret[temp_expt_id] = {
+                    'init_date': str(review_i.add_time),
+                    'expert_id': review_i.expert.user.id,
+                    'expert_name': review_i.expert.name,
+                    'expert_field': review_i.expert.field,
+                    'email': review_i.expert.user.email,
+                    'expert_state': review_i.review_status,
+                    'works':[]
+                }
+
+        #字典转换为列表
+        expt_tree_ret = list(expt_tree_ret.values())
+        context['expt_tree_ret'] = expt_tree_ret
+
+        #待选专家
+        expertlist_origin = Expert.objects.all().exclude(user__id__in=
+            Review.objects.all().values_list('expert__user__id', flat=True))
+        expertlist_ret = []
+        for expert in expertlist_origin:
+            expertlist_ret.append({
+                'expert_id':expert.user.id,
+                'expert_name':expert.name,
+                'expert_field':FIELD_MAP[expert.field],
+                'email':expert.user.email,
+            })
+        context['expertlist'] = expertlist_ret
+
+        return render(request, 'expert_treetable.html', context)

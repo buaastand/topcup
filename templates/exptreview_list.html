@@ -22,7 +22,7 @@
     
     <div id="ExptreviewList" style="width: 100%">
         <div class="buttonArea">
-             <el-button type="primary" @click="selectExpert">为选中的分配更换专家</el-button>
+             <el-button type="primary" @click="changeExpert">为选中的分配替换评审人</el-button>
         </div>
         
         <div class="tableArea">
@@ -32,7 +32,7 @@
                 tooltip-effect="light"
                 style="width: 1000px;"
                 @filter-change="test"
-                >
+                @selection-change="rhandleSelectionChange">
                 <el-table-column
                     type="selection"
                     width="40">
@@ -111,7 +111,7 @@
         <div style="width:100%; margin-top: 10px; text-align: center">
             <el-pagination
               @size-change="rhandleSizeChange"
-              @current-change="rhandleSizeChange"
+              @current-change="rhandleCurrentChange"
               :current-page="currentReviewPage"
               :page-sizes="[10, 30, 100, totalReview]"
               :page-size="reviewPageSize"
@@ -120,49 +120,77 @@
             </el-pagination>
         </div>
 
-        <!-- <el-dialog
-            title="可选专家"
+        <el-dialog
+            title="替换评审人"
             :visible.sync="dialogVisible"
             width="800px"
             :before-close="handleClose"
             v-loading="loading">
-            <div style="width: 740px; margin:0 auto 0 auto">
-                <el-table ref="multipleTable" 
-                    :data="expertTableData" 
-                    tooltip-effect="light" 
-                    style="width: 740px"
-                    max-height="100%"
-                    @selection-change="ehandleSelectionChange">
-                    <el-table-column type="selection" width="40px">
-                    </el-table-column>
-                    <el-table-column type="index" label="序号" width="60px">
-                    </el-table-column>
-                    <el-table-column 
-                        label="专家姓名" 
-                        prop="name" 
-                        style="width:120px"
-                        column-key="name"
-                        sortable>
-                    </el-table-column>
-                    <el-table-column label="专家领域" prop="field" width="180px" :filters="fieldFilters" :filter-method="filterHandler">
-                    </el-table-column>
-                    <el-table-column 
-                        label="专家邮箱" 
-                        width="300px" 
-                        prop="email"
-                        column-key="email"
-                        ortable 
-                        show-overflow-tooltip>
-                    </el-table-column>
-                    <el-table-column class-name="expert_id" label="" prop="expert_id" width="40px">
-                    </el-table-column>
-                </el-table>
-            </div>
+            <el-collapse v-model="activeName" accordion>
+                <el-collapse-item v-for="(expt,key) in expert_work" :key="key" :name="key">
+                        <template slot="title">
+                            <div style="width: 740px">
+                                <div style="float: left;">
+                                    <el-popover trigger="hover" placement="bottom-start">
+                                            <p>ID: {[ key ]}</p>
+                                            <p>邮箱: {[ expt.email ]}</p>
+                                            <p>领域: {[ expt.field ]}</p>
+                                            <span slot="reference" class="name-wrapper">
+                                                <el-tag type="info" size="medium">{[ expt.name ]}</el-tag>
+                                            </span>
+                                    </el-popover>
+                                </div>
+                                <div style="float: right; margin-right: 10px;">
+                                    <el-tag type="danger" size="medium" v-if="target_expert[key].selected==0">未选中</el-tag>
+                                    <el-popover v-if="target_expert[key].selected==1" trigger="hover" placement="bottom-start">
+                                            <p>ID: {[ target_expert[key].id ]}</p>
+                                            <p>邮箱: {[ target_expert[key].email ]}</p>
+                                            <p>领域: {[ target_expert[key].field ]}</p>
+                                            <span slot="reference" class="name-wrapper">
+                                                <el-tag size="medium">{[ target_expert[key].name ]}</el-tag>
+                                            </span>
+                                    </el-popover>
+                                </div>
+                            </div>
+                        </template>
+                        <div style="width: 700px; margin:0 auto 0 auto">
+                                <el-table ref="singleTable" 
+                                    :data="expertTableData" 
+                                    tooltip-effect="light" 
+                                    style="width: 700px"
+                                    highlight-current-row
+                                    max-height="100%"
+                                    @current-change="ehandleSelectionChange">
+                                    <el-table-column type="index" label="序号" width="60px">
+                                    </el-table-column>
+                                    <el-table-column class-name="expert_id" label="专家ID" prop="expert_id" width="80px"></el-table-column>
+                                    <el-table-column 
+                                        label="专家姓名" 
+                                        prop="name" 
+                                        style="width:100px"
+                                        column-key="name"
+                                        sortable>
+                                    </el-table-column>
+                                    <el-table-column label="专家领域" prop="field" width="200px" :filters="fieldFilters" :filter-method="filterHandler">
+                                    </el-table-column>
+                                    <el-table-column 
+                                        label="专家邮箱" 
+                                        width="260px" 
+                                        prop="email"
+                                        column-key="email"
+                                        sortable 
+                                        show-overflow-tooltip>
+                                    </el-table-column>
+                                    </el-table-column>
+                                </el-table>
+                        </div>
+                </el-collapse-item>
+            </el-collapse>
         <span slot="footer" class="dialog-footer">
             <el-button @click="dialogVisible = false">取消</el-button>
-            <el-button type="primary" @click="matchWorksAndExperts">确认分配</el-button>
+            <el-button type="primary" @click="matchWorksAndExperts">确认替换</el-button>
         </span>
-        </el-dialog> -->
+        </el-dialog>
     </div>
 
     <script>
@@ -172,10 +200,6 @@
             data: {
                 exptReviewTable: {{ review_ret|safe }},
                 filterReview: {{ review_ret|safe }},
-
-                dialogVisible: false,
-                loading:false,
-
                 
                 currentReviewPage: 1,
                 reviewPageSize: 10,
@@ -184,18 +208,32 @@
                     'review_state': ALL_REVIEW_STATE
                 },
 
+                stateFilters: [{ text: '0', value: 0 }, { text: '1', value: 1 }, 
+                    { text: '2', value: 2 }, { text: '3', value: 3 }, 
+                    { text: '4', value: 4 }],
+
+                rmultipleSelection: [],
+                expert_work: {},
+                target_expert: {},
+
+                // dialog相关
+                dialogVisible: false,
+                loading: false,
+
+                // 手风琴相关
+                activeName: '1',
+
+                // 专家表相关
+                expertTableData: {{ expertlist | safe }},
+
                 totalExpert: 0,
                 currentExpPage: 1,
 
-                rmultipleSelection: [],
                 emultipleSelection: [],
 
-                typeFilters: [{ text: '科技发明制作', value: '科技发明制作' }, 
-                    { text: '调查报告和学术论文', value: '调查报告和学术论文' }],
-
-                stateFilters: [{ text: '0', value: 0 }, { text: '1', value: 1 }, 
-                    { text: '2', value: 2 }, { text: '3', value: 3 }, 
-                    { text: '4', value: 4 }]
+                fieldFilters: [{ text: 'A', value: 'A' }, { text: 'B', value: 'B' }, 
+                    { text: 'C', value: 'C' }, { text: 'D', value: 'D' }, 
+                    { text: 'E', value: 'E' }, { text: 'F', value: 'F' }]
             },
             computed: {
                 displayReview: function () {
@@ -206,16 +244,7 @@
                 }
             },
             methods: {
-                wtoggleSelection(rows) {
-                    if (rows) {
-                        rows.forEach(row => {
-                            this.$refs.wmultipleTable.toggleRowSelection(row);
-                        });
-                    } else {
-                        this.$refs.wmultipleTable.clearSelection();
-                    }
-                },
-                whandleSelectionChange(val) {
+                rhandleSelectionChange(val) {
                     this.rmultipleSelection = val;
                     // console.log(this.rmultipleSelection["0"]['work_id']);
                 },
@@ -238,11 +267,36 @@
                 rhandleSizeChange(val) {
                     this.reviewPageSize = val;
                 },
-                rhandleSizeChange(val) {
+                rhandleCurrentChange(val) {
                     this.currentReviewPage = val;
                 },
-                selectExpert() {
+                changeExpert() {
+                    this.expert_work = {}
+                    this.target_expert = {}
                     if (this.rmultipleSelection.length > 0) {
+                        for (var i = 0; i < this.rmultipleSelection.length; i++){
+                            var ext_id = this.rmultipleSelection[i]['expert_id'];
+                            if(this.expert_work[ext_id]){
+                                this.expert_work[ext_id]['works'].push(this.rmultipleSelection[i]['work_id']);
+                            }
+                            else{
+                                this.expert_work[ext_id] = {};
+                                this.target_expert[ext_id] = {
+                                    'id': '',
+                                    'field': '',
+                                    'email': '',
+                                    'name': '',
+                                    'selected': '0'
+                                };
+
+                                this.expert_work[ext_id]['works'] = [];
+                                this.expert_work[ext_id]['name'] = this.rmultipleSelection[i]['expert_name'];
+                                this.expert_work[ext_id]['field'] = this.rmultipleSelection[i]['expert_field'];
+                                this.expert_work[ext_id]['email'] = this.rmultipleSelection[i]['email'];
+                                this.expert_work[ext_id]['works'].push(this.rmultipleSelection[i]['work_id']);
+                            }
+                        }
+                        // console.log(this.expert_work);
                         this.dialogVisible = true;
                     }
                     else{
@@ -319,14 +373,12 @@
                     for (var i = 0; i < this.exptReviewTable.length; i++) {
                         for (var j = 0; j < this.reviewFilters['review_state'].length; j++) {
                             if (this.exptReviewTable[i]['review_state'] == this.reviewFilters['review_state'][j]) {
-                                this.filterReview.push(this.exptReviewTable[i]['review_state']);
+                                this.filterReview.push(this.exptReviewTable[i]);
                                 break;
                             }
                         }
                     }
-                    //console.log(filters);
                     this.currentReviewPage = 1;
-                    // console.log(this.exptReviewTable);
                 }
             },
             delimiters: ["{[", "]}"]

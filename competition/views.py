@@ -12,10 +12,13 @@ from users.models import Student
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django import forms
-
+from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
+from competition.models import Competition,CompetitionRegistration
+from techworks.models import WorkInfo
+from django.forms.models import model_to_dict
 from competition.models import Competition
 from django.views.generic.base import View
 from techworks.models import Appendix
@@ -41,7 +44,6 @@ def GetUserIdentitiy(request):
 
 def CompetitionDetail(request):
     user_name, user_identity = GetUserIdentitiy(request)
-    print(GetUserIdentitiy(request))
     cptDetail=Competition.objects.get(id= request.GET['id'])
     context = {'cptDetail':cptDetail}
     temp=datetime.date.today()
@@ -62,6 +64,32 @@ def CompetitionDetail(request):
     context['status_type']=status_type
     context['useridentity'] = user_identity
     context['username'] = user_name
+
+    WORKTYPE_MAP = {
+        1: "科技发明制作",
+        2: "调查报告和学术论文"
+    }
+    FIELD_MAP = {
+        1: "A",
+        2: "B",
+        3: "C",
+        4: "D",
+        5: "E",
+        6: "F",
+    }
+    defenseWorkList = WorkInfo.objects.filter(Q(if_defense=1)&Q(registration__competition=cptDetail))
+    # defenseWorkList=WorkInfo.objects.filter(if_defense=1,registration)
+    defense_WorkList_ret = []
+    for i in defenseWorkList:
+        defense_WorkList_ret.append(
+            {
+                'work_id': i.work_id,
+                'title': i.title,
+                'work_type': WORKTYPE_MAP[i.work_type],
+                'field': FIELD_MAP[i.field],
+            }
+        )
+    context['defenseworklist']=defense_WorkList_ret
     return render(request,"../templates/CompetitionDetail.html",context)
 
 def CompetitionUpdate():
@@ -136,8 +164,6 @@ def DeleteCompetition(request):
     if request.method == 'POST':
         id = request.POST.get('id')
         # id= int(temp)
-        print(request)
-        print(id,type(id))
         try:
             Competition.objects.get(id=id).delete()
         except:

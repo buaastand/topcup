@@ -12,6 +12,7 @@ from django.db.models import Q
 from django.http.response import JsonResponse
 from django.shortcuts import render, HttpResponse
 from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
@@ -24,6 +25,97 @@ from .models import WorkInfo, Appendix
 
 
 # Create your views here.
+@csrf_exempt
+def work_info(request):
+    DEGREE = ['大专','大学本科','硕士研究生','博士研究生']
+    user_name, user_identity = GetUserIdentitiy(request)
+    information = {}
+    workInfo = WorkInfo.objects.get(id=request.GET['work_id'])
+    documentlist = []
+    photolist = []
+    videolist = []
+    for i in Appendix.objects.filter(work_id=request.GET['work_id']):
+        if i.appendix_type == 1:
+            documentlist.append(i)
+        elif i.appendix_type == 2:
+            photolist.append(i)
+        else:
+            videolist.append(i)
+    workAuthor = CompetitionRegistration.objects.get(id=request.GET['work_id'])
+    workFirstAuthorInfo = Student.objects.get(user_id=workAuthor.first_auth_id)
+    labelList = json.loads(workInfo.labels)['labels']
+    labellist = list(map(int, labelList))
+    authorList = []
+
+    firstAuthor = {}
+    firstAuthor['name'] = workFirstAuthorInfo.name
+    firstAuthor['stu_id'] = workFirstAuthorInfo.stu_id
+    firstAuthor['birthdate'] = str(workFirstAuthorInfo.birthdate.year) + "-"
+    if workFirstAuthorInfo.birthdate.month < 10:
+        firstAuthor['birthdate'] = firstAuthor['birthdate'] + "0" + str(workFirstAuthorInfo.birthdate.month)
+    else:
+        firstAuthor['birthdate'] = firstAuthor['birthdate'] + str(workFirstAuthorInfo.birthdate.month)
+    firstAuthor['degree'] = DEGREE[workFirstAuthorInfo.degree]
+    firstAuthor['major'] = workFirstAuthorInfo.major
+    firstAuthor['enroll_time'] = str(workFirstAuthorInfo.enroll_time)
+    firstAuthor['address'] = workFirstAuthorInfo.address
+    firstAuthor['phone'] = workFirstAuthorInfo.phone
+    firstAuthor['email'] = workFirstAuthorInfo.user.email
+
+
+    if(workAuthor.second_auth_id):
+        workSecondAuthorInfo = Student.objects.get(user_id=workAuthor.second_auth_id)
+        authorList.append({'name': workSecondAuthorInfo.name,
+                           'stu_id': workSecondAuthorInfo.stu_id,
+                           'degree': DEGREE[workSecondAuthorInfo.degree],
+                           'phone': workSecondAuthorInfo.phone,
+                           'email': workSecondAuthorInfo.user.email})
+    else:
+        workSecondAuthorInfo = ''
+
+    if (workAuthor.third_auth_id):
+        workThirdAuthorInfo = Student.objects.get(user_id=workAuthor.third_auth_id)
+        authorList.append({'name': workThirdAuthorInfo.name,
+                           'stu_id': workThirdAuthorInfo.stu_id,
+                           'degree': DEGREE[workThirdAuthorInfo.degree],
+                           'phone': workThirdAuthorInfo.phone,
+                           'email': workThirdAuthorInfo.user.email})
+    else:
+        workThirdAuthorInfo = ''
+
+    if (workAuthor.forth_auth_id):
+        workForthAuthorInfo = Student.objects.get(user_id=workAuthor.forth_auth_id)
+        authorList.append({'name': workForthAuthorInfo.name,
+                           'stu_id': workForthAuthorInfo.stu_id,
+                           'degree': DEGREE[workForthAuthorInfo.degree],
+                           'phone': workForthAuthorInfo.phone,
+                           'email': workForthAuthorInfo.user.email})
+    else:
+        workForthAuthorInfo = ''
+
+    if (workAuthor.fifth_auth_id):
+        workFifthAuthorInfo = Student.objects.get(user_id=workAuthor.fifth_auth_id)
+        authorList.append({'name': workFifthAuthorInfo.name,
+                           'stu_id': workFifthAuthorInfo.stu_id,
+                           'degree': DEGREE[workFifthAuthorInfo.degree],
+                           'phone': workFifthAuthorInfo.phone,
+                           'email': workFifthAuthorInfo.user.email})
+    else:
+        workFifthAuthorInfo = ''
+
+    information = {'workInfo': workInfo}
+    information['documentlist'] = documentlist
+    information['photolist'] = photolist
+    information['videolist'] = videolist
+    information['workAuthor'] = workAuthor
+    information['authorList'] = authorList
+    information['labellist'] = labellist
+    information['username'] = user_name
+    information['useridentity'] = user_identity
+    information['firstAuthor'] = firstAuthor
+
+    return render(request, '../templates/viewWorkInfo.html', information)
+
 def searchstu(request):
     DEGREE_MAP = {
         1: "大专",
@@ -42,13 +134,11 @@ def searchstu(request):
     }}
     return JsonResponse(ret)
 
-
 def deletework(request):
     work_id = request.GET.get('work_id')
     work = WorkInfo.objects.filter(work_id=work_id)
     work.delete()
     return HttpResponse(status=200)
-
 
 # @login_required(login_url='/login/')
 # @method_decorator(login_required,name='dispatch')
@@ -167,11 +257,11 @@ class TechWorkView(View):
             filelist = Appendix.objects.filter(work__work_id=work.work_id)
 
             for file in filelist:
-                if file.appendix_type == 0:
+                if file.appendix_type == 1:
                     file_docu.append({"name": file.filename, "url": file.file.url})
-                elif file.appendix_type == 1:
-                    file_photo.append({"name": file.filename, "url": file.file.url})
                 elif file.appendix_type == 2:
+                    file_photo.append({"name": file.filename, "url": file.file.url})
+                elif file.appendix_type == 3:
                     file_video.append({"name": file.filename, "url": file.file.url})
 
         user_name, user_identity = GetUserIdentitiy(request)
@@ -223,9 +313,9 @@ class TechWorkView(View):
 
                 work.submitted = True if int(request.POST.get("submitted", work.submitted)) == 1 else False
                 FILE_TYLE_MAP = {
-                    "document": 0,
-                    "photo": 1,
-                    "video": 2
+                    "document": 1,
+                    "photo": 2,
+                    "video": 3
                 }
 
                 deleteList = json.loads(request.POST.get('deleteList', "{\"deletelist\":[]}"))["deletelist"]
