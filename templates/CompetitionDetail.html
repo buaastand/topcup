@@ -7,7 +7,7 @@
     <script src="https://unpkg.com/element-ui/lib/index.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 
-    <title>比赛详情</title>
+    <title>比赛详情|TOPCUP</title>
 </head>
 
 <body style="margin: 0">
@@ -98,7 +98,7 @@
                 <el-tab-pane label="比赛结果">
                     <div class="cptdetailtext">{{ cptDetail.result_details }}</div>
                     {% if status_type == '4' %}
-                    <a href="/media/{{ cptDetail.end_appendix }}">比赛结果文件下载</a>
+                    <el-link type="primary" href="/media/{{ cptDetail.end_appendix }}"><i class="el-icon-download"></i>比赛结果文件下载</el-link>
                     {% endif %}
                 </el-tab-pane>
             </el-tabs>
