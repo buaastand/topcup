@@ -22,21 +22,22 @@
     
     <div id="ExptreviewList" style="width: 100%">
         <div class="buttonArea">
-             <el-button type="primary" @click="changeExpert">为选中的分配替换评审人</el-button>
+            <el-radio-group v-model="tabPosition">
+                <el-radio-button label="expt">专家视图</el-radio-button>
+                <el-radio-button label="work">作品视图</el-radio-button>
+                <el-radio-button onclick="window.open('../exptreview_list/','_self')" label="expnd">平铺视图</el-radio-button>
+            </el-radio-group>
+            <el-button style="float:right; margin-right: 20px" type="primary" @click="changeExpert">为选中的分配替换评审人</el-button>
         </div>
         
         <div class="tableArea">
             <el-table
-                ref="multipleTable"
-                :data="displayReview"
+                ref="multiTable"
+                :data="displayExpert"
                 tooltip-effect="light"
                 style="width: 1000px;"
-                @filter-change="test"
-                @selection-change="rhandleSelectionChange">
-                <el-table-column
-                    type="selection"
-                    width="40">
-                </el-table-column>
+                @expand-change="checkcheck"
+                @filter-change="test">
                 <el-table-column
                     type="index"
                     label="序号"
@@ -45,7 +46,7 @@
                 <el-table-column
                     label="分配时间"
                     prop="init_date"
-                    width="120"
+                    width="140"
                     column-key="init_date"
                     sortable>
                 </el-table-column>
@@ -59,51 +60,78 @@
                 <el-table-column
                     label="专家名称"
                     prop="expert_name"
-                    width="120"
+                    width="110"
                     column-key="expert_name"
                     sortable>
-                    <template slot-scope="scope">
-                        <el-popover trigger="hover" placement="bottom-start">
-                            <p>邮箱: {[ scope.row.email ]}</p>
-                            <p>领域: {[ scope.row.expert_field ]}</p>
-                            <div slot="reference" class="name-wrapper">
-                                <el-tag size="medium">{[ scope.row.expert_name ]}</el-tag>
-                            </div>
-                        </el-popover>
-                    </template>
                 </el-table-column>
                 <el-table-column
-                    label="作品ID"
-                    prop="work_id"
+                    label="专家领域"
+                    prop="expert_field"
                     width="120"
-                    column-key="work_id"
+                    column-key="expert_field"
                     sortable>
                 </el-table-column>
                 <el-table-column
-                    label="作品名称"
-                    prop="work_type"
-                    column-key="work_type"
-                    width="340"
-                    sortable
-                    show-overflow-tooltip>
-                    <template slot-scope="scope">
-                        <el-popover trigger="hover" placement="bottom-start">
-                            <p>类型: {[ scope.row.work_type ]}</p>
-                            <p>领域: {[ scope.row.work_field ]}</p>
-                            <div slot="reference" class="name-wrapper">
-                                <el-tag size="medium">{[ scope.row.work_name ]}</el-tag>
-                            </div>
-                        </el-popover>
-                    </template>
+                    label="专家邮箱"
+                    prop="email"
+                    width="250"
+                    column-key="email"
+                    sortable>
                 </el-table-column>
                 <el-table-column
                     label="评审状态"
-                    prop="review_state"
+                    prop="expert_state"
                     width="100"
-                    column-key="review_state"
-                    :filters="stateFilters"
-                    :filter-method="filterHandler"
-                    >
+                    column-key="expert_state"
+                    :filters="expertFilters"
+                    :filter-method="filterHandler">
+                </el-table-column>
+                <el-table-column type="expand" width="100">
+                    <template slot-scope="props">
+                        <el-table 
+                            :data="props.row.works" 
+                            :ref="'expt_'+props.row.expert_id"
+                            tooltip-effect="light" 
+                            style="width: 1000px;"
+                            @selection-change="(selection) => selectReviews(selection, props.row)" 
+                            @filter-change="">
+                            <el-table-column type="selection" width="40">
+                            </el-table-column>
+                            <el-table-column type="index" label="序号" width="60">
+                            </el-table-column>
+                            <el-table-column 
+                                label="作品ID" 
+                                prop="work_id" 
+                                width="120" 
+                                column-key="work_id" 
+                                sortable>
+                            </el-table-column>
+                            <el-table-column 
+                                label="作品名称" 
+                                prop="work_name" 
+                                width="200" 
+                                column-key="work_name" 
+                                sortable 
+                                show-overflow-tooltip>
+                            </el-table-column>
+                            <el-table-column label="作品类别" 
+                                prop="work_type" 
+                                column-key="work_type" 
+                                :filters="typeFilters"
+                                :filter-method="filterHandler" 
+                                width="200">
+                            </el-table-column>
+                            <el-table-column label="作品领域" 
+                                prop="work_field" 
+                                column-key="work_field" 
+                                :filters="fieldFilters"
+                                :filter-method="filterHandler">
+                            </el-table-column>
+                            <el-table-column label="评审状态" prop="review_state" column-key="review_state" :filters="stateFilters"
+                                :filter-method="filterHandler">
+                            </el-table-column>
+                        </el-table>
+                    </template>
                 </el-table-column>
           </el-table>
         </div>
@@ -127,10 +155,11 @@
             :before-close="handleClose"
             v-loading="loading">
             <el-collapse v-model="activeName" accordion>
-                <el-collapse-item v-for="(expt,key) in expert_work" :key="key" :name="key">
+                <el-collapse-item v-for="(expt,key) in reviewSelection" :key="key" :name="key">
                         <template slot="title">
                             <div style="width: 740px">
                                 <div style="float: left;">
+                                    <span style="color: #409EFF">原评审人: </span>
                                     <el-popover trigger="hover" placement="bottom-start">
                                             <p>ID: {[ key ]}</p>
                                             <p>邮箱: {[ expt.email ]}</p>
@@ -140,7 +169,8 @@
                                             </span>
                                     </el-popover>
                                 </div>
-                                <div style="float: right; margin-right: 10px;">
+                                <div style="float: left; position:absolute; left: 300px;">
+                                    <span style="color: #409EFF">新评审人: </span>
                                     <el-tag type="danger" size="medium" v-if="target_expert[key].selected==0">未选中</el-tag>
                                     <el-popover v-if="target_expert[key].selected==1" trigger="hover" placement="bottom-start">
                                             <p>ID: {[ target_expert[key].id ]}</p>
@@ -166,12 +196,12 @@
                                     <el-table-column class-name="expert_id" label="专家ID" prop="expert_id" width="80px"></el-table-column>
                                     <el-table-column 
                                         label="专家姓名" 
-                                        prop="name" 
+                                        prop="expert_name" 
                                         style="width:100px"
-                                        column-key="name"
+                                        column-key="expert_name"
                                         sortable>
                                     </el-table-column>
-                                    <el-table-column label="专家领域" prop="field" width="200px" :filters="fieldFilters" :filter-method="filterHandler">
+                                    <el-table-column label="专家领域" prop="expert_field" width="200px" :filters="fieldFilters" :filter-method="filterHandler">
                                     </el-table-column>
                                     <el-table-column 
                                         label="专家邮箱" 
@@ -195,12 +225,19 @@
 
     <script>
         const ALL_REVIEW_STATE = [0, 1, 2, 3, 4];
+
         var exptReviewList = new Vue({
             el: '#ExptreviewList',
             data: {
-                exptReviewTable: {{ review_ret|safe }},
-                filterReview: {{ review_ret|safe }},
-                
+                // tabs
+                tabPosition: 'expt',
+
+                // expt table
+                exptReviewTable: {{ expt_tree_ret|safe }},
+                filterReview: {{ expt_tree_ret|safe }},
+
+                reviewSelection: {},
+
                 currentReviewPage: 1,
                 reviewPageSize: 10,
 
@@ -208,12 +245,22 @@
                     'review_state': ALL_REVIEW_STATE
                 },
 
+                expertFilters: [{ text: '0', value: 0 }, { text: '1', value: 1 }, 
+                    { text: '2', value: 2 }, { text: '3', value: 3 }, 
+                    { text: '4', value: 4 }],
+
                 stateFilters: [{ text: '0', value: 0 }, { text: '1', value: 1 }, 
                     { text: '2', value: 2 }, { text: '3', value: 3 }, 
                     { text: '4', value: 4 }],
 
+                fieldFilters: [{ text: 'A', value: 'A' }, { text: 'B', value: 'B' }, 
+                    { text: 'C', value: 'C' }, { text: 'D', value: 'D' }, 
+                    { text: 'E', value: 'E' }, { text: 'F', value: 'F' }],
+
+                typeFilters: [{ text: '科技发明制作', value: '科技发明制作' }, 
+                    { text: '调查报告和学术论文', value: '调查报告和学术论文' }],
+
                 rmultipleSelection: [],
-                expert_work: {},
                 target_expert: {},
 
                 // dialog相关
@@ -231,12 +278,9 @@
 
                 emultipleSelection: [],
 
-                fieldFilters: [{ text: 'A', value: 'A' }, { text: 'B', value: 'B' }, 
-                    { text: 'C', value: 'C' }, { text: 'D', value: 'D' }, 
-                    { text: 'E', value: 'E' }, { text: 'F', value: 'F' }]
             },
             computed: {
-                displayReview: function () {
+                displayExpert: function () {
                     return this.filterReview.slice((this.currentReviewPage-1)*this.reviewPageSize,this.currentReviewPage*this.reviewPageSize);
                 },
                 totalReview: function () {
@@ -244,26 +288,33 @@
                 }
             },
             methods: {
-                rhandleSelectionChange(val) {
-                    this.rmultipleSelection = val;
-                    // console.log(this.rmultipleSelection["0"]['work_id']);
-                },
-                etoggleSelection(rows) {
-                    if (rows) {
-                        rows.forEach(row => {
-                            this.$refs.emultipleTable.toggleRowSelection(row);
-                        });
-                    } else {
-                        this.$refs.emultipleTable.clearSelection();
+                selectReviews(selection, row){
+                    this.reviewSelection[row.expert_id] = {
+                        'works': selection,
+                        'id': row.expert_id,
+                        'name': row.expert_name,
+                        'email': row.email,
+                        'field': row.expert_field
                     }
                 },
-                ehandleSelectionChange(val) {
-                    this.emultipleSelection = val;
+                checkcheck(row, expandRows){
+                    var temp_id = row.expert_id;
+                    this.$nextTick(() => {
+                        if(this.reviewSelection[temp_id]){
+                            var temp_selection = this.reviewSelection[temp_id]['works'];
+                            for (i in temp_selection) {
+                                if (this.$refs['expt_'+temp_id]) {
+                                    this.$refs['expt_'+temp_id].toggleRowSelection(temp_selection[i], true);
+                                }
+                            }
+                        }
+                    });
                 },
                 filterHandler(value, row, column) {
                     const property = column['property'];
                     return row[property] === value;
                 },
+
                 rhandleSizeChange(val) {
                     this.reviewPageSize = val;
                 },
@@ -271,37 +322,27 @@
                     this.currentReviewPage = val;
                 },
                 changeExpert() {
-                    this.expert_work = {}
                     this.target_expert = {}
-                    if (this.rmultipleSelection.length > 0) {
-                        for (var i = 0; i < this.rmultipleSelection.length; i++){
-                            var ext_id = this.rmultipleSelection[i]['expert_id'];
-                            if(this.expert_work[ext_id]){
-                                this.expert_work[ext_id]['works'].push(this.rmultipleSelection[i]['work_id']);
-                            }
-                            else{
-                                this.expert_work[ext_id] = {};
-                                this.target_expert[ext_id] = {
+                    var haveWork = 0;
+                    for (i in this.reviewSelection){
+                        if (this.reviewSelection[i]['works'] && this.reviewSelection[i]['works'].length>0) {
+                            this.target_expert[i] = {
                                     'id': '',
                                     'field': '',
                                     'email': '',
                                     'name': '',
                                     'selected': '0'
                                 };
-
-                                this.expert_work[ext_id]['works'] = [];
-                                this.expert_work[ext_id]['name'] = this.rmultipleSelection[i]['expert_name'];
-                                this.expert_work[ext_id]['field'] = this.rmultipleSelection[i]['expert_field'];
-                                this.expert_work[ext_id]['email'] = this.rmultipleSelection[i]['email'];
-                                this.expert_work[ext_id]['works'].push(this.rmultipleSelection[i]['work_id']);
-                            }
+                            haveWork = 1;
                         }
-                        // console.log(this.expert_work);
-                        this.dialogVisible = true;
                     }
-                    else{
+
+                    if (haveWork == 0) {
                         this.$message.error('请至少选择一个参赛作品！');
+                        return;
                     }
+
+                    this.dialogVisible = true;
                 },
                 handleClose(done) {
                     this.$confirm('确认关闭？')
@@ -359,20 +400,19 @@
                     });
                 },
                 test(filters){
-                    // console.log(this.exptReviewTable);
                     this.filterReview = [];
                     var filtered;
 
-                    if(filters['review_state']){
-                        if(filters['review_state'].length == 0){
-                            this.reviewFilters['review_state'] = ALL_REVIEW_STATE;
+                    if(filters['expert_state']){
+                        if(filters['expert_state'].length == 0){
+                            this.reviewFilters['expert_state'] = ALL_REVIEW_STATE;
                         }
-                        else this.reviewFilters['review_state'] = filters['review_state'];
+                        else this.reviewFilters['expert_state'] = filters['expert_state'];
                     }
 
                     for (var i = 0; i < this.exptReviewTable.length; i++) {
-                        for (var j = 0; j < this.reviewFilters['review_state'].length; j++) {
-                            if (this.exptReviewTable[i]['review_state'] == this.reviewFilters['review_state'][j]) {
+                        for (var j = 0; j < this.reviewFilters['expert_state'].length; j++) {
+                            if (this.exptReviewTable[i]['expert_state'] == this.reviewFilters['expert_state'][j]) {
                                 this.filterReview.push(this.exptReviewTable[i]);
                                 break;
                             }

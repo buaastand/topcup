@@ -120,7 +120,7 @@
                         width="300px" 
                         prop="email"
                         column-key="email"
-                        ortable 
+                        sortable 
                         show-overflow-tooltip>
                     </el-table-column>
                     <el-table-column class-name="expert_id" label="" prop="expert_id" width="40px">
@@ -176,27 +176,9 @@
                 }
             },
             methods: {
-                wtoggleSelection(rows) {
-                    if (rows) {
-                        rows.forEach(row => {
-                            this.$refs.wmultipleTable.toggleRowSelection(row);
-                        });
-                    } else {
-                        this.$refs.wmultipleTable.clearSelection();
-                    }
-                },
                 whandleSelectionChange(val) {
                     this.wmultipleSelection = val;
                     // console.log(this.wmultipleSelection["0"]['work_id']);
-                },
-                etoggleSelection(rows) {
-                    if (rows) {
-                        rows.forEach(row => {
-                            this.$refs.emultipleTable.toggleRowSelection(row);
-                        });
-                    } else {
-                        this.$refs.emultipleTable.clearSelection();
-                    }
                 },
                 ehandleSelectionChange(val) {
                     this.emultipleSelection = val;

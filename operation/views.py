@@ -145,8 +145,9 @@ class AssignWorkListView(View):
                 'field':FIELD_MAP[work.field],
             })
 
+        # 专家拒绝了待处理
         expertlist_origin = Expert.objects.all().exclude(user__id__in=
-            Review.objects.all().values_list('expert__user__id', flat=True)) 
+            Review.objects.filter(review_status__lt=4).values_list('expert__user__id', flat=True)) 
         expertlist_ret = []
         for expert in expertlist_origin:
             expertlist_ret.append({
@@ -163,6 +164,7 @@ class AssignExpertView(View):
     """
     待分配专家
     """
+    
     def get(self,request):
         pass
 
@@ -212,9 +214,19 @@ class AssignExpertView(View):
 
 class ExptreviewListView(View):
     """
-    展示比赛已分配专家
+    展示已分配的专家-作品对
     """
     def get(self, request):
+
+        FIELD_MAP = {
+            1: "A",
+            2: "B",
+            3: "C",
+            4: "D",
+            5: "E",
+            6: "F",
+        }
+
         cpt_id = request.GET.get('cpt_id','')
         user_name,user_identity = GetUserIdentitiy(request)
         context = {}
@@ -240,5 +252,86 @@ class ExptreviewListView(View):
                 }
             )
         context['review_ret'] = review_ret
+
+        #待选专家
+        expertlist_origin = Expert.objects.all().exclude(user__id__in=
+        Review.objects.all().values_list('expert__user__id', flat=True)) 
+        expertlist_ret = []
+        for expert in expertlist_origin:
+            expertlist_ret.append({
+                'expert_id':expert.user.id,
+                'name':expert.name,
+                'field':FIELD_MAP[expert.field],
+                'email':expert.user.email,
+            })
+        context['expertlist'] = expertlist_ret
+
         return render(request, 'exptreview_list.html', context)
 
+
+class ExptTreetableView(View):
+    """
+    以专家为主体展示已分配到某个专家的作品列表
+    """
+    def get(self, request):
+        FIELD_MAP = {
+            1: "A",
+            2: "B",
+            3: "C",
+            4: "D",
+            5: "E",
+            6: "F",
+        }
+
+        cpt_id = request.GET.get('cpt_id','')
+        user_name,user_identity = GetUserIdentitiy(request)
+        context = {}
+        context['username'] = user_name
+        context['useridentity'] = user_identity
+
+        # 从Review表中选出该比赛的review
+        reviews = Review.objects.all()
+        expt_tree_ret = {}
+
+        # 以专家ID为key, value为专家信息和需要评审的作品列表
+        for review_i in reviews:
+            temp_expt_id = review_i.expert.user.id
+            if temp_expt_id in expt_tree_ret.keys():
+                expt_tree_ret[temp_expt_id]['works'].append(
+                    {
+                        'work_id': review_i.work.work_id,
+                        'work_name': review_i.work.title,
+                        'work_type':review_i.work.work_type,
+                        'work_field': review_i.work.field,
+                        'review_state': review_i.review_status,
+                    }
+                )
+            else:
+                expt_tree_ret[temp_expt_id] = {
+                    'init_date': str(review_i.add_time),
+                    'expert_id': review_i.expert.user.id,
+                    'expert_name': review_i.expert.name,
+                    'expert_field': review_i.expert.field,
+                    'email': review_i.expert.user.email,
+                    'expert_state': review_i.review_status,
+                    'works':[]
+                }
+        
+        #字典转换为列表
+        expt_tree_ret = list(expt_tree_ret.values())
+        context['expt_tree_ret'] = expt_tree_ret
+
+        #待选专家
+        expertlist_origin = Expert.objects.all().exclude(user__id__in=
+            Review.objects.all().values_list('expert__user__id', flat=True)) 
+        expertlist_ret = []
+        for expert in expertlist_origin:
+            expertlist_ret.append({
+                'expert_id':expert.user.id,
+                'expert_name':expert.name,
+                'expert_field':FIELD_MAP[expert.field],
+                'email':expert.user.email,
+            })
+        context['expertlist'] = expertlist_ret
+
+        return render(request, 'expert_treetable.html', context)
