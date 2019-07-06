@@ -29,7 +29,7 @@ import operation.views as Opt
 from django.views.generic import RedirectView
 
 from operation.views import AssignWorkListView, AssignExpertView, ReassignExpertView
-from operation.views import AssignWorkListView,AssignExpertView,DefenseWorkListView
+from operation.views import AssignWorkListView,AssignExpertView,DefenseWorkListView,InvitationView
 
 urlpatterns = [
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root':settings.MEDIA_ROOT}),
@@ -87,6 +87,8 @@ urlpatterns = [
 
     path('final_result/', Cpt.CompetitionFinalResult.as_view()),
     path('reassign_expet/', ReassignExpertView.as_view()),
+
+    path('invitation/', InvitationView.as_view())
 ]
 
 #urlpatterns += staticfiles_urlpatterns()
