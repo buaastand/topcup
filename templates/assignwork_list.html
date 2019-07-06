@@ -145,7 +145,7 @@
             return(0);
         }
         const ALL_WORK_TYPE = ['科技发明制作', '调查报告和学术论文'];
-        const ALL_FIELD = ['A', 'B', 'C', 'D', 'E', 'F'];
+        const ALL_FIELD = ['A.机械与控制', 'B.信息技术', 'C.数理', 'D.生命科学', 'E.能源化工', 'F.哲学社会科学'];
         var assList = new Vue({
             el: '#AssignworkList',
             data: {
@@ -172,9 +172,9 @@
                 typeFilters: [{ text: '科技发明制作', value: '科技发明制作' }, 
                     { text: '调查报告和学术论文', value: '调查报告和学术论文' }],
 
-                fieldFilters: [{ text: 'A', value: 'A' }, { text: 'B', value: 'B' }, 
-                    { text: 'C', value: 'C' }, { text: 'D', value: 'D' }, 
-                    { text: 'E', value: 'E' }, { text: 'F', value: 'F' }]
+                fieldFilters: [{ text: 'A.机械与控制', value: 'A.机械与控制' }, { text: 'B.信息技术', value: 'B.信息技术' }, 
+                    { text: 'C.数理', value: 'C.数理' }, { text: 'D.生命科学', value: 'D.生命科学' }, 
+                    { text: 'E.能源化工', value: 'E.能源化工' }, { text: 'F.哲学社会科学', value: 'F.哲学社会科学' }]
             },
             computed: {
                 displayWork: function () {

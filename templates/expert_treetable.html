@@ -69,14 +69,15 @@
                 <el-table-column
                     label="专家邮箱"
                     prop="email"
-                    width="250"
+                    width="230"
                     column-key="email"
+                    show-overflow-tooltip
                     sortable>
                 </el-table-column>
                 <el-table-column
                     label="评审状态"
                     prop="expert_state"
-                    width="100"
+                    width="120"
                     column-key="expert_state"
                     :filters="expertFilters"
                     :filter-method="filterHandler">
@@ -229,7 +230,7 @@
             return(0);
         }
 
-        const ALL_REVIEW_STATE = [0, 1, 2, 3, 4];
+        const ALL_REVIEW_STATE = ['等待响应邮件', '已拒绝评审', '评审中'];
 
         var exptReviewList = new Vue({
             el: '#ExptreviewList',
@@ -250,17 +251,15 @@
                     'review_state': ALL_REVIEW_STATE
                 },
 
-                expertFilters: [{ text: '0', value: 0 }, { text: '1', value: 1 }, 
-                    { text: '2', value: 2 }, { text: '3', value: 3 }, 
-                    { text: '4', value: 4 }],
+                expertFilters: [{ text: '等待响应邮件', value: '等待响应邮件' }, { text: '已拒绝评审', value: '已拒绝评审' }, 
+                    { text: '评审中', value: '评审中' }],
 
-                stateFilters: [{ text: '0', value: 0 }, { text: '1', value: 1 }, 
-                    { text: '2', value: 2 }, { text: '3', value: 3 }, 
-                    { text: '4', value: 4 }],
+                stateFilters: [{ text: '等待响应邮件', value: '等待响应邮件' }, { text: '已拒绝评审', value: '已拒绝评审' }, 
+                    { text: '评审中', value: '评审中' }, { text: '评审已暂存', value: '评审已暂存' }],
 
-                fieldFilters: [{ text: 'A', value: 'A' }, { text: 'B', value: 'B' }, 
-                    { text: 'C', value: 'C' }, { text: 'D', value: 'D' }, 
-                    { text: 'E', value: 'E' }, { text: 'F', value: 'F' }],
+                fieldFilters: [{ text: 'A.机械与控制', value: 'A.机械与控制' }, { text: 'B.信息技术', value: 'B.信息技术' }, 
+                    { text: 'C.数理', value: 'C.数理' }, { text: 'D.生命科学', value: 'D.生命科学' }, 
+                    { text: 'E.能源化工', value: 'E.能源化工' }, { text: 'F.哲学社会科学', value: 'F.哲学社会科学' }],
 
                 typeFilters: [{ text: '科技发明制作', value: '科技发明制作' }, 
                     { text: '调查报告和学术论文', value: '调查报告和学术论文' }],

@@ -346,12 +346,12 @@ class AssignWorkListView(View):
             2: "调查报告和学术论文"
         }
         FIELD_MAP = {
-            1: "A",
-            2: "B",
-            3: "C",
-            4: "D",
-            5: "E",
-            6: "F",
+            1: 'A.机械与控制',
+            2: 'B.信息技术',
+            3: 'C.数理',
+            4: 'D.生命科学',
+            5: 'E.能源化工',
+            6: 'F.哲学社会科学'
         }
         worklist_ret = []
         for work in worklist_origin:
@@ -453,12 +453,12 @@ class ExptreviewListView(View):
     def get(self, request):
 
         FIELD_MAP = {
-            1: "A",
-            2: "B",
-            3: "C",
-            4: "D",
-            5: "E",
-            6: "F",
+            1: 'A.机械与控制',
+            2: 'B.信息技术',
+            3: 'C.数理',
+            4: 'D.生命科学',
+            5: 'E.能源化工',
+            6: 'F.哲学社会科学'
         }
 
         cpt_id = request.GET.get('cpt_id','')
@@ -476,12 +476,12 @@ class ExptreviewListView(View):
                     'init_date': str(review_i.add_time),
                     'expert_id': review_i.expert.user.id,
                     'expert_name': review_i.expert.name,
-                    'expert_field': review_i.expert.field,
+                    'expert_field': FIELD_MAP[review_i.expert.field],
                     'email': review_i.expert.user.email,
                     'work_id': review_i.work.work_id,
                     'work_name': review_i.work.title,
                     'work_type':review_i.work.work_type,
-                    'work_field': review_i.work.field,
+                    'work_field': FIELD_MAP[review_i.work.field],
                     'review_state': review_i.review_status
                 }
             )
@@ -567,13 +567,31 @@ class ExptTreetableView(View):
     以专家为主体展示已分配到某个专家的作品列表
     """
     def get(self, request):
+        WORKTYPE_MAP = {
+            1: "科技发明制作",
+            2: "调查报告和学术论文"
+        }
         FIELD_MAP = {
-            1: "A",
-            2: "B",
-            3: "C",
-            4: "D",
-            5: "E",
-            6: "F",
+            1: 'A.机械与控制',
+            2: 'B.信息技术',
+            3: 'C.数理',
+            4: 'D.生命科学',
+            5: 'E.能源化工',
+            6: 'F.哲学社会科学'
+        }
+        EXPERT_STATUS_MAP = {
+            0: '等待响应邮件',
+            1: '已拒绝评审',
+            2: '评审中',
+            3: '评审中',
+            4: '评审已完成',
+        }
+        REVIEW_STATUS_MAP = {
+            0: '等待响应邮件',
+            1: '已拒绝评审',
+            2: '评审中',
+            3: '评审已暂存',
+            4: '评审已提交',
         }
 
         cpt_id = request.GET.get('cpt_id','')
@@ -594,30 +612,31 @@ class ExptTreetableView(View):
                     {
                         'work_id': review_i.work.work_id,
                         'work_name': review_i.work.title,
-                        'work_type':review_i.work.work_type,
-                        'work_field': review_i.work.field,
-                        'review_state': review_i.review_status,
+                        'work_type':WORKTYPE_MAP[review_i.work.work_type],
+                        'work_field': FIELD_MAP[review_i.work.field],
+                        'review_state': REVIEW_STATUS_MAP[review_i.review_status],
                     }
                 )
             else:
-                expt_tree_ret[temp_expt_id] = {
-                    'init_date': str(review_i.add_time),
-                    'expert_id': review_i.expert.user.id,
-                    'expert_name': review_i.expert.name,
-                    'expert_field': review_i.expert.field,
-                    'email': review_i.expert.user.email,
-                    'expert_state': review_i.review_status,
-                    'works':[]
-                }
-                expt_tree_ret[temp_expt_id]['works'].append(
-                    {
-                        'work_id': review_i.work.work_id,
-                        'work_name': review_i.work.title,
-                        'work_type': review_i.work.work_type,
-                        'work_field': review_i.work.field,
-                        'review_state': review_i.review_status,
+                if review_i.review_status != 4:
+                    expt_tree_ret[temp_expt_id] = {
+                        'init_date': str(review_i.add_time),
+                        'expert_id': review_i.expert.user.id,
+                        'expert_name': review_i.expert.name,
+                        'expert_field': FIELD_MAP[review_i.expert.field],
+                        'email': review_i.expert.user.email,
+                        'expert_state': EXPERT_STATUS_MAP[review_i.review_status],
+                        'works':[]
                     }
-                )
+                    expt_tree_ret[temp_expt_id]['works'].append(
+                        {
+                            'work_id': review_i.work.work_id,
+                            'work_name': review_i.work.title,
+                            'work_type': WORKTYPE_MAP[review_i.work.work_type],
+                            'work_field': FIELD_MAP[review_i.work.field],
+                            'review_state': REVIEW_STATUS_MAP[review_i.review_status],
+                        }
+                    )
 
         #字典转换为列表
         expt_tree_ret = list(expt_tree_ret.values())
