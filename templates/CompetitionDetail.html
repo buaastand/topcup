@@ -54,9 +54,6 @@
                 <el-tab-pane label="赛事规则">
                     <div class="cptdetailtext">{{ cptDetail.rule }}</div>
                 </el-tab-pane>
-                <el-tab-pane label="初审名单">
-                    <div class="cptdetailtext">定时任务补偿</div>
-                </el-tab-pane>
                 <el-tab-pane label="答辩名单">
                     <div class="cptdetailtext">
                         <div style="width: 740px; margin:0 auto 0 auto">
@@ -83,7 +80,16 @@
                                 </el-table-column>
                                 <el-table-column
                                         label="作品领域"
-                                        prop="field">
+                                        prop="field"
+                                        width="100">
+                                </el-table-column>
+                                <el-table-column>
+                                        <template slot-scope="scope">
+                                            <el-button
+                                              size="mini"
+                                              type="danger"
+                                              @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+                                        </template>
                                 </el-table-column>
                             </el-table>
                         </div>
@@ -91,6 +97,9 @@
                 </el-tab-pane>
                 <el-tab-pane label="比赛结果">
                     <div class="cptdetailtext">{{ cptDetail.result_details }}</div>
+                    {% if status_type == '4' %}
+                    <a href="/media/{{ cptDetail.end_appendix }}">比赛结果文件下载</a>
+                    {% endif %}
                 </el-tab-pane>
             </el-tabs>
         </div>
@@ -102,12 +111,6 @@
             <el-button type="text" style="text-decoration:underline" >评价作品</el-button>
             {% endif %}
             {% if useridentity == 3 %}
-                {% if status_type == '3' %}
-                    <el-button type="text" style="text-decoration:underline" @click="DefenseChoose({{ cptDetail.id }})">遴选答辩名单</el-button>
-                {% endif %}
-                {% if status_type == '4'%}
-                    <el-button type="text" style="text-decoration:underline" @click="FinalResult({{ cptDetail.id }})">发布比赛结果</el-button>
-                {% endif %}
             <el-button type="text" style="text-decoration:underline" @click="CptChange({{ cptDetail.id }})">管理比赛</el-button>
             {% endif %}
         </div>
@@ -137,10 +140,26 @@
                 window.open('/cptchange/?cptid='+val,"_self")
             },
             DefenseChoose(val){
-                window.open('/defense_work/?cptid='+val,"_self")
+                window.open('/defense_work/?cptid='+val)
+            },
+            handleDelete(index, row) {
+                axios
+                    .post("/workdefensechange/",{workid:row.work_id},{headers: {'X-CSRFtoken':'{{ csrf_token }}'}})
+                    .then(res=>{
+                        if(res.status==200 && res.data.Message == 1)
+                        {
+                            this.$message.success('删除成功！');
+                            this.defense_work_list.splice(index,1);
+                        }
+                        else {
+                            this.$message.success('删除失败！');
+                        }
+                    })
+                    .catch()
+                window.open('/defense_work/?cptid='+val)
             },
             FinalResult(val){
-                window.open('/final_result/?id='+val,"_self")
+                window.open('/final_result/?id='+val)
             }
         }
     })

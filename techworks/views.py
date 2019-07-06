@@ -31,6 +31,12 @@ def work_info(request):
     user_name, user_identity = GetUserIdentitiy(request)
     information = {}
     workInfo = WorkInfo.objects.get(id=request.GET['work_id'])
+    nextlist = []
+    nextlist = WorkInfo.objects.filter(check_status=-1).exclude(id=request.GET['work_id'])
+    if nextlist.exists():
+        nextid = nextlist[0].id
+    else:
+        nextid = -1
     documentlist = []
     photolist = []
     videolist = []
@@ -113,6 +119,7 @@ def work_info(request):
     information['username'] = user_name
     information['useridentity'] = user_identity
     information['firstAuthor'] = firstAuthor
+    information['nextid'] = nextid
 
     return render(request, '../templates/viewWorkInfo.html', information)
 
@@ -136,9 +143,15 @@ def searchstu(request):
 
 def deletework(request):
     work_id = request.GET.get('work_id')
-    work = WorkInfo.objects.filter(work_id=work_id)
-    work.delete()
-    return HttpResponse(status=200)
+    username = request.user.username
+    user_id = Student.objects.get(user__username=username).user_id
+    author_id = CompetitionRegistration.objects.get(workinfo__work_id=work_id).first_auth.user_id
+    if user_id == author_id:
+        work = WorkInfo.objects.filter(work_id=work_id)
+        work.delete()
+        return HttpResponse(status=200)
+    else:
+        return HttpResponse(status=202)
 
 # @login_required(login_url='/login/')
 # @method_decorator(login_required,name='dispatch')
@@ -529,3 +542,14 @@ def generatePdf(request):
 
     return JsonResponse({'url': '/media/pdf/'+workid+'.pdf'})
 
+@csrf_exempt
+def checkWork(request):
+    work_id = request.GET['work_id']
+    newStatus = request.POST.get('status')
+    try:
+        techwork = WorkInfo.objects.get(id = work_id)
+        techwork.check_status = newStatus
+        techwork.save()
+    except:
+        return JsonResponse({'Message': 0})
+    return JsonResponse({'Message': 1})

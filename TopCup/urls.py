@@ -28,6 +28,7 @@ import techworks.views as Tch
 import operation.views as Opt
 from django.views.generic import RedirectView
 
+from operation.views import AssignWorkListView, AssignExpertView, ReassignExpertView
 from operation.views import AssignWorkListView,AssignExpertView,DefenseWorkListView
 
 urlpatterns = [
@@ -36,6 +37,7 @@ urlpatterns = [
     path('competitiondetail/', Cpt.CompetitionDetail),
     path('index/', Cpt.CompetitionList),
     path('competitionlist/', Cpt.CompetitionList),
+    path('workdefensechange/',Cpt.WorkdefenseChange),
     path('techworklist/', Tch.TechWorkListView.as_view()),
     path('techworksubmit/', Tch.TechWorkView.as_view()),
     path('generatepdf/',Tch.generatePdf),
@@ -67,9 +69,14 @@ urlpatterns = [
     path('submitReview/',Opt.sumbitReview),
     path('nextReviewWork/',Opt.NextReviewWork),
 
+
     path('work_list/', Opt.ExpertReviewListView.as_view()),
     path('work_review/', Opt.ExpertReviewView.as_view()),
     #re_path(r'^static/(?P<path>.*)$', serve, {"document_root":STATIC_ROOT}),
+
+    path('check_work/', Opt.CheckWorkListView.as_view()),
+    path('check_work/work_info/', Tch.work_info),
+    path('check_work/check_info/', Tch.checkWork),
 
     path('assign_work/', AssignWorkListView.as_view()),
     path('assign_expert/', AssignExpertView.as_view()),
@@ -79,6 +86,7 @@ urlpatterns = [
     path('review_exptree/', ExptTreetableView.as_view()),
 
     path('final_result/', Cpt.CompetitionFinalResult.as_view()),
+    path('reassign_expet/', ReassignExpertView.as_view()),
 ]
 
 #urlpatterns += staticfiles_urlpatterns()

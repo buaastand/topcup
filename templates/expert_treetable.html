@@ -22,12 +22,7 @@
     
     <div id="ExptreviewList" style="width: 100%">
         <div class="buttonArea">
-            <el-radio-group v-model="tabPosition">
-                <el-radio-button label="expt">专家视图</el-radio-button>
-                <el-radio-button label="work">作品视图</el-radio-button>
-                <el-radio-button onclick="window.open('../exptreview_list/','_self')" label="expnd">平铺视图</el-radio-button>
-            </el-radio-group>
-            <el-button style="float:right; margin-right: 20px" type="primary" @click="changeExpert">为选中的分配替换评审人</el-button>
+            <el-button type="primary" @click="changeExpert">为选中的分配替换评审人</el-button>
         </div>
         
         <div class="tableArea">
@@ -190,7 +185,7 @@
                                     style="width: 700px"
                                     highlight-current-row
                                     max-height="100%"
-                                    @current-change="ehandleSelectionChange">
+                                    @current-change="(currentRow, oldCurrentRow) => {ehandleSelectionChange(currentRow, oldCurrentRow, key)}">
                                     <el-table-column type="index" label="序号" width="60px">
                                     </el-table-column>
                                     <el-table-column class-name="expert_id" label="专家ID" prop="expert_id" width="80px"></el-table-column>
@@ -314,7 +309,6 @@
                     const property = column['property'];
                     return row[property] === value;
                 },
-
                 rhandleSizeChange(val) {
                     this.reviewPageSize = val;
                 },
@@ -351,35 +345,45 @@
                     })
                     .catch(_ => {});
                 },
+                ehandleSelectionChange (currentRow, oldCurrentRow, key) {
+                    this.target_expert[key] = {
+                        'id': currentRow.expert_id,
+                        'field': currentRow.expert_field,
+                        'email': currentRow.email,
+                        'name': currentRow.expert_name,
+                        'selected': '1'
+                    },
+                    this.$forceUpdate()
+                },
                 matchWorksAndExperts(){
                     this.loading = true;
 
-                    var em_length = this.emultipleSelection.length;
-                    if (em_length < 3) {
-                        this.$message.error('请至少选择三名专家！');
-                        this.loading = false;
-                        return;
+                    for (i in this.target_expert){
+                        if(this.target_expert[i]['selected'] == 0){
+                            this.$message.error('还有专家未替换！');
+                            this.loading = false;
+                            return;
+                        }
                     }
 
-                    var wm_length = this.rmultipleSelection.length;
-                    selected_work = [];
-                    selected_expert = [];
-
-                    for (var i = 0; i < wm_length; i++) {
-                        selected_work.push(this.rmultipleSelection[i]['work_id'])
+                    var originExpert_work = {};
+                    var originExpert_expt = {};
+                    for (i in this.reviewSelection) {
+                        originExpert_work[i] = [];
+                        for(j in this.reviewSelection[i]['works']){
+                            originExpert_work[i].push(this.reviewSelection[i]['works'][j].work_id);
+                        }
                     }
-                    for (var i = 0; i < em_length; i++) {
-                        selected_expert.push(this.emultipleSelection[i]['expert_id'])
+                    for (i in this.target_expert) {
+                        originExpert_expt[i] = this.target_expert[i].id;
                     }
-                    // console.log(selected_work);
-                    // console.log(selected_expert);
                     
                     this.$http
                     .post(
-                        '../assign_expert/',
-                        {'selected_work': JSON.stringify(selected_work),
-                        'selected_expert': JSON.stringify(selected_expert),},
-                        {emulateJSON:true}
+                        '../reassign_expet/', {
+                            'originExpert_work': JSON.stringify(originExpert_work),
+                            'originExpert_expt': JSON.stringify(originExpert_expt)
+                        }, {emulateJSON:true}
                     )
                     .then(response => {
                         console.log(response);
@@ -389,6 +393,7 @@
                         }
                         else{
                             this.$message.error('分配失败！');
+                            window.open('../assign_work/', '_self');
                         }
                         this.loading = false;
                     })

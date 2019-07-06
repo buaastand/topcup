@@ -29,7 +29,8 @@
                      status-icon
                      ref="techworkForm"
                      label-width="20%"
-                     label="right">
+                     label="right"
+                     v-loading.fullscreen.lock="fullscreenLoading">
                 <h2 style="margin-left: 5%;margin-bottom: 0">
                     申报者情况
                 </h2>
@@ -328,7 +329,8 @@
             },
         photo_path:[],
         document_path:[],
-        video_path:[]
+        video_path:[],
+        fullscreenLoading: false,
         },
     methods: {
                 video_path_file(file, fileList) {
@@ -343,6 +345,7 @@
                     this.document_path = fileList.map(toRaw);
                 },
                 onSubmit(formName, submit) {   // 提交
+                    this.fullscreenLoading = true;
                     this.$refs[formName].validate((valid) => {
                         if (valid) {
                             let form = this.$refs[formName];
@@ -360,6 +363,7 @@
                             formData.append('detail', this.techworkForm.detail);
                             formData.append('innovation', this.techworkForm.innovation);
                             formData.append('keywords', this.techworkForm.keywords);
+                            formData.append('csrfmiddlewaretoken','{{ csrf_token }}');
                             console.log(this.techworkForm.show_type);
                             console.log(this.techworkForm.invest_type);
 
@@ -400,7 +404,6 @@
                             } else if (submit == 0) {
                                 formData.append('submitted', 0);
                             }
-
                             formData.append('deleteList', JSON.stringify({"deletelist": deleteList}));
                             console.log(deleteList);
 
@@ -413,6 +416,7 @@
                             formm(url, formData, config, response => {
                                 console.log(response.data);
                                 this.loading = false;
+                                this.fullscreenLoading = false;
                                 if (response.status == 200) {
                                     if (submit == 1)
                                         this.$message('提交完成');
@@ -424,6 +428,7 @@
                                     this.$message.error(response.msg);
                                 }
                             }, () => {
+                                this.fullscreenLoading = false;
                                 this.$message.error('网络错误');
                                 this.loading = false;
                             });
@@ -494,6 +499,7 @@
                     window.open(file.url);
                 },
                 generatePdf() {
+                    this.fullscreenLoading = true;
                     let _this = this;
                     console.log(_this.work_id);
                     let formData = new FormData();
@@ -508,6 +514,8 @@
                         .then(res=>{
                             console.log(res);
                             window.open(res.data.url);
+                            this.fullscreenLoading = false;
+                            this.$message.success('打开PDF');
                         })
                         .catch(function (response) {
 

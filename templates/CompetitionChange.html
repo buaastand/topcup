@@ -11,13 +11,14 @@
     <script src="https://cdn.staticfile.org/vue-resource/1.5.1/vue-resource.min.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <!-- 引入cpt_init.css-->
-    <link rel="stylesheet" href="..\static\css\CompetitionInit.css" type="text/css"/>
+    <link rel="stylesheet" href="..\static\css\CompetitionChange.css" type="text/css"/>
     <link rel="stylesheet" href="../static/css/NavName.css">
 
     <meta charset="UTF-8">
     <title>管理竞赛</title>
-
+    <META HTTP-EQUIV="pragma" CONTENT="no-cache">
 </head>
+
 <body style="margin: 0; background: #F5F7FA">
     {%include 'NavMenu.html'%}
     <div id="app">
@@ -27,36 +28,45 @@
                     {% csrf_token %}
                     <el-form-item label="竞赛开始时间" prop="init_date">
                         <el-col :span="11">
-                            <el-date-picker type="date" placeholder="{{ cptDetail.init_date|date:"Y-m-d" }}" v-model="form.init_date" style="width: 100%;"></el-date-picker>
+                            <el-date-picker type="date" placeholder="{{cptDetail.init_date|date:'Y-m-d'}}" v-model="form.init_date" style="width: 100%;"></el-date-picker>
                         </el-col>
                     </el-form-item>
                     <el-form-item label="提交截止时间" prop="submit_end_date">
                         <el-col :span="11">
-                            <el-date-picker type="date" placeholder="{{ cptDetail.submit_end_date|date:"Y-m-d" }}" v-model="form.submit_end_date" style="width: 100%;"></el-date-picker>
+                            <el-date-picker type="date" placeholder="{{cptDetail.submit_end_date|date:'Y-m-d'}}" v-model="form.submit_end_date" style="width: 100%;"></el-date-picker>
                         </el-col>
                     </el-form-item>
                     <el-form-item label="初审截止时间" prop="check_end_date">
                         <el-col :span="11">
-                            <el-date-picker type="date" placeholder="{{ cptDetail.check_end_date|date:"Y-m-d" }}" v-model="form.check_end_date" style="width: 100%;"></el-date-picker>
+                            <el-date-picker type="date" placeholder="{{cptDetail.check_end_date|date:'Y-m-d'}}" v-model="form.check_end_date" style="width: 100%;"></el-date-picker>
                         </el-col>
                     </el-form-item>
                     <el-form-item label="初评截止时间" prop="review_end_date">
                         <el-col :span="11">
-                            <el-date-picker type="date" placeholder="{{ cptDetail.review_end_date|date:"Y-m-d" }}" v-model="form.review_end_date" style="width: 100%;"></el-date-picker>
+                            <el-date-picker type="date" placeholder="{{cptDetail.review_end_date|date:'Y-m-d'}}" v-model="form.review_end_date" style="width: 100%;"></el-date-picker>
                         </el-col>
                     </el-form-item>
                     <el-form-item label="答辩结束时间" prop="defense_end_date">
                         <el-col :span="11">
-                            <el-date-picker type="date" placeholder="{{ cptDetail.defense_end_date|date:"Y-m-d" }}" v-model="form.defense_end_date" style="width: 100%;"></el-date-picker>
+                            <el-date-picker type="date" placeholder="{{cptDetail.defense_end_date|date:'Y-m-d'}}" v-model="form.defense_end_date" style="width: 100%;"></el-date-picker>
                         </el-col>
                     </el-form-item>
                     <el-form-item label="竞赛终止时间" prop="finish_date">
                         <el-col :span="11">
-                            <el-date-picker type="date" placeholder="{{ cptDetail.finish_date|date:"Y-m-d" }}" v-model="form.finish_date" style="width: 100%;"></el-date-picker>
+                            <el-date-picker type="date" placeholder="{{cptDetail.finish_date|date:'Y-m-d'}}" v-model="form.finish_date" style="width: 100%;"></el-date-picker>
                         </el-col>
                     </el-form-item>
                     <div class="buttonArea">
-                        <el-button type="primary" @click="dialogVisible = true">确认修改</el-button>
+                    <el-row>
+                            <el-button type="primary" @click="dialogVisible = true">确认修改</el-button>
+                            {% if status_type == '3' %}
+                                <el-button type="primary"  @click="DefenseChoose({{ cptDetail.id }})">遴选答辩名单</el-button>
+                            {% endif %}
+                            {% if status_type == '4'%}
+                                <el-button type="primary"  @click="FinalResult({{ cptDetail.id }})">发布比赛结果</el-button>
+                            {% endif %}
+                    </el-row>
+
                     </div>
                 </el-form>
             </div>
@@ -66,18 +76,19 @@
             <span>确认修改？</span>
             <span slot="footer">
                 <el-button @click="dialogVisible = false">取消</el-button>
-                <el-button type="primary" @click.once="onSubmit({{ cptDetail.id }}, 'form')">确认</el-button>
+                <el-button type="primary" @click="onSubmit({{ cptDetail.id }}, 'form')">确认</el-button>
             </span>
         </el-dialog>
     </div>
 
     <script>
-        var initDate = '{{ cptDetail.init_date|date:"Y-m-d" }}'
-        var submitEndDate = '{{ cptDetail.submit_end_date|date:"Y-m-d" }}'
-        var checkEndDate = '{{ cptDetail.check_end_date|date:"Y-m-d" }}'
-        var reviewEndDate = '{{ cptDetail.review_end_date|date:"Y-m-d" }}'
-        var defenseEndDate = '{{ cptDetail.defense_end_date|date:"Y-m-d" }}'
-        var finishDate = '{{ cptDetail.finish_date|date:"Y-m-d" }}'
+
+        var initDate = '{{cptDetail.init_date|date:"Y-m-d"}}';
+        var submitEndDate = '{{ cptDetail.submit_end_date|date:"Y-m-d" }}';
+        var checkEndDate = '{{ cptDetail.check_end_date|date:"Y-m-d" }}';
+        var reviewEndDate = '{{ cptDetail.review_end_date|date:"Y-m-d" }}';
+        var defenseEndDate = '{{ cptDetail.defense_end_date|date:"Y-m-d" }}';
+        var finishDate = '{{ cptDetail.finish_date|date:"Y-m-d" }}';
 
         Date.prototype.Format = function (fmt) {
             var o = {
@@ -95,32 +106,29 @@
             el: '#app',
             data() {
                 var initValidator = (rule, value, callback) => {
-                    if (!(value == '')) {
-                        if (value.Format("yyyy-MM-dd") < initDate) {
-                            callback(new Error('只能延后'));
+                    console.log("1 " + value)
+                    console.log(initDate)
+                    if (value == '') {
+                        callback(new Error('不能为空'));
+                    } else {
+                        if(value.Format("yyyy-MM-dd") < initDate) {
+                            callback(new Error('只能推迟'));
                         } else {
                             callback();
                         }
                     }
                 };
                 var submitValidator = (rule, value, callback) => {
-                    if (!(value == '')) {
-                        if (this.form.init_date == '') {
-                            if (value.Format("yyyy-MM-dd") < initDate) {
-                                callback(new Error('提交截止时间必须不早于竞赛开始时间'));
-                            } else {
-                                if (value.Format("yyyy-MM-dd") < submitEndDate) {
-                                    callback(new Error('只能延后'));
-                                } else {
-                                    callback();
-                                }
-                            }
+                    console.log("2 " + value)
+                    if (!(this.form.init_date == '')) {
+                        if (value == '') {
+                            callback(new Error('不能为空'));
                         } else {
-                            if (value.Format("yyyy-MM-dd") < this.form.init_date.Format("yyyy-MM-dd")) {
-                                callback(new Error('提交截止时间必须不早于竞赛开始时间'));
+                            if (value < this.form.init_date) {
+                                callback(new Error('提交截止日期不能早于开始日期'));
                             } else {
-                                if (value.Format("yyyy-MM-dd") < submitEndDate) {
-                                    callback(new Error('只能延后'));
+                                if(value.Format("yyyy-MM-dd") < submitEndDate) {
+                                    callback(new Error('只能推迟'));
                                 } else {
                                     callback();
                                 }
@@ -129,24 +137,16 @@
                     }
                 };
                 var checkValidator = (rule, value, callback) => {
-
-                    if (!(value == '')) {
-                        if (this.form.submit_end_date == '') {
-                            if (value.Format("yyyy-MM-dd") < submitEndDate) {
-                                callback(new Error('初审截止时间必须不早于提交截止时间'));
-                            } else {
-                                if (value.Format("yyyy-MM-dd") < checkEndDate) {
-                                    callback(new Error('只能延后'));
-                                } else {
-                                    callback();
-                                }
-                            }
+                    console.log("3 " + value)
+                    if (!(this.form.submit_end_date == '')) {
+                        if (value == '') {
+                            callback(new Error('不能为空'));
                         } else {
-                            if (value.Format("yyyy-MM-dd") < this.form.submit_end_date.Format("yyyy-MM-dd")) {
-                                callback(new Error('初审截止时间必须不早于提交截止时间'));
+                            if (value < this.form.submit_end_date) {
+                                callback(new Error('初审截止日期不能早于提交截止日期'));
                             } else {
-                                if (value.Format("yyyy-MM-dd") < checkEndDate) {
-                                    callback(new Error('只能延后'));
+                                if(value.Format("yyyy-MM-dd") < checkEndDate) {
+                                    callback(new Error('只能推迟'));
                                 } else {
                                     callback();
                                 }
@@ -155,23 +155,16 @@
                     }
                 };
                 var reviewValidator = (rule, value, callback) => {
-                    if (!(value == '')) {
-                        if (this.form.init_date == '') {
-                            if (value.Format("yyyy-MM-dd") < checkEndDate) {
-                                callback(new Error('初评截止时间必须不早于初审截止时间'));
-                            } else {
-                                if (value.Format("yyyy-MM-dd") < reviewEndDate) {
-                                    callback(new Error('只能延后'));
-                                } else {
-                                    callback();
-                                }
-                            }
+                    console.log("4 " + value)
+                    if (!(this.form.check_end_date == '')) {
+                        if (value == '') {
+                            callback(new Error('不能为空'));
                         } else {
-                            if (value.Format("yyyy-MM-dd") < this.form.check_end_date.Format("yyyy-MM-dd")) {
-                                callback(new Error('初评截止时间必须不早于初审截止时间'));
+                            if (value < this.form.check_end_date) {
+                                callback(new Error('初评截止日期不能早于初审截止日期'));
                             } else {
-                                if (value.Format("yyyy-MM-dd") < reviewEndDate) {
-                                    callback(new Error('只能延后'));
+                                if(value.Format("yyyy-MM-dd") < reviewEndDate) {
+                                    callback(new Error('只能推迟'));
                                 } else {
                                     callback();
                                 }
@@ -180,23 +173,16 @@
                     }
                 };
                 var defenseValidator = (rule, value, callback) => {
-                    if (!(value == '')) {
-                        if (this.form.init_date == '') {
-                            if (value.Format("yyyy-MM-dd") < reviewEndDate) {
-                                callback(new Error('答辩结束时间必须不早于初评截止时间'));
-                            } else {
-                                if (value.Format("yyyy-MM-dd") < defenseEndDate) {
-                                    callback(new Error('只能延后'));
-                                } else {
-                                    callback();
-                                }
-                            }
+                    console.log("5 " + value)
+                    if (!(this.form.review_end_date == '')) {
+                        if (value == '') {
+                            callback(new Error('不能为空'));
                         } else {
-                            if (value.Format("yyyy-MM-dd") < this.form.review_end_date.Format("yyyy-MM-dd")) {
-                                callback(new Error('答辩结束时间必须不早于初评截止时间'));
+                            if (value < this.form.review_end_date) {
+                                callback(new Error('答辩截止日期不能早于初评截止日期'));
                             } else {
-                                if (value.Format("yyyy-MM-dd") < defenseEndDate) {
-                                    callback(new Error('只能延后'));
+                                if(value.Format("yyyy-MM-dd") < defenseEndDate) {
+                                    callback(new Error('只能推迟'));
                                 } else {
                                     callback();
                                 }
@@ -205,23 +191,16 @@
                     }
                 };
                 var finishValidator = (rule, value, callback) => {
-                    if (!(value == '')) {
-                        if (this.form.init_date == '') {
-                            if (value.Format("yyyy-MM-dd") < defenseEndDate) {
-                                callback(new Error('竞赛终止时间必须不早于答辩结束时间'));
-                            } else {
-                                if (value.Format("yyyy-MM-dd") < finishDate) {
-                                    callback(new Error('只能延后'));
-                                } else {
-                                    callback();
-                                }
-                            }
+                    console.log("6 " + value)
+                    if (!(this.form.defense_end_date == '')) {
+                        if (value == '') {
+                            callback(new Error('不能为空'));
                         } else {
-                            if (value.Format("yyyy-MM-dd") < this.form.defense_end_date.Format("yyyy-MM-dd")) {
-                                callback(new Error('竞赛终止时间必须不早于答辩结束时间'));
+                            if (value < this.form.defense_end_date) {
+                                callback(new Error('结束日期不能早于答辩截止日期日期'));
                             } else {
-                                if (value.Format("yyyy-MM-dd") < finishDate) {
-                                    callback(new Error('只能延后'));
+                                if(value.Format("yyyy-MM-dd") < finishDate) {
+                                    callback(new Error('只能推迟'));
                                 } else {
                                     callback();
                                 }
@@ -229,85 +208,109 @@
                         }
                     }
                 };
+
+
                 return {
+                    competition_id:{{ cptDetail.id }},
                     labelPosition: 'left',
                     dialogVisible: false,
                     form: {
+                        init_date: '',
                         submit_end_date: '',
                         check_end_date: '',
                         review_end_date: '',
                         defense_end_date: '',
                         finish_date: '',
-
+                        
                     },
 
                     rules: {
                         init_date: [
+                            {required: true, message: '不能为空', trigger: 'blur'},
                             {type: 'date', required: true, validator: initValidator, trigger: 'blur'},
                         ],
                         submit_end_date: [
+                            {required: true, message: '不能为空', trigger: 'blur'},
                             {type: 'date', required: true, validator: submitValidator, trigger: 'blur'},
                         ],
                         check_end_date: [
+                            {required: true, message: '不能为空', trigger: 'blur'},
                             {type: 'date', required: true, validator: checkValidator, trigger: 'blur'},
                         ],
                         review_end_date: [
+                            {required: true, message: '不能为空', trigger: 'blur'},
                             {type: 'date', required: true, validator: reviewValidator, trigger: 'blur'},
                         ],
                         defense_end_date: [
+                            {required: true, message: '不能为空', trigger: 'blur'},
                             {type: 'date', required: true, validator: defenseValidator, trigger: 'blur'},
                         ],
                         finish_date: [
+                            {required: true, message: '不能为空', trigger: 'blur'},
                             {type: 'date', required: true, validator: finishValidator, trigger: 'blur'},
                         ],
                     }
                 };
             },
             methods: {
+                DefenseChoose(val){
+                    window.open('/defense_work/?cptid='+val)
+                },
+                FinalResult(val){
+                    window.open('/final_result/?id='+val, '_self')
+                },
                 onSubmit(val, formName) {
                     disable = true;
                     dialogVisible = false;
-                    this.$refs[formName].validate((valid) => {
-                        if(valid) {
-                            var formFile = new FormData();
 
-                            formFile.append('init_date', this.form.init_date.Format("yyyy-MM-dd"));
-                            formFile.append('submit_end_date', this.form.submit_end_date.Format("yyyy-MM-dd"));
-                            formFile.append('check_end_date', this.form.check_end_date.Format("yyyy-MM-dd"));
-                            formFile.append('review_end_date', this.form.review_end_date.Format("yyyy-MM-dd"));
-                            formFile.append('defense_end_date', this.form.defense_end_date.Format("yyyy-MM-dd"));
-                            formFile.append('finish_date', this.form.finish_date.Format("yyyy-MM-dd"));
-                            
-                            axios
-                                .post('../cptchange/cptchangepost/?cptid='+val, formFile)
-                                .then(res=> {
-                                    if(res.status == 200 && res.data.Message == 1){
+                        this.$refs[formName].validate((valid) => {
+                            if(valid) {
+                                var formFile = new FormData();
+
+                                console.log(this.form.init_date.Format("yyyy-MM-dd"))
+                                console.log(typeof(this.form.init_date.Format("yyyy-MM-dd")))
+                                
+                                formFile.append('init_date', this.form.init_date.Format("yyyy-MM-dd"));
+                                formFile.append('submit_end_date', this.form.submit_end_date.Format("yyyy-MM-dd"));
+                                formFile.append('check_end_date', this.form.check_end_date.Format("yyyy-MM-dd"));
+                                formFile.append('review_end_date', this.form.review_end_date.Format("yyyy-MM-dd"));
+                                formFile.append('defense_end_date', this.form.defense_end_date.Format("yyyy-MM-dd"));
+                                formFile.append('finish_date', this.form.finish_date.Format("yyyy-MM-dd"));
+                                
+                                axios
+                                    .post('../cptchange/cptchangepost/?cptid='+val, formFile)
+                                    .then(res=> {
+                                        if(res.status == 200 && res.data.Message == 1){
+                                            CptInit.$message({
+                                            type:'info',
+                                            message:'修改成功！'
+                                            });
+                                            window.open("/competitionlist/?selected=0","_self")
+                                        }
+                                        else{
+                                            console.log("axios fail")
+                                            CptInit.$message({
+                                            type:'info',
+                                            message:'修改失败！'
+                                            });
+                                        }
+                                    })
+                                    .catch(function(error) {
+                                        console.log(error)
                                         CptInit.$message({
-                                        type:'info',
-                                        message:'修改成功！'
-                                        });
-                                        window.open("/competitionlist/?selected=0","_self")
-                                    }
-                                    else{
-                                        CptInit.$message({
-                                        type:'info',
-                                        message:'修改失败！'
-                                        });
-                                    }
-                                })
-                                .catch(function(error) {
-                                    CptInit.$message({
-                                        type:'info',
-                                        message:'修改失败！'
-                                        });
-                                })
-                        } else {
-                            return false;
-                        }
-                    })
+                                            type:'info',
+                                            message:'修改失败！'
+                                            });
+                                    })
+                            } else {
+                                return false;
+                            }
+                        })
+                }
                     
-                },
-            }
+                    
+            },
+            
         });
 
     

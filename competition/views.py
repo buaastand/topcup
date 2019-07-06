@@ -46,6 +46,7 @@ def CompetitionDetail(request):
     user_name, user_identity = GetUserIdentitiy(request)
     cptDetail=Competition.objects.get(id= request.GET['id'])
     context = {'cptDetail':cptDetail}
+
     temp=datetime.date.today()
     now_time =temp
     if now_time<cptDetail.init_date:
@@ -91,6 +92,13 @@ def CompetitionDetail(request):
         )
     context['defenseworklist']=defense_WorkList_ret
     return render(request,"../templates/CompetitionDetail.html",context)
+
+def WorkdefenseChange(request):
+    work_id = json.loads(request.body)
+    Work=WorkInfo.objects.get(work_id=work_id['workid'])
+    Work.if_defense=0
+    Work.save()
+    return JsonResponse({'Message': 1})
 
 def CompetitionUpdate():
     cptList = Competition.objects.all()
@@ -239,9 +247,27 @@ def CompetitionChange(request):
     context = {}
     cptDetail = Competition.objects.get(id = request.GET['cptid'])
 
+    temp = datetime.date.today()
+    now_time = temp
+    if now_time < cptDetail.init_date:
+        status_type = "-1"
+    elif now_time < cptDetail.submit_end_date:
+        status_type = "0"
+    elif now_time < cptDetail.check_end_date:
+        status_type = "1"
+    elif now_time < cptDetail.review_end_date:
+        status_type = "2"
+    elif now_time < cptDetail.defense_end_date:
+        status_type = "3"
+    else:
+        status_type = "4"
+
+    print(cptDetail.init_date)
+
     context = {'cptDetail': cptDetail}
     context['username'] = user_name
     context['useridentity'] = user_identity
+    context['status_type'] = status_type
 
     return render(request,'../templates/CompetitionChange.html', context)
 
@@ -256,19 +282,23 @@ def CompetitionChangePost(request):
     defense_end_date = request.POST.get('defense_end_date')
     finish_date = request.POST.get('finish_date')
 
+    print(init_date)
+    print(type(init_date))
+
     try:
-        if init_date:
-            cptDetail.init_date = init_date
-        if submit_end_date:
-            cptDetail.submit_end_date = submit_end_date
-        if check_end_date:
-            cptDetail.check_end_date = check_end_date
-        if review_end_date:
-            cptDetail.review_end_date = review_end_date
-        if defense_end_date:
-            cptDetail.defense_end_date = defense_end_date
-        if finish_date:
-            cptDetail.finish_date = finish_date
+        # cptDetail.init_date = init_date
+        # cptDetail.submit_end_date = submit_end_date
+        # cptDetail.check_end_date = check_end_date
+        # cptDetail.review_end_date = review_end_date
+        # cptDetail.defense_end_date = defense_end_date
+        # cptDetail.finish_date = finish_date
+
+        cptDetail.init_date = datetime.datetime.strptime(init_date, "%Y-%m-%d")
+        cptDetail.submit_end_date = datetime.datetime.strptime(submit_end_date, "%Y-%m-%d")
+        cptDetail.check_end_date = datetime.datetime.strptime(check_end_date, "%Y-%m-%d")
+        cptDetail.review_end_date = datetime.datetime.strptime(review_end_date, "%Y-%m-%d")
+        cptDetail.defense_end_date = datetime.datetime.strptime(defense_end_date, "%Y-%m-%d")
+        cptDetail.finish_date = datetime.datetime.strptime(finish_date, "%Y-%m-%d")
         cptDetail.save()
     except:
         return JsonResponse({'Message': 0})
@@ -286,6 +316,8 @@ class CompetitionFinalResult(View):
             appendix.append({"name": name_list[len(name_list) - 1], "url": competition.end_appendix.url})
         except:
             name = ''
+            competition.end_appendix.delete()
+            competition.save()
         return render(request, 'final_result.html', {'id': competition_id, 'detail': competition.result_details,
                                                      'appendix': appendix})
         # try:

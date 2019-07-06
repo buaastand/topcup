@@ -11,6 +11,11 @@ from django.db import transaction
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
+from django.views.generic.base import View
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+import datetime, zipfile, tempfile, os
+from wsgiref.util import FileWrapper
 from django.utils.encoding import escape_uri_path
 from django.views.generic.base import View
 
@@ -26,6 +31,52 @@ from .models import Review
 
 
 # Create your views here.
+
+class CheckWorkListView(View):
+    """
+    展示待评审作品列表
+    """
+    def get(self,request):
+        cpt_id = request.GET.get('cpt_id','')
+        worklist_origin = WorkInfo.objects.filter(check_status=-1)
+        # to do: 1.属于某个比赛的作品 2.
+        WORKTYPE_MAP = {
+            1: "科技发明制作",
+            2: "调查报告和学术论文"
+        }
+        FIELD_MAP = {
+            1: "A",
+            2: "B",
+            3: "C",
+            4: "D",
+            5: "E",
+            6: "F",
+        }
+        worklist_ret = []
+        for work in worklist_origin:
+            worklist_ret.append({
+                'id':work.id,
+                'work_id':work.work_id,
+                'title':work.title,
+                'work_type':WORKTYPE_MAP[work.work_type],
+                'field':FIELD_MAP[work.field],
+            })
+
+
+        user_name,user_identity = GetUserIdentitiy(request)
+        return render(request,'check_worklist.html',{'worklist':worklist_ret , 'useridentity':user_identity,'username':user_name})
+
+    def post(self,request):
+
+        work_list = request.POST.get('selected_work')
+        work_list = json.loads(work_list)
+
+        for work_id in work_list:
+            work_i = WorkInfo.objects.get(work_id=work_id) #数据库是否存在work_id相同的多个比赛
+            work_i.check_status = 1
+            work_i.save()
+        return JsonResponse({'Message':0})
+
 def DownLoadZip(request):
     status = request.GET.get('status')
     if status == '0':
@@ -57,16 +108,14 @@ def DownLoadZip(request):
 def DownloadBatchZip(request):
     status = request.GET.get('status')
     work_list = []
-    id_list = []
+    id_list = json.loads(request.GET.get('id_list'))
     if status == '0':
-        id_list = json.loads(request.GET.get('id_list'))
         for id in id_list:
             review = Review.objects.get(id=id)
             work_list.append(WorkInfo.objects.get(id=review.work_id))
-
-    else:       # !!!
-        work = WorkInfo.objects.get(id = request.GET.get('id'))
-        id = work.work_id
+    else:
+        for id in id_list:
+            work_list.append(WorkInfo.objects.get(id=id))
 
     Temp = tempfile.TemporaryFile()
     Archive = zipfile.ZipFile(Temp, 'w', zipfile.ZIP_DEFLATED)
@@ -114,6 +163,23 @@ def sumbitReview(request):
         for review in review_list:
             review.review_status = 4
             review.save()
+
+        # update work review status
+        review_list = Review.objects.filter(expert__user_id=user_id)
+        for review in review_list:
+            work_reviews = Review.objects.filter(work=review.work)
+            review_finish = 1
+            if len(work_reviews) < 3:
+                review_finish = 0
+            else:
+                for r in work_reviews:
+                    if r.review_status != 4:
+                        review_finish = 0
+                        break
+            if review_finish == 1:
+                review.work.review_status = 1
+                review.work.save()
+
     ret={'status': status}
     return JsonResponse(ret)
 
@@ -223,6 +289,7 @@ class ExpertReviewView(View):
         user_name, user_identity = GetUserIdentitiy(request)
         return render(request, 'ExpertReviewWork.html', {'work': work, 'id': review.id,
                                                          'score': review.score, 'comment':review.comment,
+                                                         'tag': review.review_status,
                                                          'show_list': show, 'invest_list': invest,
                                                          'docu': file_docu, 'photo': file_photo, 'video': file_video,
                                                          'username': user_name, 'useridentity': user_identity})
@@ -522,6 +589,15 @@ class ExptTreetableView(View):
                     'expert_state': review_i.review_status,
                     'works':[]
                 }
+                expt_tree_ret[temp_expt_id]['works'].append(
+                    {
+                        'work_id': review_i.work.work_id,
+                        'work_name': review_i.work.title,
+                        'work_type': review_i.work.work_type,
+                        'work_field': review_i.work.field,
+                        'review_state': review_i.review_status,
+                    }
+                )
 
         #字典转换为列表
         expt_tree_ret = list(expt_tree_ret.values())
@@ -541,6 +617,66 @@ class ExptTreetableView(View):
         context['expertlist'] = expertlist_ret
 
         return render(request, 'expert_treetable.html', context)
+
+class ReassignExpertView(View):
+    """
+    重新分配专家
+    """
+
+    def get(self,request):
+        pass
+
+    def post(self,request):
+        originExpert_work = request.POST.get('originExpert_work')
+        originExpert_expt = request.POST.get('originExpert_expt')
+        originExpert_work = json.loads(originExpert_work)
+        originExpert_expt = json.loads(originExpert_expt)
+
+        # 为review更换专家
+        try:
+            for origin_expert_id in originExpert_expt.keys():
+                # 用ID拿expert
+                new_expert_id = originExpert_expt[origin_expert_id]
+                new_expert = Expert.objects.get(user__id=new_expert_id)
+                origin_expert = Expert.objects.get(user__id=origin_expert_id)
+
+                for work_id in originExpert_work[origin_expert_id]:
+                    work = WorkInfo.objects.get(work_id=work_id)
+                    if Review.objects.filter(expert=new_expert, work=work).exists():
+                        continue
+                    else:
+                        review = Review.objects.get(expert=origin_expert, work=work)
+                        review.expert = new_expert
+                        review.review_status = 0
+                        review.save()
+
+        except Exception as e:
+            print(e)
+            return JsonResponse({'Message':1})
+            pass
+
+        # ref：https://www.cnblogs.com/lovealways/p/6701662.html
+        import smtplib
+        from email.mime.text import MIMEText
+        sender = 'topcup2019@163.com'
+        passwd = '123456zxcvbn'
+        s = smtplib.SMTP_SSL('smtp.163.com', 465)
+        s.login(sender, passwd)
+        for expert_id in originExpert_expt.values():
+            receiver = Expert.objects.get(user_id=expert_id).user.email
+            subject = '邀请参加科技竞赛作品评审'
+            content = "<p>尊敬的"+'\"'+Expert.objects.get(user_id=expert_id).name+'\"'+"：</p>"+"<p>邀请您参与TopCup科技竞赛作品评审</p>"+"<p><a href=''>接受</a></p> <p><a href=''>拒绝</a></p>"
+            msg = MIMEText(content, "html", "utf-8")
+            msg['Subject'] = subject
+            msg['From'] = sender
+            msg['To'] = receiver
+            try:
+                s.sendmail(sender,receiver,msg.as_string())
+            except:
+                return JsonResponse({'Message':1})
+                pass
+        s.quit()
+        return JsonResponse({'Message':0})
 
 try:
     scheduler = BackgroundScheduler()
