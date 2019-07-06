@@ -14,6 +14,9 @@ from django.shortcuts import render
 from django.utils.encoding import escape_uri_path
 from django.views.generic.base import View
 
+from apscheduler.schedulers.background import BackgroundScheduler
+from django_apscheduler.jobstores import DjangoJobStore,register_events,register_job
+
 from TopCup.settings import MEDIA_ROOT
 from competition.models import Competition
 from competition.views import GetUserIdentitiy
@@ -538,3 +541,80 @@ class ExptTreetableView(View):
         context['expertlist'] = expertlist_ret
 
         return render(request, 'expert_treetable.html', context)
+
+try:
+    scheduler = BackgroundScheduler()
+    scheduler.add_jobstore(DjangoJobStore(),'default')
+    @register_job(scheduler,"cron", day_of_week='*', hour='6', minute='0', second='0')
+    def notify_expert():
+        from datetime import datetime,date,timedelta
+        one_week_later = date.today()+timedelta(days=7)
+        one_day_later = date.today()+timedelta(days=1)
+
+        one_week_set = Review.objects.filter(review_status=0, work__registration__competition__review_end_date=one_week_later)
+        one_week_expert = {}
+        for review in one_week_set:
+            one_week_expert[review.expert.user.email] = {
+                'expt_name': review.expert.name,
+                'title': review.work.registration.competition.title
+            }
+
+        # 发邮件
+        import smtplib
+        from email.mime.text import MIMEText
+        sender = 'topcup2019@163.com'
+        passwd = '123456zxcvbn'
+        s = smtplib.SMTP_SSL('smtp.163.com', 465)
+        s.login(sender, passwd)
+        for expert_id in one_week_expert.keys():
+            receiver = Expert.objects.get(user_id=expert_id).user.email
+            subject = '尽快' + '\"' + one_week_expert[expert_id]['title'] + '\"' + '作品评审'
+            content = '尊敬的' + one_week_expert[expert_id]['expert_name'] + ": 距\"" + one_week_expert[expert_id]['title'] + '\"' + '作品评审结束还有一周，请尽快完成！'
+            msg = MIMEText(content)
+            msg['Subject'] = subject
+            msg['From'] = sender
+            msg['To'] = receiver
+            try:
+                s.sendmail(sender, receiver, msg.as_string())
+            except:
+                pass
+        s.quit()
+
+        one_day_set = Review.objects.filter(review_status=0,work__registration__competition__review_end_date=one_day_later)
+        one_day_expert = {}
+        for review in one_day_set:
+            one_day_expert[review.expert.user.email] = {
+                'expt_name': review.expert.name,
+                'title': review.work.registration.competition.title
+            }
+
+        # 发邮件
+        import smtplib
+        from email.mime.text import MIMEText
+        sender = 'topcup2019@163.com'
+        passwd = '123456zxcvbn'
+        s = smtplib.SMTP_SSL('smtp.163.com', 465)
+        s.login(sender, passwd)
+        for expert_id in one_day_expert.keys():
+            receiver = Expert.objects.get(user_id=expert_id).user.email
+            subject = '尽快' + '\"' + one_day_expert[expert_id][
+                'title'] + '\"' + '作品评审'
+            content = '尊敬的' + one_day_expert[expert_id][
+                'expert_name'] + ": 距\"" + one_day_expert[expert_id][
+                          'title'] + '\"' + '作品评审结束还有一天，请尽快完成！'
+            msg = MIMEText(content)
+            msg['Subject'] = subject
+            msg['From'] = sender
+            msg['To'] = receiver
+            try:
+                s.sendmail(sender, receiver, msg.as_string())
+            except:
+                pass
+        s.quit()
+
+
+    register_events(scheduler)
+    scheduler.start()
+except Exception as e:
+    print(e)
+    scheduler.shutdown()

@@ -45,7 +45,8 @@ INSTALLED_APPS = [
     'users',
     'operation',
     'techworks',
-    'competition'
+    'competition',
+    'django_apscheduler',
 ]
 
 MIDDLEWARE = [
