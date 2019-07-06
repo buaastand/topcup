@@ -346,12 +346,12 @@ class AssignWorkListView(View):
             2: "调查报告和学术论文"
         }
         FIELD_MAP = {
-            1: "A",
-            2: "B",
-            3: "C",
-            4: "D",
-            5: "E",
-            6: "F",
+            1: 'A.机械与控制',
+            2: 'B.信息技术',
+            3: 'C.数理',
+            4: 'D.生命科学',
+            5: 'E.能源化工',
+            6: 'F.哲学社会科学'
         }
         worklist_ret = []
         for work in worklist_origin:
@@ -362,7 +362,6 @@ class AssignWorkListView(View):
                 'field':FIELD_MAP[work.field],
             })
 
-        # 专家拒绝了待处理
         expertlist_origin = Expert.objects.all().exclude(user__id__in=
             Review.objects.filter(review_status__lt=4).values_list('expert__user__id', flat=True))
         expertlist_ret = []
@@ -452,12 +451,12 @@ class ExptreviewListView(View):
     def get(self, request):
 
         FIELD_MAP = {
-            1: "A",
-            2: "B",
-            3: "C",
-            4: "D",
-            5: "E",
-            6: "F",
+            1: 'A.机械与控制',
+            2: 'B.信息技术',
+            3: 'C.数理',
+            4: 'D.生命科学',
+            5: 'E.能源化工',
+            6: 'F.哲学社会科学'
         }
 
         cpt_id = request.GET.get('cpt_id','')
@@ -475,12 +474,12 @@ class ExptreviewListView(View):
                     'init_date': str(review_i.add_time),
                     'expert_id': review_i.expert.user.id,
                     'expert_name': review_i.expert.name,
-                    'expert_field': review_i.expert.field,
+                    'expert_field': FIELD_MAP[review_i.expert.field],
                     'email': review_i.expert.user.email,
                     'work_id': review_i.work.work_id,
                     'work_name': review_i.work.title,
                     'work_type':review_i.work.work_type,
-                    'work_field': review_i.work.field,
+                    'work_field': FIELD_MAP[review_i.work.field],
                     'review_state': review_i.review_status
                 }
             )
@@ -566,13 +565,31 @@ class ExptTreetableView(View):
     以专家为主体展示已分配到某个专家的作品列表
     """
     def get(self, request):
+        WORKTYPE_MAP = {
+            1: "科技发明制作",
+            2: "调查报告和学术论文"
+        }
         FIELD_MAP = {
-            1: "A",
-            2: "B",
-            3: "C",
-            4: "D",
-            5: "E",
-            6: "F",
+            1: 'A.机械与控制',
+            2: 'B.信息技术',
+            3: 'C.数理',
+            4: 'D.生命科学',
+            5: 'E.能源化工',
+            6: 'F.哲学社会科学'
+        }
+        EXPERT_STATUS_MAP = {
+            0: '等待响应邮件',
+            1: '已拒绝评审',
+            2: '评审中',
+            3: '评审中',
+            4: '评审已完成',
+        }
+        REVIEW_STATUS_MAP = {
+            0: '等待响应邮件',
+            1: '已拒绝评审',
+            2: '评审中',
+            3: '评审已暂存',
+            4: '评审已提交',
         }
 
         cpt_id = request.GET.get('cpt_id','')
@@ -593,34 +610,31 @@ class ExptTreetableView(View):
                     {
                         'work_id': review_i.work.work_id,
                         'work_name': review_i.work.title,
-                        'work_type':review_i.work.work_type,
-                        'work_field': review_i.work.field,
-                        'review_state': review_i.review_status,
+                        'work_type':WORKTYPE_MAP[review_i.work.work_type],
+                        'work_field': FIELD_MAP[review_i.work.field],
+                        'review_state': REVIEW_STATUS_MAP[review_i.review_status],
                     }
                 )
             else:
-                expt_tree_ret[temp_expt_id] = {
-                    'init_date': str(review_i.add_time),
-                    'expert_id': review_i.expert.user.id,
-                    'expert_name': review_i.expert.name,
-                    'expert_field': review_i.expert.field,
-                    'email': review_i.expert.user.email,
-                    'expert_state': review_i.review_status,
-                    'works':[]
-                }
-                expt_tree_ret[temp_expt_id]['works'].append(
-                    {
-                        'work_id': review_i.work.work_id,
-                        'work_name': review_i.work.title,
-<<<<<<< HEAD
-                        'work_type':review_i.work.work_type,
-=======
-                        'work_type': review_i.work.work_type,
->>>>>>> 962584e276e064e865d126ebcaf94b8ae808bc5b
-                        'work_field': review_i.work.field,
-                        'review_state': review_i.review_status,
+                if review_i.review_status != 4:
+                    expt_tree_ret[temp_expt_id] = {
+                        'init_date': str(review_i.add_time),
+                        'expert_id': review_i.expert.user.id,
+                        'expert_name': review_i.expert.name,
+                        'expert_field': FIELD_MAP[review_i.expert.field],
+                        'email': review_i.expert.user.email,
+                        'expert_state': EXPERT_STATUS_MAP[review_i.review_status],
+                        'works':[]
                     }
-                )
+                    expt_tree_ret[temp_expt_id]['works'].append(
+                        {
+                            'work_id': review_i.work.work_id,
+                            'work_name': review_i.work.title,
+                            'work_type': WORKTYPE_MAP[review_i.work.work_type],
+                            'work_field': FIELD_MAP[review_i.work.field],
+                            'review_state': REVIEW_STATUS_MAP[review_i.review_status],
+                        }
+                    )
 
         #字典转换为列表
         expt_tree_ret = list(expt_tree_ret.values())
@@ -662,40 +676,7 @@ class ReassignExpertView(View):
                 new_expert = Expert.objects.get(user__id=new_expert_id)
                 origin_expert = Expert.objects.get(user__id=origin_expert_id)
 
-<<<<<<< HEAD
-            # try:
-            for work_id in originExpert_work[origin_expert_id]:
-                review = Review.objects.get(Q(expert=origin_expert) & Q(work__work_id=work_id))
-                
-                review.expert = new_expert
-                review.review_status = 0
-                review.save()
-            # except:
-            #     return JsonResponse({'Message':1})
-            #     pass
-
-        # ref：https://www.cnblogs.com/lovealways/p/6701662.html
-        # import smtplib
-        # from email.mime.text import MIMEText
-        # sender = 'topcup2019@163.com'
-        # passwd = '123456zxcvbn'
-        # s = smtplib.SMTP_SSL('smtp.163.com', 465)
-        # s.login(sender, passwd)
-        # for expert_id in expert_list:
-        #     receiver = Expert.objects.get(user_id=expert_id).user.email
-        #     subject = '邀请参加'+'\"'+cpt_name+'\"'+'作品评审'
-        #     content = '这是email内容'
-        #     msg = MIMEText(content)
-        #     msg['Subject'] = subject
-        #     msg['From'] = sender
-        #     msg['To'] = receiver
-        #     try:
-        #         s.sendmail(sender,receiver,msg.as_string())
-        #     except:
-        #         return JsonResponse({'Message':1})
-        #         pass
-        # s.quit()
-=======
+                # try:
                 for work_id in originExpert_work[origin_expert_id]:
                     work = WorkInfo.objects.get(work_id=work_id)
                     if Review.objects.filter(expert=new_expert, work=work).exists():
@@ -740,10 +721,6 @@ class ReassignExpertView(View):
                 return JsonResponse({'Message': 1})
                 pass
         s.quit()
-<<<<<<< HEAD
->>>>>>> 962584e276e064e865d126ebcaf94b8ae808bc5b
-        return JsonResponse({'Message':0})
-=======
         return JsonResponse({'Message': 0})
 
     def encode_data(self, data):
@@ -784,4 +761,3 @@ class InvitationView(View):
             raise Exception("Bad hash!")
         data = pickle.loads(zlib.decompress(base64.b64decode(text)))
         return data
->>>>>>> db9310d54474a412fec8124ff50c212198fbc763
