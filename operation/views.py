@@ -9,6 +9,8 @@ from techworks.models import WorkInfo
 from users.models import Expert
 from .models import Review
 
+from django.db.models import Q
+
 
 # Create your views here.
 class ReviewWorkListView(View):
@@ -268,7 +270,6 @@ class ExptreviewListView(View):
 
         return render(request, 'exptreview_list.html', context)
 
-
 class ExptTreetableView(View):
     """
     以专家为主体展示已分配到某个专家的作品列表
@@ -335,3 +336,57 @@ class ExptTreetableView(View):
         context['expertlist'] = expertlist_ret
 
         return render(request, 'expert_treetable.html', context)
+
+class ReassignExpertView(View):
+    """
+    重新分配专家
+    """
+    
+    def get(self,request):
+        pass
+
+    def post(self,request):
+        originExpert_work = request.POST.get('originExpert_work')
+        originExpert_expt = request.POST.get('originExpert_expt')
+        originExpert_work = json.loads(originExpert_work)
+        originExpert_expt = json.loads(originExpert_expt)
+
+        # 为review更换专家
+        for origin_expert_id in originExpert_expt.keys():
+            # 用ID拿expert
+            new_expert_id = originExpert_expt[origin_expert_id]
+            new_expert = Expert.objects.filter(user__id=new_expert_id)
+            origin_expert = Expert.objects.filter(user__id=origin_expert_id)
+
+            try:
+                for work_id in originExpert_work[origin_expert_id]:
+                    review = Review.objects.filter(Q(expert=origin_expert) & Q(work__work_id=work_id))
+                    review.expert = new_expert
+                    review.review_status = 0
+                    review.save()
+            except:
+                return JsonResponse({'Message':1})
+                pass
+                
+        # ref：https://www.cnblogs.com/lovealways/p/6701662.html
+        # import smtplib
+        # from email.mime.text import MIMEText
+        # sender = 'topcup2019@163.com'
+        # passwd = '123456zxcvbn'
+        # s = smtplib.SMTP_SSL('smtp.163.com', 465)
+        # s.login(sender, passwd)
+        # for expert_id in expert_list:
+        #     receiver = Expert.objects.get(user_id=expert_id).user.email
+        #     subject = '邀请参加'+'\"'+cpt_name+'\"'+'作品评审'
+        #     content = '这是email内容'
+        #     msg = MIMEText(content)
+        #     msg['Subject'] = subject
+        #     msg['From'] = sender
+        #     msg['To'] = receiver
+        #     try:
+        #         s.sendmail(sender,receiver,msg.as_string())
+        #     except:
+        #         return JsonResponse({'Message':1})
+        #         pass
+        # s.quit()
+        return JsonResponse({'Message':0})

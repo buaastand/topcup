@@ -28,7 +28,7 @@ import techworks.views as Tch
 from operation.views import ReviewWorkListView
 from django.views.generic import RedirectView
 
-from operation.views import AssignWorkListView,AssignExpertView
+from operation.views import AssignWorkListView, AssignExpertView, ReassignExpertView
 
 urlpatterns = [
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root':settings.MEDIA_ROOT}),
@@ -68,6 +68,7 @@ urlpatterns = [
 
     path('exptreview_list/', ExptreviewListView.as_view()),
     path('review_exptree/', ExptTreetableView.as_view()),
+    path('reassign_expet/', ReassignExpertView.as_view()),
 ]
 
 #urlpatterns += staticfiles_urlpatterns()
