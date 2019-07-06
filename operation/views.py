@@ -1,9 +1,14 @@
 # -*-coding:utf-8 -*-
+import base64
 import datetime
+import hashlib
 import json
 import os
+import pickle
 import tempfile
+import urllib
 import zipfile
+import zlib
 from wsgiref.util import FileWrapper
 
 from django.core.paginator import Paginator
@@ -11,11 +16,6 @@ from django.db import transaction
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
-from django.views.decorators.csrf import csrf_exempt
-from django.views.generic.base import View
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-import datetime, zipfile, tempfile, os
-from wsgiref.util import FileWrapper
 from django.utils.encoding import escape_uri_path
 from django.views.generic.base import View
 
@@ -25,11 +25,6 @@ from competition.views import GetUserIdentitiy
 from techworks.models import WorkInfo, Appendix
 from users.models import Expert
 from .models import Review
-
-import hashlib, zlib
-import pickle
-import urllib
-import base64
 
 
 # Create your views here.
@@ -420,10 +415,10 @@ class AssignExpertView(View):
         for expert_id in expert_list:
             arg = [expert_id, cpt_id, 1]
             hash, enc = self.encode_data(arg)
-            acc_url = 'https://' + host + '/invitation/?hash=' + hash + '&enc=' + enc
+            acc_url = 'http://' + host + '/invitation/?hash=' + hash + '&enc=' + enc
             arg = [expert_id, cpt_id, 0]
             hash, enc = self.encode_data(arg)
-            def_url = 'https://' + host + '/invitation/?hash=' + hash + '&enc=' + enc
+            def_url = 'http://' + host + '/invitation/?hash=' + hash + '&enc=' + enc
             receiver = Expert.objects.get(user_id=expert_id).user.email
             subject = '邀请参加科技竞赛作品评审'
             content = "<p>尊敬的" + '\"' + Expert.objects.get(
@@ -686,10 +681,10 @@ class ReassignExpertView(View):
         for expert_id in originExpert_expt.values():
             arg = [expert_id, cpt_id, 1]
             hash, enc = self.encode_data(arg)
-            acc_url = 'https://' + host + '/invitation/?hash=' + hash + '&enc=' + enc
+            acc_url = 'http://' + host + '/invitation/?hash=' + hash + '&enc=' + enc
             arg = [expert_id, cpt_id, 0]
             hash, enc = self.encode_data(arg)
-            def_url = 'https://' + host + '/invitation/?hash=' + hash + '&enc=' + enc
+            def_url = 'http://' + host + '/invitation/?hash=' + hash + '&enc=' + enc
             receiver = Expert.objects.get(user_id=expert_id).user.email
             subject = '邀请参加科技竞赛作品评审'
             content = "<p>尊敬的" + '\"' + Expert.objects.get(
@@ -722,6 +717,10 @@ class InvitationView(View):
         expert_id = data[0]
         cpt_id = data[1]
         acc = data[2]
+        cpt = Competition.objects.get(id=cpt_id)
+        expert = Expert.objects.get(user__id=expert_id)
+        if len(Review.objects.filter(expert=expert, work__registration__competition=cpt).exclude(review_status=0)):
+            return render(request, 'expired.html')
         if acc == 0:
             finded_reviews = Review.objects.filter(expert__user__id=expert_id, work__registration__competition__id=cpt_id)
             for review in finded_reviews:
