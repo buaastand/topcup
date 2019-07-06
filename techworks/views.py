@@ -12,19 +12,7 @@ from django.db.models import Q
 from django.http.response import JsonResponse
 from django.shortcuts import render, HttpResponse
 from django.views import View
-from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
-
-from .models import WorkInfo, Appendix
-from django.db.models import Q
-from competition.models import CompetitionRegistration, Competition
-from users.models import Student
-from django.db import transaction
-from competition.views import GetUserIdentitiy
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-import datetime, time, random
-import json
-import docx
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
@@ -269,11 +257,11 @@ class TechWorkView(View):
             filelist = Appendix.objects.filter(work__work_id=work.work_id)
 
             for file in filelist:
-                if file.appendix_type == 0:
+                if file.appendix_type == 1:
                     file_docu.append({"name": file.filename, "url": file.file.url})
-                elif file.appendix_type == 1:
-                    file_photo.append({"name": file.filename, "url": file.file.url})
                 elif file.appendix_type == 2:
+                    file_photo.append({"name": file.filename, "url": file.file.url})
+                elif file.appendix_type == 3:
                     file_video.append({"name": file.filename, "url": file.file.url})
 
         user_name, user_identity = GetUserIdentitiy(request)
@@ -325,9 +313,9 @@ class TechWorkView(View):
 
                 work.submitted = True if int(request.POST.get("submitted", work.submitted)) == 1 else False
                 FILE_TYLE_MAP = {
-                    "document": 0,
-                    "photo": 1,
-                    "video": 2
+                    "document": 1,
+                    "photo": 2,
+                    "video": 3
                 }
 
                 deleteList = json.loads(request.POST.get('deleteList', "{\"deletelist\":[]}"))["deletelist"]

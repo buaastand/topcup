@@ -1,25 +1,25 @@
 # -*-coding:utf-8 -*-
+import datetime
+import json
+import os
+import tempfile
+import zipfile
+from wsgiref.util import FileWrapper
+
+from django.core.paginator import Paginator
+from django.db import transaction
+from django.db.models import Q
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
-from django.views.decorators.csrf import csrf_exempt
-from django.views.generic.base import View
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-import datetime, zipfile, tempfile, os
-from wsgiref.util import FileWrapper
 from django.utils.encoding import escape_uri_path
-from django.db.models import Q
+from django.views.generic.base import View
 
-from django.db import transaction
-from competition.views import GetUserIdentitiy
+from TopCup.settings import MEDIA_ROOT
 from competition.models import Competition
+from competition.views import GetUserIdentitiy
 from techworks.models import WorkInfo, Appendix
 from users.models import Expert
 from .models import Review
-from TopCup.settings import MEDIA_ROOT
-from django.db.models.aggregates import Count,Avg
-import json
-from decimal import *
-
 
 
 # Create your views here.
@@ -210,11 +210,11 @@ class ExpertReviewView(View):
                     invest.append(INVEST_MAP[int(i)])
             filelist = Appendix.objects.filter(work__work_id=work.work_id)
             for file in filelist:
-                if file.appendix_type == 0:
+                if file.appendix_type == 1:
                     file_docu.append({"name": file.filename, "url": file.file.url})
-                elif file.appendix_type == 1:
-                    file_photo.append({"name": file.filename, "url": file.file.url})
                 elif file.appendix_type == 2:
+                    file_photo.append({"name": file.filename, "url": file.file.url})
+                elif file.appendix_type == 3:
                     file_video.append({"name": file.filename, "url": file.file.url})
 
         user_name, user_identity = GetUserIdentitiy(request)
@@ -461,6 +461,17 @@ class DefenseWorkListView(View):
         user_name,user_identity = GetUserIdentitiy(request)
         return render(request,'defensework_list.html',{ 'worklist':worklist_ret , 'useridentity':user_identity,'username':user_name,'cpt_id':cpt_id})
 
+    def post(self, request):
+        defenseWorkList = json.loads(request.body)
+        with transaction.atomic():
+            for item in defenseWorkList:
+                work = WorkInfo.objects.get(work_id=item.get("work_id"))
+                work.if_defense = True
+                work.save()
+        # print(request.data)
+
+        return JsonResponse({'Message': 0})
+
 class ExptTreetableView(View):
     """
     以专家为主体展示已分配到某个专家的作品列表
@@ -527,14 +538,3 @@ class ExptTreetableView(View):
         context['expertlist'] = expertlist_ret
 
         return render(request, 'expert_treetable.html', context)
-
-    def post(self,request):
-        defenseWorkList=json.loads(request.body)
-        with transaction.atomic():
-            for item in defenseWorkList:
-                work = WorkInfo.objects.get(work_id=item.get("work_id"))
-                work.if_defense = True
-                work.save()
-        # print(request.data)
-
-        return JsonResponse({'Message': 0})
