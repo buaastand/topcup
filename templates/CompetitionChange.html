@@ -59,6 +59,10 @@
                     <div class="buttonArea">
                     <el-row>
                             <el-button type="primary" @click="dialogVisible = true">确认修改</el-button>
+                            {% if status_type == '2' %}
+                                <el-button type="primary"  @click="ExpertChoose({{ cptDetail.id }})">选择初评专家</el-button>
+                                <el-button type="primary"  @click="ExpertChange({{ cptDetail.id }})">替换初评专家</el-button>
+                            {% endif %}
                             {% if status_type == '3' %}
                                 <el-button type="primary"  @click="DefenseChoose({{ cptDetail.id }})">遴选答辩名单</el-button>
                             {% endif %}
@@ -306,9 +310,13 @@
                                 return false;
                             }
                         })
+                },
+                ExpertChoose(val){
+                     window.open('/assign_work/?cpt_id='+val, '_self')
+                },
+                ExpertChange(val) {
+                    window.open('/review_exptree/?cpt_id='+val, '_self')
                 }
-                    
-                    
             },
             
         });

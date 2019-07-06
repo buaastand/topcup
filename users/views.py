@@ -18,7 +18,6 @@ from users.models import Expert
 from .forms import RegisterForm, LoginForm, ModifyPwdForm
 from .models import BaseUser, Student
 
-
 class UserBackend(ModelBackend):
     """
     BaseUser authentication backend
@@ -311,3 +310,4 @@ def page_error(request):
     response = render_to_response('500.html',{})
     response.status_code = 500
     return response
+

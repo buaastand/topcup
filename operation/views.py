@@ -26,6 +26,11 @@ from techworks.models import WorkInfo, Appendix
 from users.models import Expert
 from .models import Review
 
+import hashlib, zlib
+import pickle
+import urllib
+import base64
+
 
 # Create your views here.
 
@@ -333,8 +338,8 @@ class AssignWorkListView(View):
     """
     def get(self,request):
         cpt_id = request.GET.get('cpt_id','')
-        worklist_origin = WorkInfo.objects.all().exclude(work_id__in=
-            Review.objects.all().values_list('work_id', flat=True))
+        reviewed_worklist = list(Review.objects.all().values_list('work__work_id', flat=True))
+        worklist_origin = WorkInfo.objects.filter(registration__competition__id=cpt_id).exclude(work_id__in=reviewed_worklist)
         # to do: 1.属于某个比赛的作品 2.
         WORKTYPE_MAP = {
             1: "科技发明制作",
@@ -380,10 +385,12 @@ class AssignExpertView(View):
         pass
 
     def post(self,request):
-        expert_list = request.POST.get('selected_expert')
-        expert_list = json.loads(expert_list)
-        work_list = request.POST.get('selected_work')
-        work_list = json.loads(work_list)
+        expert_list = json.loads(request.body)
+        expert_list = expert_list['selected_expert']
+        work_list = json.loads(request.body)
+        work_list = work_list['selected_work']
+        cpt_id = json.loads(request.body)['cpt_id']
+        cpt_title = Competition.objects.get(id=cpt_id).title
 
         for expert_id in expert_list:
             for work_id in work_list:
@@ -405,23 +412,38 @@ class AssignExpertView(View):
         from email.mime.text import MIMEText
         sender = 'topcup2019@163.com'
         passwd = '123456zxcvbn'
+        host = request.get_host()
         s = smtplib.SMTP_SSL('smtp.163.com', 465)
         s.login(sender, passwd)
         for expert_id in expert_list:
+            arg = [expert_id, cpt_id, 1]
+            hash, enc = self.encode_data(arg)
+            acc_url = 'https://' + host + '/invitation/?hash=' + hash + '&enc=' + enc
+            arg = [expert_id, cpt_id, 0]
+            hash, enc = self.encode_data(arg)
+            def_url = 'https://' + host + '/invitation/?hash=' + hash + '&enc=' + enc
             receiver = Expert.objects.get(user_id=expert_id).user.email
-            subject = '邀请参加'+'\"'+cpt_name+'\"'+'作品评审'
-            content = '这是email内容'
-            msg = MIMEText(content)
+            subject = '邀请参加科技竞赛作品评审'
+            content = "<p>尊敬的" + '\"' + Expert.objects.get(
+                user_id=expert_id).name + '\"' + "：</p>" + "<p>邀请您参与TopCup\"" + cpt_title + "\"作品评审</p>" + "<p><a href=" + acc_url + ">接受</a></p> <p><a href=" + def_url + ">拒绝</a></p>"
+            msg = MIMEText(content, "html", "utf-8")
             msg['Subject'] = subject
             msg['From'] = sender
             msg['To'] = receiver
             try:
-                s.sendmail(sender,receiver,msg.as_string())
+                s.sendmail(sender, receiver, msg.as_string())
             except:
-                return JsonResponse({'Message':1})
+                return JsonResponse({'Message': 1})
                 pass
         s.quit()
-        return JsonResponse({'Message':0})
+        return JsonResponse({'Message': 0})
+
+    def encode_data(self, data):
+        """Turn `data` into a hash and an encoded string, suitable for use with `decode_data`."""
+        compressed_text = zlib.compress(pickle.dumps(data, 0))
+        text = base64.b64encode(compressed_text).decode().replace('\n', '')
+        m = hashlib.md5(str.encode('{}{}'.format('yankun', text))).hexdigest()[:12]
+        return m, text
 
 class ExptreviewListView(View):
     """
@@ -624,11 +646,10 @@ class ReassignExpertView(View):
         pass
 
     def post(self,request):
-        originExpert_work = request.POST.get('originExpert_work')
-        originExpert_expt = request.POST.get('originExpert_expt')
-        originExpert_work = json.loads(originExpert_work)
-        originExpert_expt = json.loads(originExpert_expt)
-
+        originExpert_work = json.loads(request.body)['originExpert_work']
+        originExpert_expt = json.loads(request.body)['originExpert_expt']
+        cpt_id = json.loads(request.body)['cpt_id']
+        cpt_title = Competition.objects.get(id=cpt_id).title
         # 为review更换专家
         try:
             for origin_expert_id in originExpert_expt.keys():
@@ -657,20 +678,67 @@ class ReassignExpertView(View):
         from email.mime.text import MIMEText
         sender = 'topcup2019@163.com'
         passwd = '123456zxcvbn'
+        host = request.get_host()
         s = smtplib.SMTP_SSL('smtp.163.com', 465)
         s.login(sender, passwd)
         for expert_id in originExpert_expt.values():
+            arg = [expert_id, cpt_id, 1]
+            hash, enc = self.encode_data(arg)
+            acc_url = 'https://' + host + '/invitation/?hash=' + hash + '&enc=' + enc
+            arg = [expert_id, cpt_id, 0]
+            hash, enc = self.encode_data(arg)
+            def_url = 'https://' + host + '/invitation/?hash=' + hash + '&enc=' + enc
             receiver = Expert.objects.get(user_id=expert_id).user.email
             subject = '邀请参加科技竞赛作品评审'
-            content = "<p>尊敬的"+'\"'+Expert.objects.get(user_id=expert_id).name+'\"'+"：</p>"+"<p>邀请您参与TopCup科技竞赛作品评审</p>"+"<p><a href=''>接受</a></p> <p><a href=''>拒绝</a></p>"
+            content = "<p>尊敬的" + '\"' + Expert.objects.get(
+                user_id=expert_id).name + '\"' + "：</p>" + "<p>邀请您参与TopCup\"" + cpt_title + "\"作品评审</p>" + "<p><a href=" + acc_url + ">接受</a></p> <p><a href=" + def_url + ">拒绝</a></p>"
             msg = MIMEText(content, "html", "utf-8")
             msg['Subject'] = subject
             msg['From'] = sender
             msg['To'] = receiver
             try:
-                s.sendmail(sender,receiver,msg.as_string())
+                s.sendmail(sender, receiver, msg.as_string())
             except:
-                return JsonResponse({'Message':1})
+                return JsonResponse({'Message': 1})
                 pass
         s.quit()
-        return JsonResponse({'Message':0})
+        return JsonResponse({'Message': 0})
+
+    def encode_data(self, data):
+        """Turn `data` into a hash and an encoded string, suitable for use with `decode_data`."""
+        compressed_text = zlib.compress(pickle.dumps(data, 0))
+        text = base64.b64encode(compressed_text).decode().replace('\n', '')
+        m = hashlib.md5(str.encode('{}{}'.format('yankun', text))).hexdigest()[:12]
+        return m, text
+
+
+class InvitationView(View):
+    def get(self, request):
+        hash = request.GET.get('hash', '')
+        enc = request.GET.get('enc', '')
+        data = self.decode_data(hash=hash, enc=enc)
+        expert_id = data[0]
+        cpt_id = data[1]
+        acc = data[2]
+        if acc == 0:
+            finded_reviews = Review.objects.filter(expert__user__id=expert_id, work__registration__competition__id=cpt_id)
+            for review in finded_reviews:
+                review.review_status = 1
+                review.save()
+            return render(request, 'refuse_review.html')
+        elif acc == 1:
+            expert = Expert.objects.get(user__id=expert_id)
+            finded_reviews = Review.objects.filter(expert=expert, work__registration__competition__id=cpt_id)
+            for review in finded_reviews:
+                review.review_status = 2
+                review.save()
+            return render(request, "login.html", { 'expert_email': expert.user.email ,'expert_activated':~expert.activated})
+
+    def decode_data(self, hash, enc):
+        """The inverse of `encode_data`."""
+        text = urllib.parse.unquote(enc)
+        m = hashlib.md5(str.encode('{}{}'.format('yankun', text))).hexdigest()[:12]
+        if m != hash:
+            raise Exception("Bad hash!")
+        data = pickle.loads(zlib.decompress(base64.b64decode(text)))
+        return data
