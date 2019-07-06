@@ -20,7 +20,8 @@
 
 .boxCard {
     width: 1000px;
-    margin-top: 0px;
+    margin-top: 20px;
+    margin-bottom: 20px;
     margin-left: auto;
     margin-right: auto;
 }
@@ -29,6 +30,11 @@
     width: 160px;
     margin-left: auto;
     margin-right: auto;
+}
+
+.previewPicUploader {
+    width: 108px;
+    height: 80px;
 }
 
 .previewPicUploader .el-upload{
@@ -55,6 +61,11 @@
     width: 108px;
     height: 80px;
     display: block;
+}
+
+.detailPicUploader {
+    width: 500px;
+    height: 130px;
 }
 
 .detailPicUploader .el-upload{

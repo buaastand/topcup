@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>科技竞赛平台</title>
+    <!-- 引入vue.js,axios.js -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+    <script src="https://cdn.staticfile.org/vue-resource/1.5.1/vue-resource.min.js"></script>
+
+    <!-- 引入element.ui-->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <!-- 引入css-->
+    <link rel="stylesheet" href="../static/css/NavName.css">
+    <link rel="stylesheet" href="../static/css/assignwork_list.css" type="text/css">
+</head>
+
+<body style="margin: 0; background: #F5F7FA">
+
+    {% include 'NavMenu.html' %}
+<div style=" background: #ffffff;width: 140vh;min-width:1000px;margin: auto;margin-top: 5vh; box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);padding: 2%;margin-bottom: 5vh;padding-bottom: 50px">
+
+    <div id="AssignworkList" style="width: 100%">
+        <div class="buttonArea">
+            <el-button type="primary" @click="selectExpert" style="margin-left: 5%">批量通过选中的作品</el-button>
+            <el-button type="primary" @click="handledownload" style="margin-left: 5%">打包下载选中作品的附件</el-button>
+
+        </div>
+
+        <div class="tableArea">
+            <el-table
+                ref="multipleTable"
+                :data="displayWork"
+                tooltip-effect="light"
+                style="width: 1000px;"
+                @selection-change="whandleSelectionChange"
+                @filter-change="test"
+                >
+                <el-table-column
+                    type="selection"
+                    width="40">
+                </el-table-column>
+                <el-table-column
+                    type="index"
+                    label="序号"
+                    width="60">
+                </el-table-column>
+                <el-table-column
+                    label="作品ID"
+                    prop="work_id"
+                    width="120"
+                    column-key="work_id"
+                    sortable>
+                </el-table-column>
+                <el-table-column
+                    label="作品名称"
+                    prop="title"
+                    width="300"
+                    column-key="title"
+                    sortable
+                    show-overflow-tooltip>
+                </el-table-column>
+                <el-table-column
+                    label="作品类别"
+                    prop="work_type"
+                    column-key="work_type"
+                    :filters="typeFilters"
+                    :filter-method="filterHandler"
+                    width="200">
+                </el-table-column>
+                <el-table-column
+                    label="作品领域"
+                    prop="field"
+                    column-key="field"
+                    :filters="fieldFilters"
+                    :filter-method="filterHandler"
+                    width="100"
+                    >
+                </el-table-column>
+                <el-table-column
+                    label="操作"
+                    prop="id"
+                    width="90"
+                    column-key="id">
+                <template slot-scope="scope">
+                <el-button type="primary" @click="handleview(scope.$index, scope.row)" size="mini">查看详情</el-button>
+                </template>
+                </el-table-column>
+          </el-table>
+        </div>
+
+        <div style="width:100%; margin-top: 10px; text-align: center">
+            <el-pagination
+              @size-change="whandleSizeChange"
+              @current-change="whandleCurrentChange"
+              :current-page="currentWorkPage"
+              :page-sizes="[10, 30, 100, totalWork]"
+              :page-size="workPageSize"
+              layout="total, sizes, prev, pager, next, jumper"
+              :total="totalWork">
+            </el-pagination>
+        </div>
+
+        <el-dialog
+            title="提示"
+            :visible.sync="dialogVisible"
+            width="300px"
+            :before-close="handleClose"
+            v-loading="loading">
+确认通过选中的作品？
+        <span slot="footer" class="dialog-footer">
+            <el-button @click="dialogVisible = false">取消</el-button>
+            <el-button type="primary" @click="matchWorksAndExperts">确认通过</el-button>
+        </span>
+        </el-dialog>
+    </div>
+
+
+    <script>
+        const ALL_WORK_TYPE = ['科技发明制作', '调查报告和学术论文'];
+        const ALL_FIELD = ['A', 'B', 'C', 'D', 'E', 'F'];
+        var assList = new Vue({
+            el: '#AssignworkList',
+            data: {
+                dialogVisible: false,
+                loading:false,
+
+                workFilters: {
+                    'work_type': ALL_WORK_TYPE,
+                    'field': ALL_FIELD
+                },
+
+                workTableData: {{ worklist | safe }},
+                filterWork: {{ worklist | safe }},
+                currentWorkPage: 1,
+                workPageSize: 10,
+
+                totalExpert: 0,
+                currentExpPage: 1,
+
+                wmultipleSelection: [],
+                emultipleSelection: [],
+
+                typeFilters: [{ text: '科技发明制作', value: '科技发明制作' },
+                    { text: '调查报告和学术论文', value: '调查报告和学术论文' }],
+
+                fieldFilters: [{ text: 'A', value: 'A' }, { text: 'B', value: 'B' },
+                    { text: 'C', value: 'C' }, { text: 'D', value: 'D' },
+                    { text: 'E', value: 'E' }, { text: 'F', value: 'F' }]
+            },
+            computed: {
+                displayWork: function () {
+                    return this.filterWork.slice((this.currentWorkPage-1)*this.workPageSize,this.currentWorkPage*this.workPageSize);
+                },
+                totalWork: function () {
+                    return this.filterWork.length;
+                }
+            },
+            methods: {
+                wtoggleSelection(rows) {
+                    if (rows) {
+                        rows.forEach(row => {
+                            this.$refs.wmultipleTable.toggleRowSelection(row);
+                        });
+                    } else {
+                        this.$refs.wmultipleTable.clearSelection();
+                    }
+                },
+                whandleSelectionChange(val) {
+                    this.wmultipleSelection = val;
+                    // console.log(this.wmultipleSelection["0"]['work_id']);
+                },
+                etoggleSelection(rows) {
+                    if (rows) {
+                        rows.forEach(row => {
+                            this.$refs.emultipleTable.toggleRowSelection(row);
+                        });
+                    } else {
+                        this.$refs.emultipleTable.clearSelection();
+                    }
+                },
+                ehandleSelectionChange(val) {
+                    this.emultipleSelection = val;
+                },
+                filterHandler(value, row, column) {
+                    const property = column['property'];
+                    return row[property] === value;
+                },
+                whandleSizeChange(val) {
+                    this.workPageSize = val;
+                },
+                whandleCurrentChange(val) {
+                    this.currentWorkPage = val;
+                },
+                handledownload() {
+                    if(this.wmultipleSelection) {
+                        var id_list = [];
+                        this.wmultipleSelection.forEach(index => {
+                            id_list.push(index.id);
+                        });
+                        console.log(id_list);
+                        axios.get('/downloadBatchZip/', {params: {id_list: JSON.stringify(id_list), status:0} })
+                        .then(response => {
+                            console.log(response);
+                            window.open(response.request.responseURL);
+                            this.$message.success('下载成功');
+                        })
+                    .catch(error => {
+                        this.$message.error('选中项目不包含附件');
+                        console.log(error);
+                        });
+                    }
+
+                },
+                selectExpert() {
+                    if (this.wmultipleSelection.length > 0) {
+                        this.dialogVisible = true;
+                    }
+                    else{
+                        this.$message.error('请至少选择一个参赛作品！');
+                    }
+                },
+
+                handleview(index,row) {
+                    window.location.href="/check_work/work_info/?work_id="+row.id;
+                    console.log(index, row);
+                },
+
+                matchWorksAndExperts(){
+                    this.loading = true;
+                    var wm_length = this.wmultipleSelection.length;
+                    selected_work = [];
+                    for (var i = 0; i < wm_length; i++) {
+                        selected_work.push(this.wmultipleSelection[i]['work_id'])
+                    }
+                    // console.log(selected_work);
+                    let _this = this;
+                    let formdata = new FormData();
+                    formdata.append('selected_work', JSON.stringify(selected_work));
+                    formdata.append('csrfmiddlewaretoken', "{{ csrf_token }}");
+
+                    axios.post(
+                        '../check_work/',
+                        formdata
+                    )
+                    .then(response => {
+                        console.log(response);
+                        if(response.data.Message == '0'){
+                            _this.$message({message:'提交成功！', type:'success'});
+                            window.open('../check_work/', '_self');
+                        }
+                        else{
+                            _this.$message.error('提交失败！');
+                        }
+                        _this.loading = false;
+                    })
+                    .catch(function (error) { // 请求失败处理
+                        console.log(error);
+                        _this.$message.error('提交失败！');
+                        _this.dialogVisible = false;
+                        _this.loading = false;
+                    });
+                },
+
+                test(filters){
+                    // console.log(this.workTableData);
+                    this.filterWork = [];
+                    var filtered;
+
+                    if(filters['work_type']){
+                        if(filters['work_type'].length == 0){
+                            this.workFilters['work_type'] = ALL_WORK_TYPE;
+                        }
+                        else this.workFilters['work_type'] = filters['work_type'];
+                    }
+                    if(filters['field']){
+                        if(filters['field'].length == 0){
+                            this.workFilters['field'] = ALL_FIELD;
+                        }
+                        else this.workFilters['field'] = filters['field'];
+                    }
+
+                    for (var i = 0; i < this.workTableData.length; i++) {
+                        filtered = 0;
+                        for (var j = 0; j < this.workFilters['work_type'].length; j++) {
+                            if (this.workTableData[i]['work_type'] == this.workFilters['work_type'][j]) {
+                                filtered = 1;
+                                break;
+                            }
+                        }
+
+                        if (filtered == 1) {
+                            for (var j = 0; j < this.workFilters['field'].length; j++) {
+                                if (this.workTableData[i]['field'] == this.workFilters['field'][j]) {
+                                    this.filterWork.push(this.workTableData[i])
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    //console.log(filters);
+                    this.currentWorkPage = 1;
+                    // console.log(this.workTableData);
+                }
+            },
+            delimiters: ["{[", "]}"]
+        });
+        // console.log(assList.expertTableData);
+    </script>
+</div>
+</body>
+
+</html>

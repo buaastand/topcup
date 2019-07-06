@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>submit_techwork</title>
+    <title>TopCup个人作品列表</title>
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
     <link rel="stylesheet" href="../static/css/submit_techwork.css">
     <link rel="stylesheet" href="../static/css/NavName.css">
@@ -10,12 +10,12 @@
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script src="https://unpkg.com/element-ui/lib/index.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+        <meta name="csrf-token" content="{{ csrf_token }}">
 
 </head>
-<body style="margin: 0">
+<body style="margin: 0; background: #F5F7FA">
 {% include 'NavMenu.html' %}
-<div id="techwork_list" class="background" style="height: 500px; width: 1200px;">
-
+<div id="techwork_list" class="background" style="height: 800px; width: 1300px;">
     <el-container>
         <el-header>
             <h1 style="font-weight: bold">
@@ -26,7 +26,6 @@
         <el-main>
             <template>
                 <el-table :data="techworkList">
-                    <el-table-column prop="id" type="index" label="序号"></el-table-column>
                     <el-table-column prop="work_id" label="作品编号"></el-table-column>
                     <el-table-column prop="first_author"  label="第一作者"></el-table-column>
                     <el-table-column prop="title"  label="作品名称"></el-table-column>
@@ -35,20 +34,29 @@
                     <el-table-column prop="submitted"  label="作品状态"></el-table-column>
                     <el-table-column>
                         <template slot-scope="scope">
-                            <el-button size="mini" type="danger" @click="deleteWork(scope.$index)">删除</el-button>
-                            <el-button size="mini" type="primary" @click="editWork(scope.$index)">编辑</el-button>
+                            <el-button v-if="scope.row.submitted === '暂存'" size="mini" type="primary" @click="editWork(scope.$index)">编辑</el-button>
+                            <el-button v-if="scope.row.submitted === '已提交'" size="mini" type="primary" @click="editWork(scope.$index)">查看</el-button>
+                            <el-button size="mini" type="danger" @click="deleteWork(scope.$index, scope.row.work_id)">
+                                删除
+                            </el-button>
                         </template>
                     </el-table-column>
                 </el-table>
             </template>
         </el-main>
+        <el-footer>
+            <div style="margin: 25px auto; text-align: center">
+                <el-pagination
+                    @current-change="handleCurrentChange"
+                    :current-page={{num}}
+                    :page-size="10"
+                    layout="total, prev, pager, next, jumper"
+                    :total={{total}}>
+                </el-pagination>
+            </div>
+        </el-footer>
     </el-container>
 </div>
-
-
-
-
-
 </body>
 
 <script>
@@ -59,16 +67,42 @@
         techworkList: {{ worklist | safe }},
     },
     methods: {
-        deleteWork(n) {    // 删除
+        deleteWork(n, id) {    // 删除
+            console.log(id);
             if (n == -2) {
                 this.techworkList = "";
             }
             {
-                this.techworkList.splice(n, 1);
+                this.$confirm('此操作将永久删除该作品, 是否继续?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning',
+                center:true,
+                }).then(() => {
+                    axios.get('/deletework/',{params:{work_id:id}})
+                    .then(res=>{
+                            if(res.status==200){
+                                this.techworkList.splice(n, 1);
+                                this.$message({
+                                    type:'info',
+                                    message:'删除成功！'
+                                });
+                            }
+                            else{
+                                this.$message.error("删除失败！只有第一作者才能删除作品！");
+                            }
+                        })
+                    .catch(err => {
+                        console.error(err);
+                        });
+                })
             }
         },
-        editWork(n) {    // 删除
+        editWork(n) {    // 编辑
             window.location="/techworksubmit/?workid="+this.techworkList[n].work_id;
+        },
+        handleCurrentChange(val) {
+            window.open("/techworklist?page="+val,"_self");
         },
     }
 })
