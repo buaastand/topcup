@@ -87,7 +87,6 @@ def CompetitionDetail(request):
             }
         )
     context['defenseworklist']=defense_WorkList_ret
-
     return render(request,"../templates/CompetitionDetail.html",context)
 
 def CompetitionUpdate():

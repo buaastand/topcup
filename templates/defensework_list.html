@@ -53,7 +53,7 @@
             <el-table-column
                     label="作品名称"
                     prop="title"
-                    width="400"
+                    width="300"
                     column-key="title"
                     sortable
                     show-overflow-tooltip>
@@ -72,12 +72,13 @@
                     column-key="field"
                     :filters="fieldFilters"
                     :filter-method="filterHandler"
+                    width="150"
             >
             </el-table-column>
             <el-table-column
                     prop="avgscore"
                     label="评分"
-                    width="60">
+                    sortable>
             </el-table-column>
         </el-table>
     </div>
@@ -135,12 +136,13 @@
                         column-key="field"
                         :filters="fieldFilters"
                         :filter-method="filterHandler"
+                        width="120"
                 >
                 </el-table-column>
                 <el-table-column
                         prop="avgscore"
                         label="评分"
-                        width="60">
+                        sortable>
                 </el-table-column>
             </el-table>
         </div>
@@ -236,6 +238,11 @@
                     .post("/defense_work/",JSON.stringify(this.wmultipleSelection),{headers: {'X-CSRFtoken':'{{ csrf_token }}'}})
                     .then(res=>{
                         console.log(res)
+                        if(res.status==200)
+                        {
+                            this.$message.success('发布成功！');
+                            window.open('/defense_work/?cptid='+{{ cpt_id }},"_self");
+                        }
                     })
                     .catch(res=>{
                     });

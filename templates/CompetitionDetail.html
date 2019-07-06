@@ -102,6 +102,9 @@
             <el-button type="text" style="text-decoration:underline" >评价作品</el-button>
             {% endif %}
             {% if useridentity == 3 %}
+                {% if status_type == '3' %}
+                    <el-button type="text" style="text-decoration:underline" @click="DefenseChoose({{ cptDetail.id }})">遴选答辩名单</el-button>
+                {% endif %}
             <el-button type="text" style="text-decoration:underline" @click="CptChange({{ cptDetail.id }})">管理比赛</el-button>
             {% endif %}
         </div>
@@ -129,7 +132,10 @@
             },
             CptChange(val){
                 window.open('/cptchange/?cptid='+val,"_self")
-            }
+            },
+            DefenseChoose(val){
+                window.open('/defense_work/?cptid='+val,"_self")
+            },
         }
     })
 </script>

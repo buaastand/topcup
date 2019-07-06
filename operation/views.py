@@ -338,18 +338,19 @@ class DefenseWorkListView(View):
     展示待遴选作品列表
     """
     def get(self,request):
-        cpt_id = request.GET.get('cpt_id','')
-        worklist_origin = WorkInfo.objects.all().exclude(work_id__in=
-            Review.objects.all().values_list('work_id', flat=True))
+        cpt_id = request.GET['cptid']
+        print(cpt_id)
+        Cpt=Competition.objects.get(id=cpt_id)
+        worklist_origin = WorkInfo.objects.filter(registration__competition=Cpt)
         #求每个作品的平均分并填表
-        scorelist=Review.objects.values('work').annotate(avgscore=Avg('score')).values("work","avgscore")
-        worklist=WorkInfo.objects.all()
-        for i in worklist:
-            try:
-                i.avg_score=Decimal(scorelist.get(work = i)['avgscore']).quantize(Decimal('0.00'))
-            except:
-                i.avg_score = 0
-            i.save()
+        # scorelist=Review.objects.values('work').annotate(avgscore=Avg('score')).values("work","avgscore")
+        # worklist=WorkInfo.objects.all()
+        # for i in worklist:
+        #     try:
+        #         i.avg_score=Decimal(scorelist.get(work = i)['avgscore']).quantize(Decimal('0.00'))
+        #     except:
+        #         i.avg_score = 0
+        #     i.save()
 
 
             # i.avg_score=scorelist.filter('work' == i.work_id)
@@ -370,15 +371,16 @@ class DefenseWorkListView(View):
         }
         worklist_ret = []
         for work in worklist_origin:
-            worklist_ret.append({
-                'work_id':work.work_id,
-                'title':work.title,
-                'work_type':WORKTYPE_MAP[work.work_type],
-                'field':FIELD_MAP[work.field],
-                'avgscore':work.avg_score
-            })
+            if work.if_defense==0:
+                worklist_ret.append({
+                    'work_id':work.work_id,
+                    'title':work.title,
+                    'work_type':WORKTYPE_MAP[work.work_type],
+                    'field':FIELD_MAP[work.field],
+                    'avgscore':work.avg_score
+                })
         user_name,user_identity = GetUserIdentitiy(request)
-        return render(request,'defensework_list.html',{ 'worklist':worklist_ret , 'useridentity':user_identity,'username':user_name})
+        return render(request,'defensework_list.html',{ 'worklist':worklist_ret , 'useridentity':user_identity,'username':user_name,'cpt_id':cpt_id})
 
     def post(self,request):
         defenseWorkList=json.loads(request.body)
