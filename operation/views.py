@@ -317,6 +317,15 @@ class ExptTreetableView(View):
                     'expert_state': review_i.review_status,
                     'works':[]
                 }
+                expt_tree_ret[temp_expt_id]['works'].append(
+                    {
+                        'work_id': review_i.work.work_id,
+                        'work_name': review_i.work.title,
+                        'work_type':review_i.work.work_type,
+                        'work_field': review_i.work.field,
+                        'review_state': review_i.review_status,
+                    }
+                )
         
         #字典转换为列表
         expt_tree_ret = list(expt_tree_ret.values())
@@ -358,16 +367,17 @@ class ReassignExpertView(View):
             new_expert = Expert.objects.filter(user__id=new_expert_id)
             origin_expert = Expert.objects.filter(user__id=origin_expert_id)
 
-            try:
-                for work_id in originExpert_work[origin_expert_id]:
-                    review = Review.objects.filter(Q(expert=origin_expert) & Q(work__work_id=work_id))
-                    review.expert = new_expert
-                    review.review_status = 0
-                    review.save()
-            except:
-                return JsonResponse({'Message':1})
-                pass
+            # try:
+            for work_id in originExpert_work[origin_expert_id]:
+                review = Review.objects.get(Q(expert=origin_expert) & Q(work__work_id=work_id))
                 
+                review.expert = new_expert
+                review.review_status = 0
+                review.save()
+            # except:
+            #     return JsonResponse({'Message':1})
+            #     pass
+
         # ref：https://www.cnblogs.com/lovealways/p/6701662.html
         # import smtplib
         # from email.mime.text import MIMEText
