@@ -67,9 +67,14 @@ urlpatterns = [
     path('submitReview/',Opt.sumbitReview),
     path('nextReviewWork/',Opt.NextReviewWork),
 
+
     path('work_list/', Opt.ExpertReviewListView.as_view()),
     path('work_review/', Opt.ExpertReviewView.as_view()),
     #re_path(r'^static/(?P<path>.*)$', serve, {"document_root":STATIC_ROOT}),
+
+    path('check_work/', Opt.CheckWorkListView.as_view()),
+    path('check_work/work_info/', Tch.work_info),
+    path('check_work/check_info/', Tch.checkWork),
 
     path('assign_work/', AssignWorkListView.as_view()),
     path('assign_expert/', AssignExpertView.as_view()),

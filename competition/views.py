@@ -239,6 +239,8 @@ def CompetitionChange(request):
     context = {}
     cptDetail = Competition.objects.get(id = request.GET['cptid'])
 
+    print(cptDetail.init_date)
+
     context = {'cptDetail': cptDetail}
     context['username'] = user_name
     context['useridentity'] = user_identity
@@ -256,19 +258,23 @@ def CompetitionChangePost(request):
     defense_end_date = request.POST.get('defense_end_date')
     finish_date = request.POST.get('finish_date')
 
+    print(init_date)
+    print(type(init_date))
+
     try:
-        if init_date:
-            cptDetail.init_date = init_date
-        if submit_end_date:
-            cptDetail.submit_end_date = submit_end_date
-        if check_end_date:
-            cptDetail.check_end_date = check_end_date
-        if review_end_date:
-            cptDetail.review_end_date = review_end_date
-        if defense_end_date:
-            cptDetail.defense_end_date = defense_end_date
-        if finish_date:
-            cptDetail.finish_date = finish_date
+        # cptDetail.init_date = init_date
+        # cptDetail.submit_end_date = submit_end_date
+        # cptDetail.check_end_date = check_end_date
+        # cptDetail.review_end_date = review_end_date
+        # cptDetail.defense_end_date = defense_end_date
+        # cptDetail.finish_date = finish_date
+
+        cptDetail.init_date = datetime.datetime.strptime(init_date, "%Y-%m-%d")
+        cptDetail.submit_end_date = datetime.datetime.strptime(submit_end_date, "%Y-%m-%d")
+        cptDetail.check_end_date = datetime.datetime.strptime(check_end_date, "%Y-%m-%d")
+        cptDetail.review_end_date = datetime.datetime.strptime(review_end_date, "%Y-%m-%d")
+        cptDetail.defense_end_date = datetime.datetime.strptime(defense_end_date, "%Y-%m-%d")
+        cptDetail.finish_date = datetime.datetime.strptime(finish_date, "%Y-%m-%d")
         cptDetail.save()
     except:
         return JsonResponse({'Message': 0})
