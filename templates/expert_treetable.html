@@ -22,12 +22,7 @@
     
     <div id="ExptreviewList" style="width: 100%">
         <div class="buttonArea">
-            <el-radio-group v-model="tabPosition">
-                <el-radio-button label="expt">专家视图</el-radio-button>
-                <el-radio-button label="work">作品视图</el-radio-button>
-                <el-radio-button onclick="window.open('../exptreview_list/','_self')" label="expnd">平铺视图</el-radio-button>
-            </el-radio-group>
-            <el-button style="float:right; margin-right: 20px" type="primary" @click="changeExpert">为选中的分配替换评审人</el-button>
+            <el-button type="primary" @click="changeExpert">为选中的分配替换评审人</el-button>
         </div>
         
         <div class="tableArea">
@@ -398,6 +393,7 @@
                         }
                         else{
                             this.$message.error('分配失败！');
+                            window.open('../assign_work/', '_self');
                         }
                         this.loading = false;
                     })
