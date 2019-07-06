@@ -743,7 +743,9 @@ class InvitationView(View):
         acc = data[2]
         cpt = Competition.objects.get(id=cpt_id)
         expert = Expert.objects.get(user__id=expert_id)
-        if len(Review.objects.filter(expert=expert, work__registration__competition=cpt).exclude(review_status=0)):
+        review_temp = Review.objects.filter(
+            Q(expert=expert) & Q(work__registration__competition=cpt) & ~Q(review_status=0))
+        if len(review_temp):
             return render(request, 'expired.html')
         if acc == 0:
             finded_reviews = Review.objects.filter(expert__user__id=expert_id, work__registration__competition__id=cpt_id)
@@ -757,7 +759,8 @@ class InvitationView(View):
             for review in finded_reviews:
                 review.review_status = 2
                 review.save()
-            return render(request, "login.html", { 'expert_email': expert.user.email ,'expert_activated':~expert.activated})
+            return render(request, "login.html", {'expert_email': expert.user.email,
+                                                  'expert_activated': ('false' if expert.activated else 'true')})
 
     def decode_data(self, hash, enc):
         """The inverse of `encode_data`."""
