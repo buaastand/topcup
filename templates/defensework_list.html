@@ -238,10 +238,13 @@
                     .post("/defense_work/",JSON.stringify(this.wmultipleSelection),{headers: {'X-CSRFtoken':'{{ csrf_token }}'}})
                     .then(res=>{
                         console.log(res)
-                        if(res.status==200)
+                        if(res.status==200 && res.data.Message == 0)
                         {
                             this.$message.success('发布成功！');
                             window.open('/defense_work/?cptid='+{{ cpt_id }},"_self");
+                        }
+                        else {
+                            this.$message.success('发布失败！');
                         }
                     })
                     .catch(res=>{

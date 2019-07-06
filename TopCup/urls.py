@@ -36,6 +36,7 @@ urlpatterns = [
     path('competitiondetail/', Cpt.CompetitionDetail),
     path('index/', Cpt.CompetitionList),
     path('competitionlist/', Cpt.CompetitionList),
+    path('workdefensechange/',Cpt.WorkdefenseChange),
     path('techworklist/', Tch.TechWorkListView.as_view()),
     path('techworksubmit/', Tch.TechWorkView.as_view()),
     path('generatepdf/',Tch.generatePdf),
