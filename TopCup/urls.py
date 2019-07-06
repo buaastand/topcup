@@ -28,6 +28,7 @@ import techworks.views as Tch
 import operation.views as Opt
 from django.views.generic import RedirectView
 
+from operation.views import AssignWorkListView, AssignExpertView, ReassignExpertView
 from operation.views import AssignWorkListView,AssignExpertView,DefenseWorkListView
 
 urlpatterns = [
@@ -85,6 +86,7 @@ urlpatterns = [
     path('review_exptree/', ExptTreetableView.as_view()),
 
     path('final_result/', Cpt.CompetitionFinalResult.as_view()),
+    path('reassign_expet/', ReassignExpertView.as_view()),
 ]
 
 #urlpatterns += staticfiles_urlpatterns()
