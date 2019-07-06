@@ -20,8 +20,15 @@ import json
 
 # Create your views here.
 def DownLoadZip(request):
-    review = Review.objects.get(id = request.GET.get('id'))
-    work = WorkInfo.objects.get(id=review.work_id)
+    status = request.GET.get('status')
+    if status == '0':
+        review = Review.objects.get(id = request.GET.get('id'))
+        work = WorkInfo.objects.get(id=review.work_id)
+        id = review.id
+    else:
+        work = WorkInfo.objects.get(id = request.GET.get('id'))
+        id = work.work_id
+
     appendix_list = Appendix.objects.filter(work__work_id=work.work_id)
     temp = tempfile.TemporaryFile()
     archive = zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED)
@@ -34,8 +41,47 @@ def DownLoadZip(request):
     temp.seek(0)
     wrapper = FileWrapper(temp)
     response = HttpResponse(wrapper, content_type='application/zip')
-    filename = str(review.id) + '_' + work.title + '.zip'
+    filename = str(id) + '_' + work.title + '.zip'
     response['Content-Disposition'] = "attachment; filename*=utf-8''{}".format(escape_uri_path(filename))  # 压缩包名称有问题
+    response['Content-Length'] = data
+    return response
+
+
+def DownloadBatchZip(request):
+    status = request.GET.get('status')
+    work_list = []
+    id_list = []
+    if status == '0':
+        id_list = json.loads(request.GET.get('id_list'))
+        for id in id_list:
+            review = Review.objects.get(id=id)
+            work_list.append(WorkInfo.objects.get(id=review.work_id))
+
+    else:       # !!!
+        work = WorkInfo.objects.get(id = request.GET.get('id'))
+        id = work.work_id
+
+    Temp = tempfile.TemporaryFile()
+    Archive = zipfile.ZipFile(Temp, 'w', zipfile.ZIP_DEFLATED)
+    for work in work_list:
+        appendix_list = Appendix.objects.filter(work__work_id=work.work_id)
+        temp = tempfile.TemporaryFile(dir=MEDIA_ROOT+'\\compressed', delete=False)
+        archive = zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED)
+        for appendix in appendix_list:
+            target_file = os.path.join(MEDIA_ROOT, str(appendix.file)).replace('\\', '/')
+            archive.write(target_file, appendix.filename)
+        archive.close()
+        temp.seek(0)
+        target_file = os.path.join(MEDIA_ROOT + '/compressed', str(temp.name)).replace('\\', '/')
+        Archive.write(target_file, str(work.title)+'.zip')
+
+    Archive.close()
+    data = Temp.tell()
+    Temp.seek(0)
+    wrapper = FileWrapper(Temp)
+    response = HttpResponse(wrapper, content_type='application/zip')
+    filename = 'TopCup作品集.zip'
+    response['Content-Disposition'] = "attachment; filename*=utf-8''{}".format(escape_uri_path(filename))
     response['Content-Length'] = data
     return response
 
@@ -305,6 +351,7 @@ class AssignExpertView(View):
                 pass
         s.quit()
         return JsonResponse({'Message':0})
+
 
 class ExptreviewListView(View):
     """

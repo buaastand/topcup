@@ -62,6 +62,7 @@ urlpatterns = [
 
     path('reviewworklist/', Opt.ExpertReviewListView.as_view()),
     path('downloadZip/', Opt.DownLoadZip),
+    path('downloadBatchZip/',Opt.DownloadBatchZip),
     path('judge/', Opt.Judge),
     path('submitReview/',Opt.sumbitReview),
     path('nextReviewWork/',Opt.NextReviewWork),
