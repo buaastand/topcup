@@ -206,6 +206,7 @@
       },
 
       nextReviewWork(){     // 下一个
+          this.$options.methods.reviewWork.bind(this)();
           axios.get('/nextReviewWork/', {params: {id: {{id}} }})
           .then(response => {
               if(response.data['nextid'] === 0){

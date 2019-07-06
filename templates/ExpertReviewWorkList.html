@@ -16,7 +16,7 @@
 <body style="margin: 0; background: #F5F7FA">
 {% include 'NavMenu.html' %}
 <div id="expert_reviewlist" class="background" style="height: 800px; width: 1200px;">
-    <el-container>
+    <el-container v-loading.fullscreen.lock="fullscreenLoading">
         <el-header>
             <h1 style="font-weight: bold">
                 评审任务
@@ -155,6 +155,7 @@
         dialogTableVisible: false,
         dialogFormVisible: false,
         multipleSelection: [],
+        fullscreenLoading: false
     },
     methods: {
         opendialog(id, score,comment){
@@ -215,18 +216,22 @@
         },
 
         submitReview(){     //提交
+            this.fullscreenLoading = true;
             axios.get('/submitReview/')
             .then(response => {
                 console.log(response);
                 if(response.data['status'] === 1) {
+                     this.fullscreenLoading = false;
                     this.$message.success('提交成功: 感谢您对本次比赛的支持与帮助！');
                     window.location.href = "/reviewworklist/";
                 }
-                else
+                else{
+                    this.fullscreenLoading = false;
                     this.$message.error('提交失败: 请完成所以评审任务后再提交');
-
+                }
             })
             .catch(error => {
+                this.$message.error('提交失败: 请完成所以评审任务后再提交');
                 this.$message.error('网络异常：提交失败');
                 console.log(error);
             });
