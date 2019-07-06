@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>科技竞赛平台</title>
+    <!-- 引入vue.js,axios.js -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+    <script src="https://cdn.staticfile.org/vue-resource/1.5.1/vue-resource.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <!-- 引入element.ui-->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+    <!-- 引入css-->
+    <link rel="stylesheet" href="../static/css/NavName.css">
+    <link rel="stylesheet" href="../static/css/assignwork_list.css" type="text/css">
+</head>
+
+<body style="margin: 0; background: #F5F7FA">
+{% include 'NavMenu.html' %}
+
+<div id="AssignworkList" style="width: 100%">
+    <div class="buttonArea">
+        <el-button type="primary" @click="selectDefense">发布现场答辩名单</el-button>
+    </div>
+
+    <div class="tableArea">
+        <el-table
+                ref="multipleTable"
+                :data="displayWork"
+                tooltip-effect="light"
+                style="width: 1000px;"
+                @selection-change="whandleSelectionChange"
+                @filter-change="test"
+        >
+            <el-table-column
+                    type="selection"
+                    width="40">
+            </el-table-column>
+            <el-table-column
+                    type="index"
+                    label="序号"
+                    width="60">
+            </el-table-column>
+            <el-table-column
+                    label="作品ID"
+                    prop="work_id"
+                    width="120"
+                    column-key="work_id"
+                    sortable>
+            </el-table-column>
+            <el-table-column
+                    label="作品名称"
+                    prop="title"
+                    width="300"
+                    column-key="title"
+                    sortable
+                    show-overflow-tooltip>
+            </el-table-column>
+            <el-table-column
+                    label="作品类别"
+                    prop="work_type"
+                    column-key="work_type"
+                    :filters="typeFilters"
+                    :filter-method="filterHandler"
+                    width="200">
+            </el-table-column>
+            <el-table-column
+                    label="作品领域"
+                    prop="field"
+                    column-key="field"
+                    :filters="fieldFilters"
+                    :filter-method="filterHandler"
+                    width="150"
+            >
+            </el-table-column>
+            <el-table-column
+                    prop="avgscore"
+                    label="评分"
+                    sortable>
+            </el-table-column>
+        </el-table>
+    </div>
+
+    <div style="width:100%; margin-top: 10px; text-align: center">
+        <el-pagination
+                @size-change="whandleSizeChange"
+                @current-change="whandleCurrentChange"
+                :current-page="currentWorkPage"
+                :page-sizes="[10, 30, 100, totalWork]"
+                :page-size="workPageSize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="totalWork">
+        </el-pagination>
+    </div>
+
+    <el-dialog
+            title="发布现场答辩名单"
+            :visible.sync="dialogVisible"
+            width="800px"
+            :before-close="handleClose"
+            v-loading="loading">
+        <div style="width: 740px; margin:0 auto 0 auto">
+            <el-table ref="multipleTable"
+                      :data="wmultipleSelection"
+                      tooltip-effect="light"
+                      style="width: 740px"
+                      max-height="100%">
+                <el-table-column
+                        label="作品ID"
+                        prop="work_id"
+                        width="120"
+                        column-key="work_id"
+                        sortable>
+                </el-table-column>
+                <el-table-column
+                        label="作品名称"
+                        prop="title"
+                        width="200"
+                        column-key="title"
+                        sortable
+                        show-overflow-tooltip>
+                </el-table-column>
+                <el-table-column
+                        label="作品类别"
+                        prop="work_type"
+                        column-key="work_type"
+                        :filters="typeFilters"
+                        :filter-method="filterHandler"
+                        width="200">
+                </el-table-column>
+                <el-table-column
+                        label="作品领域"
+                        prop="field"
+                        column-key="field"
+                        :filters="fieldFilters"
+                        :filter-method="filterHandler"
+                        width="120"
+                >
+                </el-table-column>
+                <el-table-column
+                        prop="avgscore"
+                        label="评分"
+                        sortable>
+                </el-table-column>
+            </el-table>
+        </div>
+        <span slot="footer" class="dialog-footer">
+            <el-button @click="dialogVisible = false">取消</el-button>
+            <el-button type="primary" @click="sendDefenseList">确认发布</el-button>
+        </span>
+    </el-dialog>
+</div>
+
+<script>
+    const ALL_WORK_TYPE = ['科技发明制作', '调查报告和学术论文'];
+    const ALL_FIELD = ['A', 'B', 'C', 'D', 'E', 'F'];
+    var assList = new Vue({
+        el: '#AssignworkList',
+        data: {
+            dialogVisible: false,
+            loading: false,
+
+            workFilters: {
+                'work_type': ALL_WORK_TYPE,
+                'field': ALL_FIELD
+            },
+
+            workTableData: {{ worklist | safe }},
+            filterWork: {{ worklist | safe }},
+            currentWorkPage: 1,
+            workPageSize: 10,
+
+
+            wmultipleSelection: [],
+
+            typeFilters: [{text: '科技发明制作', value: '科技发明制作'},
+                {text: '调查报告和学术论文', value: '调查报告和学术论文'}],
+
+            fieldFilters: [{text: 'A', value: 'A'}, {text: 'B', value: 'B'},
+                {text: 'C', value: 'C'}, {text: 'D', value: 'D'},
+                {text: 'E', value: 'E'}, {text: 'F', value: 'F'}]
+        },
+        computed: {
+            displayWork: function () {
+                return this.filterWork.slice((this.currentWorkPage - 1) * this.workPageSize, this.currentWorkPage * this.workPageSize);
+            },
+            totalWork: function () {
+                return this.filterWork.length;
+            }
+        },
+        methods: {
+            wtoggleSelection(rows) {
+                if (rows) {
+                    rows.forEach(row => {
+                        this.$refs.wmultipleTable.toggleRowSelection(row);
+                    });
+                } else {
+                    this.$refs.wmultipleTable.clearSelection();
+                }
+            },
+            whandleSelectionChange(val) {
+                this.wmultipleSelection = val;
+            },
+            etoggleSelection(rows) {
+                if (rows) {
+                    rows.forEach(row => {
+                        this.$refs.emultipleTable.toggleRowSelection(row);
+                    });
+                } else {
+                    this.$refs.emultipleTable.clearSelection();
+                }
+            },
+            ehandleSelectionChange(val) {
+                this.emultipleSelection = val;
+            },
+            filterHandler(value, row, column) {
+                const property = column['property'];
+                return row[property] === value;
+            },
+            whandleSizeChange(val) {
+                this.workPageSize = val;
+            },
+            whandleCurrentChange(val) {
+                this.currentWorkPage = val;
+            },
+            selectDefense() {
+                if (this.wmultipleSelection.length > 0) {
+                    this.dialogVisible = true;
+                } else {
+                    this.$message.error('请至少选择一个参赛作品！');
+                }
+            },
+            sendDefenseList() {
+                console.log(this.wmultipleSelection);
+                axios
+                    .post("/defense_work/",JSON.stringify(this.wmultipleSelection),{headers: {'X-CSRFtoken':'{{ csrf_token }}'}})
+                    .then(res=>{
+                        console.log(res)
+                        if(res.status==200 && res.data.Message == 0)
+                        {
+                            this.$message.success('发布成功！');
+                            window.open('/defense_work/?cptid='+{{ cpt_id }},"_self");
+                        }
+                        else {
+                            this.$message.success('发布失败！');
+                        }
+                    })
+                    .catch(res=>{
+                    });
+            },
+            test(filters) {
+                // console.log(this.workTableData);
+                this.filterWork = [];
+                var filtered;
+
+                if (filters['work_type']) {
+                    if (filters['work_type'].length == 0) {
+                        this.workFilters['work_type'] = ALL_WORK_TYPE;
+                    } else this.workFilters['work_type'] = filters['work_type'];
+                }
+                if (filters['field']) {
+                    if (filters['field'].length == 0) {
+                        this.workFilters['field'] = ALL_FIELD;
+                    } else this.workFilters['field'] = filters['field'];
+                }
+
+                for (var i = 0; i < this.workTableData.length; i++) {
+                    filtered = 0;
+                    for (var j = 0; j < this.workFilters['work_type'].length; j++) {
+                        if (this.workTableData[i]['work_type'] == this.workFilters['work_type'][j]) {
+                            filtered = 1;
+                            break;
+                        }
+                    }
+
+                    if (filtered == 1) {
+                        for (var j = 0; j < this.workFilters['field'].length; j++) {
+                            if (this.workTableData[i]['field'] == this.workFilters['field'][j]) {
+                                this.filterWork.push(this.workTableData[i])
+                                break;
+                            }
+                        }
+                    }
+                }
+                //console.log(filters);
+                this.currentWorkPage = 1;
+                // console.log(this.workTableData);
+            }
+        },
+        delimiters: ["{[", "]}"]
+    });
+
+</script>
+</body>
+
+</html>

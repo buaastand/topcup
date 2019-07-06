@@ -1,23 +1,22 @@
 
 import json
 
-from users.models import Expert
-from users import models
+import xlrd  # excel读工具
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.backends import ModelBackend
+from django.contrib.auth.hashers import make_password
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-import xlrd #excel读工具
+from django.db.models import Q
+from django.http import HttpResponseRedirect, JsonResponse
 # Create your views here.
 from django.shortcuts import render
-from django.contrib.auth import authenticate,login,logout
-from django.contrib.auth.backends import ModelBackend
-from django.db.models import Q
-from django.views.generic.base import View
-from django.contrib.auth.hashers import make_password
-from django.http import HttpResponse,HttpResponseRedirect,JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.urls import reverse
+from django.views.generic.base import View
 
-from .models import BaseUser,Student
-from .forms import RegisterForm,LoginForm,ModifyPwdForm
+from users import models
+from users.models import Expert
+from .forms import RegisterForm, LoginForm, ModifyPwdForm
+from .models import BaseUser, Student
 
 class UserBackend(ModelBackend):
     """
@@ -152,21 +151,36 @@ class UpdatePwdView(View):
     def post(self,request):
         form2check = json.loads(request.body)
         form2check = {
-            "pwd1":form2check["new_password"],
-            "pwd2":form2check["new_password2"]
+            'pwd0':form2check['old_password'],
+            'pwd1':form2check['new_password'],
+            'pwd2':form2check['new_password2'],
         }
         modify_form = ModifyPwdForm(form2check)
+        re_dict = dict()
+        user = request.user
         if modify_form.is_valid():
-           pwd1 = modify_form.data.get('pwd1','')
-           pwd2 = modify_form.data.get('pwd2','')
-           if pwd1 != pwd2:
-               return HttpResponse("{'status':'fail','msg':'密码不一致'}",content_type='application/json')
-           user = request.user
-           user.password = make_password(pwd2)
-           user.save()
-           return HttpResponse("{'status':'success'}",content_type='application/json')
+            pwd0 = modify_form.data.get('pwd0','')
+            pwd1 = modify_form.data.get('pwd1','')
+            pwd2 = modify_form.data.get('pwd2','')
+            if user.check_password(pwd0):
+                # 原密码正确
+                if pwd1 == pwd2:
+                    user.password = make_password(pwd1)
+                    re_dict['msg'] = True
+                    return JsonResponse(re_dict, safe=False)
+                else:
+                    re_dict['msg'] = False
+                    re_dict['detail'] = '新密码两次输入不一致'
+                    return JsonResponse(re_dict, safe=False)
+            else:
+                # 原密码错误
+                re_dict['msg'] = False
+                re_dict['detail'] = '原密码错误'
+                return JsonResponse(re_dict,safe=False)
         else:
-            return HttpResponse(json.dumps(modify_form.errors),content_type='application/json')
+            re_dict['msg'] = False
+            re_dict['detail'] = '表单验证失败'
+            return JsonResponse(re_dict,safe=False)
 
 
 class SearchStudent(View):
@@ -179,6 +193,8 @@ class SearchStudent(View):
         stu_dict = dict()
         stu_dict['stu'] = query_set
         return JsonResponse(stu_dict,safe=False)
+
+
 class ExpertManage():
     @csrf_exempt
     # 展示专家列表，允许上传文件添加专家，当和数据库中的专家邮箱重复时跳过
@@ -294,3 +310,4 @@ def page_error(request):
     response = render_to_response('500.html',{})
     response.status_code = 500
     return response
+
