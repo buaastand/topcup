@@ -111,6 +111,23 @@ def sumbitReview(request):
         for review in review_list:
             review.review_status = 4
             review.save()
+
+        # update work review status
+        review_list = Review.objects.filter(expert__user_id=user_id)
+        for review in review_list:
+            work_reviews = Review.objects.filter(work=review.work)
+            review_finish = 1
+            if len(work_reviews) < 3:
+                review_finish = 0
+            else:
+                for r in work_reviews:
+                    if r.review_status != 4:
+                        review_finish = 0
+                        break
+            if review_finish == 1:
+                review.work.review_status = 1
+                review.work.save()
+
     ret={'status': status}
     return JsonResponse(ret)
 
