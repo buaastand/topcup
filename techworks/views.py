@@ -136,9 +136,15 @@ def searchstu(request):
 
 def deletework(request):
     work_id = request.GET.get('work_id')
-    work = WorkInfo.objects.filter(work_id=work_id)
-    work.delete()
-    return HttpResponse(status=200)
+    username = request.user.username
+    user_id = Student.objects.get(user__username=username).user_id
+    author_id = CompetitionRegistration.objects.get(workinfo__work_id=work_id).first_auth.user_id
+    if user_id == author_id:
+        work = WorkInfo.objects.filter(work_id=work_id)
+        work.delete()
+        return HttpResponse(status=200)
+    else:
+        return HttpResponse(status=202)
 
 # @login_required(login_url='/login/')
 # @method_decorator(login_required,name='dispatch')
