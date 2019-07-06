@@ -14,22 +14,19 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.views.decorators.csrf import csrf_exempt
+from django.urls import path, re_path
+from django.views.generic import RedirectView
 from django.views.static import serve
-from users.views import LoginView,LogoutView,UpdatePwdView,RegisterView
-from TopCup import settings
-from users.views import ExpertManage
-
-from django.urls import path,re_path
-from operation.views import ExpertReviewView, ExptreviewListView, ExptTreetableView
 
 import competition.views as Cpt
-import techworks.views as Tch
 import operation.views as Opt
-from django.views.generic import RedirectView
-
-from operation.views import AssignWorkListView, AssignExpertView, ReassignExpertView
-from operation.views import AssignWorkListView,AssignExpertView,DefenseWorkListView
+import techworks.views as Tch
+from TopCup import settings
+from operation.views import AssignWorkListView, AssignExpertView, DefenseWorkListView, InvitationView
+from operation.views import ExptreviewListView, ExptTreetableView
+from operation.views import ReassignExpertView
+from users.views import ExpertManage, ExpertInitPasswd
+from users.views import LoginView, LogoutView, UpdatePwdView, RegisterView
 
 urlpatterns = [
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root':settings.MEDIA_ROOT}),
@@ -87,6 +84,9 @@ urlpatterns = [
 
     path('final_result/', Cpt.CompetitionFinalResult.as_view()),
     path('reassign_expet/', ReassignExpertView.as_view()),
+    path('expertpasswdinit/', ExpertInitPasswd),
+
+    path('invitation/', InvitationView.as_view())
 ]
 
 #urlpatterns += staticfiles_urlpatterns()

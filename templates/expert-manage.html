@@ -14,7 +14,7 @@
  <link rel="stylesheet" href="../static/css/NavName.css">
 
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>专家管理|TOPCUP</title>
 </head>
 <body style="margin: 0px;font-size: 14px;color: #606266;">
 {% include "NavMenu.html" %}
@@ -27,17 +27,18 @@
 
 
                 <el-upload
-                class="upload-demo"
-                ref="upload"
-                action=""
-                :on-preview="handlePreview"
-                :on-remove="handleRemove"
-                :before-remove="beforeRemove"
-                multiple
-                :limit="1"
-                :on-exceed="handleExceed"
-                :file-list="fileList"
-                :auto-upload="false">
+                        class="upload-demo"
+                        ref="upload"
+                        action=""
+                        :on-preview="handlePreview"
+                        :on-remove="handleRemove"
+                        :on-success="uploadsuccess"
+                        :before-remove="beforeRemove"
+                        multiple
+                        :limit="1"
+                        :on-exceed="handleExceed"
+                        :file-list="fileList"
+                        :auto-upload="false">
 
                 <el-button slot="trigger" size="small" type="primary" >选择上传</el-button>
                 <div slot="tip" class="el-upload__tip">只能上传xls/xlsx文件</div>
@@ -172,15 +173,19 @@
       };
     },
     methods: {
+        uploadsuccess(response, file, filelist) {
+            window.location.reload();
+            console.log('uploadsuccess');
+        },
         downloadTemplate() {
         window.location.href="/static/expertInfoTemplate/expertInfoTemplate.xlsx"
       },
         submitUpload() {
         this.$refs.upload.submit();
         this.dialogTableVisible = false;
-        setTimeout(function () {
-                    window.location.reload();
-                }, 500);
+            /*setTimeout(function () {
+                        window.location.reload();
+                    }, 500);*/
       },
       handleSelect(key, keyPath) {
         console.log(key, keyPath);
@@ -223,22 +228,26 @@
       delete_info() {
         this.$http.post('../expert_delete/',{id:this.expertid},{emulateJSON:true}).then(function(res){
                     console.log(res);
+            window.location.reload();
                 }).catch(function (response) {});
         dialogTableVisible1 = false;
-        setTimeout(function () {
-                    window.location.reload();
-                }, 500);
       },
         submitForm(formName) {
         this.$refs[formName].validate((valid) => {
           if (valid) {
-              this.$http.post('../expert_change/',{id:this.expertid, changed_email:this.changeForm.email, changed_name:this.changeForm.name, changed_field:this.changeForm.field},{emulateJSON:true}).then(function(res){
-                    console.log(res);}).catch(function (response) {});
-            this.$message.success("修改成功！");
+              this.$http.post('../expert_change/',
+                  {
+                      id: this.expertid,
+                      changed_email: this.changeForm.email,
+                      changed_name: this.changeForm.name,
+                      changed_field: this.changeForm.field
+                  }, {emulateJSON: true}).then(function (res) {
+                  console.log(res);
+                  this.$message.success("修改成功！");
+                  window.location.reload();
+              }).catch(function (response) {
+              });
             dialogTableVisible1 = false;
-            setTimeout(function () {
-                    window.location.reload();
-                }, 500);
           } else {
             console.log('错误提交!');
             return false;

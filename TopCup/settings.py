@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     'users',
     'operation',
     'techworks',
-    'competition'
+    'competition',
 ]
 
 MIDDLEWARE = [
@@ -141,3 +141,12 @@ STATIC_ROOT = "/var/www/static/"
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+#email-config
+sender = 'topcup2019@qq.com'
+passwd = 'kabidqxgdlhghbgi'
+smtp_server = 'smtp.qq.com'
+
+#deamon-notify-config
+hour=6
+minute=0

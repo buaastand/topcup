@@ -6,6 +6,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.hashers import make_password
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponseRedirect, JsonResponse
 # Create your views here.
@@ -106,7 +107,7 @@ class LoginView(View):
     用户登录
     """
     def get(self,request):
-        return render(request,'login.html',{})
+        return render(request, 'login.html', {'expert_activated': 'false'})
 
     def post(self,request):
         dataPOST = json.loads(request.body)
@@ -168,6 +169,7 @@ class UpdatePwdView(View):
                 if pwd1 == pwd2:
                     user.password = make_password(pwd1)
                     re_dict['msg'] = True
+                    user.save()
                     return JsonResponse(re_dict, safe=False)
                 else:
                     re_dict['msg'] = False
@@ -177,11 +179,48 @@ class UpdatePwdView(View):
                 # 原密码错误
                 re_dict['msg'] = False
                 re_dict['detail'] = '原密码错误'
-                return JsonResponse(re_dict,safe=False)
+                return JsonResponse(re_dict, safe=False)
         else:
             re_dict['msg'] = False
             re_dict['detail'] = '表单验证失败'
-            return JsonResponse(re_dict,safe=False)
+            return JsonResponse(re_dict, safe=False)
+
+
+def ExpertInitPasswd(request):
+    form2check = json.loads(request.body)
+    form2check = {
+        'pwd0': form2check['old_password'],
+        'pwd1': form2check['new_password'],
+        'pwd2': form2check['new_password2'],
+    }
+    modify_form = ModifyPwdForm(form2check)
+    re_dict = dict()
+    user = BaseUser.objects.get(username=form2check['pwd0'])
+    # user = request.user
+    if modify_form.is_valid():
+        pwd0 = modify_form.data.get('pwd0', '')
+        pwd1 = modify_form.data.get('pwd1', '')
+        pwd2 = modify_form.data.get('pwd2', '')
+        if user.check_password(pwd0):
+            # 原密码正确
+            if pwd1 == pwd2:
+                user.password = make_password(pwd1)
+                re_dict['msg'] = True
+                user.save()
+                return JsonResponse(re_dict, safe=False)
+            else:
+                re_dict['msg'] = False
+                re_dict['detail'] = '新密码两次输入不一致'
+                return JsonResponse(re_dict, safe=False)
+        else:
+            # 原密码错误
+            re_dict['msg'] = False
+            re_dict['detail'] = '原密码错误'
+            return JsonResponse(re_dict, safe=False)
+    else:
+        re_dict['msg'] = False
+        re_dict['detail'] = '表单验证失败'
+        return JsonResponse(re_dict, safe=False)
 
 
 class SearchStudent(View):
@@ -229,8 +268,12 @@ class ExpertManage():
                         rowVlaues = table.row_values(i)
                         # major = models.Expert.objects.filter(name=rowVlaues[0]).first()
                         email = rowVlaues[0]
-                        user = models.BaseUser.objects.create(type=3, email=email, username=email, password=make_password(email))
-                        models.Expert.objects.create(user=user, name=rowVlaues[1], field=int(rowVlaues[2]))
+                        with transaction.atomic():
+                            user = models.BaseUser.objects.create(type=3, email=email, username=email,
+                                                                  password=make_password(email))
+                            user.save()
+                            expert = models.Expert.objects.create(user=user, name=rowVlaues[1], field=int(rowVlaues[2]))
+                            expert.save()
                     except Exception as e:
                         print('解析excel文件或者数据插入错误')
                         print(e)
@@ -282,7 +325,9 @@ class ExpertManage():
         if request.method == 'POST':
             id = request.POST.get('id')
             try:
-                models.Expert.objects.get(user_id=id).delete()
+                expert = models.Expert.objects.get(user_id=id)
+                expert.user.delete()
+                expert.delete()
             except:
                 return JsonResponse({'Message': "删除失败"})
             return JsonResponse({'Message': "删除成功"})
@@ -311,3 +356,4 @@ def page_error(request):
     response = render_to_response('500.html',{})
     response.status_code = 500
     return response
+

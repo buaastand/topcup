@@ -61,7 +61,7 @@ def work_info(request):
         firstAuthor['birthdate'] = firstAuthor['birthdate'] + "0" + str(workFirstAuthorInfo.birthdate.month)
     else:
         firstAuthor['birthdate'] = firstAuthor['birthdate'] + str(workFirstAuthorInfo.birthdate.month)
-    firstAuthor['degree'] = DEGREE[workFirstAuthorInfo.degree]
+    firstAuthor['degree'] = DEGREE[workFirstAuthorInfo.degree - 1]
     firstAuthor['major'] = workFirstAuthorInfo.major
     firstAuthor['enroll_time'] = str(workFirstAuthorInfo.enroll_time)
     firstAuthor['address'] = workFirstAuthorInfo.address
@@ -120,6 +120,7 @@ def work_info(request):
     information['useridentity'] = user_identity
     information['firstAuthor'] = firstAuthor
     information['nextid'] = nextid
+    information['cptid'] = workAuthor.competition.id
 
     return render(request, '../templates/viewWorkInfo.html', information)
 
@@ -216,6 +217,12 @@ class TechWorkListView(View):
 
 class TechWorkView(View):
     def get(self, request):
+        DEGREE_MAP = {
+            1:'大专',
+            2:'大学本科',
+            3:'硕士研究生',
+            4:'博士研究生'
+        }
         work_id = request.GET.get('workid', None)
         comptition_id = request.GET.get('cptid', None)
         username = request.user.username
@@ -259,7 +266,7 @@ class TechWorkView(View):
             for auth in company:
                 company_ret.append({"stu_id": auth.stu_id,
                                     "name": auth.name,
-                                    "degree": auth.degree,
+                                    "degree": DEGREE_MAP[auth.degree],
                                     "phone": auth.phone,
                                     "email": auth.user.email})
             if work.work_type == 1:

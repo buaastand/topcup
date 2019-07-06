@@ -1,9 +1,14 @@
 # -*-coding:utf-8 -*-
+import base64
 import datetime
+import hashlib
 import json
 import os
+import pickle
 import tempfile
+import urllib
 import zipfile
+import zlib
 from wsgiref.util import FileWrapper
 
 from django.core.paginator import Paginator
@@ -11,15 +16,11 @@ from django.db import transaction
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
-from django.views.decorators.csrf import csrf_exempt
-from django.views.generic.base import View
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-import datetime, zipfile, tempfile, os
-from wsgiref.util import FileWrapper
 from django.utils.encoding import escape_uri_path
 from django.views.generic.base import View
 
 from TopCup.settings import MEDIA_ROOT
+from TopCup.settings import sender, passwd, smtp_server, hour, minute
 from competition.models import Competition
 from competition.views import GetUserIdentitiy
 from techworks.models import WorkInfo, Appendix
@@ -34,8 +35,10 @@ class CheckWorkListView(View):
     展示待评审作品列表
     """
     def get(self,request):
-        cpt_id = request.GET.get('cpt_id','')
-        worklist_origin = WorkInfo.objects.filter(check_status=-1)
+        cpt_id = request.GET.get('cptid','')
+        print(cpt_id)
+        worklist_origin = WorkInfo.objects.filter(registration__competition=Competition.objects.get(id=cpt_id), check_status=-1)
+
         # to do: 1.属于某个比赛的作品 2.
         WORKTYPE_MAP = {
             1: "科技发明制作",
@@ -88,7 +91,7 @@ def DownLoadZip(request):
     temp = tempfile.TemporaryFile()
     archive = zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED)
     for appendix in appendix_list:
-        target_file = os.path.join(MEDIA_ROOT, str(appendix.file)).replace('\\', '/')
+        target_file = os.path.join(MEDIA_ROOT, str(appendix.file))
         archive.write(target_file, appendix.filename)
 
     archive.close()
@@ -104,6 +107,8 @@ def DownLoadZip(request):
 
 def DownloadBatchZip(request):
     status = request.GET.get('status')
+    if not os.path.exists(os.path.join(MEDIA_ROOT, 'compressed')):
+        os.mkdir(os.path.join(MEDIA_ROOT, 'compressed'))
     work_list = []
     id_list = json.loads(request.GET.get('id_list'))
     if status == '0':
@@ -118,14 +123,14 @@ def DownloadBatchZip(request):
     Archive = zipfile.ZipFile(Temp, 'w', zipfile.ZIP_DEFLATED)
     for work in work_list:
         appendix_list = Appendix.objects.filter(work__work_id=work.work_id)
-        temp = tempfile.TemporaryFile(dir=MEDIA_ROOT+'\\compressed', delete=False)
+        temp = tempfile.TemporaryFile(dir=os.path.join(MEDIA_ROOT, 'compressed'), delete=False)
         archive = zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED)
         for appendix in appendix_list:
-            target_file = os.path.join(MEDIA_ROOT, str(appendix.file)).replace('\\', '/')
+            target_file = os.path.join(MEDIA_ROOT, str(appendix.file))
             archive.write(target_file, appendix.filename)
         archive.close()
         temp.seek(0)
-        target_file = os.path.join(MEDIA_ROOT + '/compressed', str(temp.name)).replace('\\', '/')
+        target_file = os.path.join(MEDIA_ROOT, '/compressed', str(temp.name))
         Archive.write(target_file, str(work.title)+'.zip')
 
     Archive.close()
@@ -333,20 +338,20 @@ class AssignWorkListView(View):
     """
     def get(self,request):
         cpt_id = request.GET.get('cpt_id','')
-        worklist_origin = WorkInfo.objects.all().exclude(work_id__in=
-            Review.objects.all().values_list('work_id', flat=True))
+        reviewed_worklist = list(Review.objects.all().values_list('work__work_id', flat=True))
+        worklist_origin = WorkInfo.objects.filter(registration__competition__id=cpt_id).exclude(work_id__in=reviewed_worklist)
         # to do: 1.属于某个比赛的作品 2.
         WORKTYPE_MAP = {
             1: "科技发明制作",
             2: "调查报告和学术论文"
         }
         FIELD_MAP = {
-            1: "A",
-            2: "B",
-            3: "C",
-            4: "D",
-            5: "E",
-            6: "F",
+            1: 'A.机械与控制',
+            2: 'B.信息技术',
+            3: 'C.数理',
+            4: 'D.生命科学',
+            5: 'E.能源化工',
+            6: 'F.哲学社会科学'
         }
         worklist_ret = []
         for work in worklist_origin:
@@ -380,10 +385,12 @@ class AssignExpertView(View):
         pass
 
     def post(self,request):
-        expert_list = request.POST.get('selected_expert')
-        expert_list = json.loads(expert_list)
-        work_list = request.POST.get('selected_work')
-        work_list = json.loads(work_list)
+        expert_list = json.loads(request.body)
+        expert_list = expert_list['selected_expert']
+        work_list = json.loads(request.body)
+        work_list = work_list['selected_work']
+        cpt_id = json.loads(request.body)['cpt_id']
+        cpt_title = Competition.objects.get(id=cpt_id).title
 
         for expert_id in expert_list:
             for work_id in work_list:
@@ -403,25 +410,41 @@ class AssignExpertView(View):
         # ref：https://www.cnblogs.com/lovealways/p/6701662.html
         import smtplib
         from email.mime.text import MIMEText
-        sender = 'topcup2019@163.com'
-        passwd = '123456zxcvbn'
-        s = smtplib.SMTP_SSL('smtp.163.com', 465)
+        s = smtplib.SMTP_SSL(smtp_server, 465)
+        # sender = 'topcup2019@163.com'
+        # passwd = '123456zxcvbn'
+        host = request.get_host()
+        # s = smtplib.SMTP_SSL('smtp.163.com', 465)
         s.login(sender, passwd)
         for expert_id in expert_list:
+            arg = [expert_id, cpt_id, 1]
+            hash, enc = self.encode_data(arg)
+            acc_url = 'http://' + host + '/invitation/?hash=' + hash + '&enc=' + enc
+            arg = [expert_id, cpt_id, 0]
+            hash, enc = self.encode_data(arg)
+            def_url = 'http://' + host + '/invitation/?hash=' + hash + '&enc=' + enc
             receiver = Expert.objects.get(user_id=expert_id).user.email
-            subject = '邀请参加'+'\"'+cpt_name+'\"'+'作品评审'
-            content = '这是email内容'
-            msg = MIMEText(content)
+            subject = '邀请参加科技竞赛作品评审'
+            content = "<p>尊敬的" + '\"' + Expert.objects.get(
+                user_id=expert_id).name + '\"' + "：</p>" + "<p>邀请您参与TopCup\"" + cpt_title + "\"作品评审</p>" + "<p><a href=" + acc_url + ">接受</a></p> <p><a href=" + def_url + ">拒绝</a></p>"
+            msg = MIMEText(content, "html", "utf-8")
             msg['Subject'] = subject
             msg['From'] = sender
             msg['To'] = receiver
             try:
-                s.sendmail(sender,receiver,msg.as_string())
+                s.sendmail(sender, receiver, msg.as_string())
             except:
-                return JsonResponse({'Message':1})
+                return JsonResponse({'Message': 1})
                 pass
         s.quit()
-        return JsonResponse({'Message':0})
+        return JsonResponse({'Message': 0})
+
+    def encode_data(self, data):
+        """Turn `data` into a hash and an encoded string, suitable for use with `decode_data`."""
+        compressed_text = zlib.compress(pickle.dumps(data, 0))
+        text = base64.b64encode(compressed_text).decode().replace('\n', '')
+        m = hashlib.md5(str.encode('{}{}'.format('yankun', text))).hexdigest()[:12]
+        return m, text
 
 class ExptreviewListView(View):
     """
@@ -430,12 +453,12 @@ class ExptreviewListView(View):
     def get(self, request):
 
         FIELD_MAP = {
-            1: "A",
-            2: "B",
-            3: "C",
-            4: "D",
-            5: "E",
-            6: "F",
+            1: 'A.机械与控制',
+            2: 'B.信息技术',
+            3: 'C.数理',
+            4: 'D.生命科学',
+            5: 'E.能源化工',
+            6: 'F.哲学社会科学'
         }
 
         cpt_id = request.GET.get('cpt_id','')
@@ -453,12 +476,12 @@ class ExptreviewListView(View):
                     'init_date': str(review_i.add_time),
                     'expert_id': review_i.expert.user.id,
                     'expert_name': review_i.expert.name,
-                    'expert_field': review_i.expert.field,
+                    'expert_field': FIELD_MAP[review_i.expert.field],
                     'email': review_i.expert.user.email,
                     'work_id': review_i.work.work_id,
                     'work_name': review_i.work.title,
                     'work_type':review_i.work.work_type,
-                    'work_field': review_i.work.field,
+                    'work_field': FIELD_MAP[review_i.work.field],
                     'review_state': review_i.review_status
                 }
             )
@@ -544,13 +567,31 @@ class ExptTreetableView(View):
     以专家为主体展示已分配到某个专家的作品列表
     """
     def get(self, request):
+        WORKTYPE_MAP = {
+            1: "科技发明制作",
+            2: "调查报告和学术论文"
+        }
         FIELD_MAP = {
-            1: "A",
-            2: "B",
-            3: "C",
-            4: "D",
-            5: "E",
-            6: "F",
+            1: 'A.机械与控制',
+            2: 'B.信息技术',
+            3: 'C.数理',
+            4: 'D.生命科学',
+            5: 'E.能源化工',
+            6: 'F.哲学社会科学'
+        }
+        EXPERT_STATUS_MAP = {
+            0: '等待响应邮件',
+            1: '已拒绝评审',
+            2: '评审中',
+            3: '评审中',
+            4: '评审已完成',
+        }
+        REVIEW_STATUS_MAP = {
+            0: '等待响应邮件',
+            1: '已拒绝评审',
+            2: '评审中',
+            3: '评审已暂存',
+            4: '评审已提交',
         }
 
         cpt_id = request.GET.get('cpt_id','')
@@ -571,30 +612,31 @@ class ExptTreetableView(View):
                     {
                         'work_id': review_i.work.work_id,
                         'work_name': review_i.work.title,
-                        'work_type':review_i.work.work_type,
-                        'work_field': review_i.work.field,
-                        'review_state': review_i.review_status,
+                        'work_type':WORKTYPE_MAP[review_i.work.work_type],
+                        'work_field': FIELD_MAP[review_i.work.field],
+                        'review_state': REVIEW_STATUS_MAP[review_i.review_status],
                     }
                 )
             else:
-                expt_tree_ret[temp_expt_id] = {
-                    'init_date': str(review_i.add_time),
-                    'expert_id': review_i.expert.user.id,
-                    'expert_name': review_i.expert.name,
-                    'expert_field': review_i.expert.field,
-                    'email': review_i.expert.user.email,
-                    'expert_state': review_i.review_status,
-                    'works':[]
-                }
-                expt_tree_ret[temp_expt_id]['works'].append(
-                    {
-                        'work_id': review_i.work.work_id,
-                        'work_name': review_i.work.title,
-                        'work_type': review_i.work.work_type,
-                        'work_field': review_i.work.field,
-                        'review_state': review_i.review_status,
+                if review_i.review_status != 4:
+                    expt_tree_ret[temp_expt_id] = {
+                        'init_date': str(review_i.add_time),
+                        'expert_id': review_i.expert.user.id,
+                        'expert_name': review_i.expert.name,
+                        'expert_field': FIELD_MAP[review_i.expert.field],
+                        'email': review_i.expert.user.email,
+                        'expert_state': EXPERT_STATUS_MAP[review_i.review_status],
+                        'works':[]
                     }
-                )
+                    expt_tree_ret[temp_expt_id]['works'].append(
+                        {
+                            'work_id': review_i.work.work_id,
+                            'work_name': review_i.work.title,
+                            'work_type': WORKTYPE_MAP[review_i.work.work_type],
+                            'work_field': FIELD_MAP[review_i.work.field],
+                            'review_state': REVIEW_STATUS_MAP[review_i.review_status],
+                        }
+                    )
 
         #字典转换为列表
         expt_tree_ret = list(expt_tree_ret.values())
@@ -624,11 +666,10 @@ class ReassignExpertView(View):
         pass
 
     def post(self,request):
-        originExpert_work = request.POST.get('originExpert_work')
-        originExpert_expt = request.POST.get('originExpert_expt')
-        originExpert_work = json.loads(originExpert_work)
-        originExpert_expt = json.loads(originExpert_expt)
-
+        originExpert_work = json.loads(request.body)['originExpert_work']
+        originExpert_expt = json.loads(request.body)['originExpert_expt']
+        cpt_id = json.loads(request.body)['cpt_id']
+        cpt_title = Competition.objects.get(id=cpt_id).title
         # 为review更换专家
         try:
             for origin_expert_id in originExpert_expt.keys():
@@ -655,22 +696,165 @@ class ReassignExpertView(View):
         # ref：https://www.cnblogs.com/lovealways/p/6701662.html
         import smtplib
         from email.mime.text import MIMEText
-        sender = 'topcup2019@163.com'
-        passwd = '123456zxcvbn'
-        s = smtplib.SMTP_SSL('smtp.163.com', 465)
+        # sender = 'topcup2019@163.com'
+        # passwd = '123456zxcvbn'
+        host = request.get_host()
+        # s = smtplib.SMTP_SSL('smtp.163.com', 465)
+        s = smtplib.SMTP_SSL(smtp_server, 465)
         s.login(sender, passwd)
         for expert_id in originExpert_expt.values():
+            arg = [expert_id, cpt_id, 1]
+            hash, enc = self.encode_data(arg)
+            acc_url = 'http://' + host + '/invitation/?hash=' + hash + '&enc=' + enc
+            arg = [expert_id, cpt_id, 0]
+            hash, enc = self.encode_data(arg)
+            def_url = 'http://' + host + '/invitation/?hash=' + hash + '&enc=' + enc
             receiver = Expert.objects.get(user_id=expert_id).user.email
             subject = '邀请参加科技竞赛作品评审'
-            content = "<p>尊敬的"+'\"'+Expert.objects.get(user_id=expert_id).name+'\"'+"：</p>"+"<p>邀请您参与TopCup科技竞赛作品评审</p>"+"<p><a href=''>接受</a></p> <p><a href=''>拒绝</a></p>"
+            content = "<p>尊敬的" + '\"' + Expert.objects.get(
+                user_id=expert_id).name + '\"' + "：</p>" + "<p>邀请您参与TopCup\"" + cpt_title + "\"作品评审</p>" + "<p><a href=" + acc_url + ">接受</a></p> <p><a href=" + def_url + ">拒绝</a></p>"
             msg = MIMEText(content, "html", "utf-8")
             msg['Subject'] = subject
             msg['From'] = sender
             msg['To'] = receiver
             try:
-                s.sendmail(sender,receiver,msg.as_string())
+                s.sendmail(sender, receiver, msg.as_string())
             except:
-                return JsonResponse({'Message':1})
+                return JsonResponse({'Message': 1})
                 pass
         s.quit()
+        return JsonResponse({'Message': 0})
+
+    def encode_data(self, data):
+        """Turn `data` into a hash and an encoded string, suitable for use with `decode_data`."""
+        compressed_text = zlib.compress(pickle.dumps(data, 0))
+        text = base64.b64encode(compressed_text).decode().replace('\n', '')
+        m = hashlib.md5(str.encode('{}{}'.format('yankun', text))).hexdigest()[:12]
+        return m, text
+
+
+class InvitationView(View):
+    def get(self, request):
+        hash = request.GET.get('hash', '')
+        enc = request.GET.get('enc', '')
+        data = self.decode_data(hash=hash, enc=enc)
+        expert_id = data[0]
+        cpt_id = data[1]
+        acc = data[2]
+        cpt = Competition.objects.get(id=cpt_id)
+        expert = Expert.objects.get(user__id=expert_id)
+        review_temp = Review.objects.filter(
+            Q(expert=expert) & Q(work__registration__competition=cpt) & ~Q(review_status=0))
+        if len(review_temp):
+            return render(request, 'expired.html')
+        if acc == 0:
+            finded_reviews = Review.objects.filter(expert__user__id=expert_id, work__registration__competition__id=cpt_id)
+            for review in finded_reviews:
+                review.review_status = 1
+                review.save()
+            return render(request, 'refuse_review.html')
+        elif acc == 1:
+            expert = Expert.objects.get(user__id=expert_id)
+            finded_reviews = Review.objects.filter(expert=expert, work__registration__competition__id=cpt_id)
+            for review in finded_reviews:
+                review.review_status = 2
+                review.save()
+            return render(request, "login.html", {'expert_email': expert.user.email,
+                                                  'expert_activated': ('false' if expert.activated else 'true')})
+
+    def decode_data(self, hash, enc):
+        """The inverse of `encode_data`."""
+        text = urllib.parse.unquote(enc)
+        m = hashlib.md5(str.encode('{}{}'.format('yankun', text))).hexdigest()[:12]
+        if m != hash:
+            raise Exception("Bad hash!")
+        data = pickle.loads(zlib.decompress(base64.b64decode(text)))
+        return data
         return JsonResponse({'Message':0})
+
+
+def notify_expert():
+    from datetime import date, timedelta
+    one_week_later = date.today() + timedelta(days=24)  # for test
+    one_day_later = date.today() + timedelta(days=1)
+
+    one_week_set = Review.objects.filter(review_status=0,
+                                         work__registration__competition__review_end_date=one_week_later)
+    one_week_expert = {}
+    for review in one_week_set:
+        one_week_expert[review.expert.user.email] = {
+            'expt_name': review.expert.name,
+            'title': review.work.registration.competition.title
+        }
+    # print(23333)
+    # 发邮件
+    import smtplib
+    from email.mime.text import MIMEText
+    s = smtplib.SMTP_SSL(smtp_server, 465)
+    s.login(sender, passwd)
+    for k, v in one_week_expert.items():
+        receiver = k
+        subject = '"' + v['title'] + '"竞赛' + '作品评审提醒'
+        content = '尊敬的' + v['expt_name'] + ": 距\"" + v['title'] + '\"' + '作品评审结束还有一周，请尽快完成！'
+        msg = MIMEText(content)
+        msg['Subject'] = subject
+        msg['From'] = sender
+        msg['To'] = receiver
+        try:
+            s.sendmail(sender, receiver, msg.as_string())
+        except Exception as e:
+            print(e)
+
+
+    one_day_set = Review.objects.filter(review_status=0,
+                                        work__registration__competition__review_end_date=one_day_later)
+    one_day_expert = {}
+    for review in one_day_set:
+        one_day_expert[review.expert.user.email] = {
+            'expt_name': review.expert.name,
+            'title': review.work.registration.competition.title
+        }
+
+    for k, v in one_day_expert.items():
+        receiver = k
+        subject = '"' + v['title'] + '"竞赛' + '作品评审提醒'
+        content = '尊敬的' + v['expt_name'] + ": 距\"" + v['title'] + '\"' + '作品评审结束还有一天，请尽快完成！'
+        msg = MIMEText(content)
+        msg['Subject'] = subject
+        msg['From'] = sender
+        msg['To'] = receiver
+        try:
+            s.sendmail(sender, receiver, msg.as_string())
+        except:
+            pass
+    s.quit()
+
+from apscheduler.schedulers.background import BackgroundScheduler
+
+sched = BackgroundScheduler()
+
+sched.add_job(notify_expert,'cron',hour=hour,minute=minute)
+
+
+def deamon_notify():
+    try:
+        sched.start()
+    except Exception as e:
+        print(e)
+        sched.shutdown()
+        deamon_notify()
+
+deamon_notify()
+
+# try:
+#     scheduler = BackgroundScheduler()
+#     scheduler.add_jobstore(DjangoJobStore(),'default')
+#     @register_job(scheduler,"cron", day_of_week='*', hour='19', minute='50', second='0')
+#
+#
+#
+#     register_events(scheduler)
+#     scheduler.start()
+# except Exception as e:
+#     print(e)
+#     scheduler.shutdown()

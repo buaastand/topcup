@@ -14,7 +14,7 @@
       <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
       <script src="https://cdn.staticfile.org/vue-resource/1.5.1/vue-resource.min.js"></script>
     <meta charset="UTF-8">
-    <title>作品详情页</title>
+    <title>作品详情|TOPCUP</title>
 </head>
 <body style="margin: 0; background: #F5F7FA; font-size:14px; color: #606266;">
 {% include "NavMenu.html" %}
@@ -172,7 +172,8 @@
       </div>
   {% endif %}
       {% for i in documentlist %}
-    <div v-if="{{ i.appendix_type}} == '1'" style="margin-left: 5%"><a href={{ i.file }} target="_blank">{{ i.filename }}</a></div>
+          <div v-if="{{ i.appendix_type }} == '1'" style="margin-left: 5%"><a
+                  href={{ i.file.url }} target="_blank">{{ i.filename }}</a></div>
       {% endfor %}
   </el-collapse-item>
 
@@ -190,10 +191,11 @@
   {% endif %}
 <div style="margin-left: 3%">
     {% for i in photolist %}
-<div v-if="{{ i.appendix_type}} == '2'" onclick="Ctor.handleClick('{{ i.file }}')" style="float: left;margin-left:2%;margin-bottom:20px;margin-top:20px">
+        <div v-if="{{ i.appendix_type }} == '2'" onclick="Ctor.handleClick('{{ i.file.url }}')"
+             style="float: left;margin-left:2%;margin-bottom:20px;margin-top:20px">
       <el-image
-      style="width: 140px; height: 140px"
-      src={{ i.file}}
+              style="width: 140px; height: 140px"
+              src={{ i.file.url }}
       fit="cover" ></el-image>
  </div>
  <el-dialog
@@ -220,7 +222,9 @@
   {% endif %}
 
       {% for i in videolist %}
-    <div v-if="{{ i.appendix_type}} == '3'" style="margin-left: 5%;margin-top: 3%;"><video src="{{ i.file }}" id="video" controls width="90%"></video></div>
+          <div v-if="{{ i.appendix_type }} == '3'" style="margin-left: 5%;margin-top: 3%;">
+              <video src="{{ i.file.url }}" id="video" controls width="90%"></video>
+          </div>
   {% endfor %}
   </el-collapse-item>
 </el-collapse>
@@ -229,9 +233,13 @@
     {% if workInfo.check_status == -1 %}
     {% if nextid != -1 %}
 <el-button type="warning" @click="handlenext" style="margin-left: 50%">下一个</el-button>
+        <el-button type="primary" @click="dialogVisiblePass = true">通过</el-button>
+        <el-button type="danger" @click="dialogVisibleReject = true" style="margin-left: 10px">打回</el-button>
+    {% else %}
+        <el-button type="primary" @click="dialogVisiblePass = true" style="margin-left: 60%">通过</el-button>
+        <el-button type="danger" @click="dialogVisibleReject = true" style="margin-left: 10px">打回</el-button>
         {% endif %}
 
-<el-button type="primary" @click="dialogVisiblePass = true" >通过</el-button>
 <el-dialog title="确认" :visible.sync="dialogVisiblePass" width="30%">
     <span>确认通过？</span>
     <span slot="footer">
@@ -240,7 +248,6 @@
     </span>
 </el-dialog>
 
-<el-button type="danger" @click="dialogVisibleReject = true" style="margin-left: 10px">打回</el-button>
 <el-dialog title="确认" :visible.sync="dialogVisibleReject" width="30%">
     <span>确认打回？</span>
     <span slot="footer">
@@ -251,9 +258,12 @@
 {% else %}
 {% if nextid != -1 %}
 <el-button type="warning" @click="handlenext" style="margin-left: 50%">下一个</el-button>
+    <el-button type="primary" @click="dialogVisiblePass = true" disabled>通过</el-button>
+    <el-button type="danger" @click="dialogVisibleReject = true" disabled style="margin-left: 10px">打回</el-button>
+{% else %}
+    <el-button type="primary" @click="dialogVisiblePass = true" style="margin-left: 60%" disabled>通过</el-button>
+    <el-button type="danger" @click="dialogVisibleReject = true" disabled style="margin-left: 10px">打回</el-button>
         {% endif %}
-<el-button type="primary" @click="dialogVisiblePass = true"  disabled>通过</el-button>
-<el-button type="danger" @click="dialogVisibleReject = true" disabled style="margin-left: 10px">打回</el-button>
 
 {% endif %}
 
@@ -315,7 +325,7 @@
                         type:'info',
                         message:'初审成功！'
                         });
-                        window.open("/check_work","_self")
+                        window.open("/check_work/?cptid=" + "{{ cptid }}", "_self")
                     }
                     else{
                         console.log("post fail")

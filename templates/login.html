@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
+    <title>登录页面|TOPCUP</title>
 
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
     <link rel="stylesheet" href="../static/css/login.css">
@@ -12,105 +12,175 @@
     <meta name="csrf-token" content="{{ csrf_token }}">
 
 </head>
-<body>
+<body style="background: url('../static/image/backgroud.jpg');background-size: cover">
 <div id="Login_page" class="background">
     <el-container>
         <el-header>
-                <h2>科技竞赛平台</h2>
+            <h2>科技竞赛平台</h2>
         </el-header>
         <el-main>
-             <el-form action="" method="post" autocomplete="off"
-             :model="loginForm"
-             :rules="rules"
-             status-icon
-             ref="loginForm"
-             label-width="100px"
-             label="right">
-        <el-form-item prop="username" label="学号/邮箱">
-            <el-input name="username" v-model="loginForm.username" type="text" placeholder="Email/Username" style="width:80%" ></el-input>
-        </el-form-item>
-        <el-form-item prop="password" label="密码">
-            <el-input name="password" v-model="loginForm.password" placeholder="Password" show-password  style="width:80%"></el-input>
-        </el-form-item>
-        <el-form-item prop="type" style="margin-top: 0" label="用户类型">
-            <el-radio-group v-model="loginForm.type">
-                <el-radio label="1">学生</el-radio>
-                <el-radio label="3">专家</el-radio>
-                <el-radio label="2">校团委</el-radio>
-            </el-radio-group>
-        </el-form-item>
-        <el-form-item>
-                <el-button type="primary" @click="onSubmit('loginForm')" style="width:80%">登录</el-button>
-        </el-form-item>
-    </el-form>
+            <el-form action="" method="post" autocomplete="off"
+                     :model="loginForm"
+                     :rules="rules"
+                     status-icon
+                     ref="loginForm"
+                     label-width="100px"
+                     label="right">
+                <el-form-item prop="username" label="学号/邮箱">
+                    <el-input name="username" v-model="loginForm.username" type="text" placeholder="Email/Username"
+                              style="width:80%"></el-input>
+                </el-form-item>
+                <el-form-item prop="password" label="密码">
+                    <el-input name="password" v-model="loginForm.password" placeholder="Password" show-password
+                              style="width:80%"></el-input>
+                </el-form-item>
+                <el-form-item prop="type" style="margin-top: 0" label="用户类型">
+                    <el-radio-group v-model="loginForm.type">
+                        <el-radio label="1">学生</el-radio>
+                        <el-radio label="3">专家</el-radio>
+                        <el-radio label="2">校团委</el-radio>
+                    </el-radio-group>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="onSubmit('loginForm')" style="width:80%">登录</el-button>
+                </el-form-item>
+            </el-form>
         </el-main>
         <el-footer>
-                <div style="margin:0 auto; width: 70%;">
-    <a href="/register/" style="float: left">注册</a>
-    <a href="" style="float: right">忘记密码？</a>
-    </div>
+            <div style="margin:0 auto; width: 70%">
+                <a href="/register/" style="float: right">注册</a>
+            </div>
         </el-footer>
     </el-container>
-
+    <el-dialog title="注册密码" :visible.sync="dialogFormVisible" width="450px" center>
+        <el-form :model="modifyForm" :rules="modifyRules" ref="modifyForm">
+            <el-form-item prop="new_password" label="新密码" :label-width="formLabelWidth">
+                <el-input v-model="modifyForm.new_password" autocomplete="off" show-password></el-input>
+            </el-form-item>
+            <el-form-item prop="new_password2" label="确认密码" :label-width="formLabelWidth">
+                <el-input v-model="modifyForm.new_password2" autocomplete="off" show-password></el-input>
+            </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="dialogFormVisible = false">取 消</el-button>
+            <el-button type="primary" @click="Modify('modifyForm')">确 定</el-button>
+        </div>
+    </el-dialog>
 
 </div>
 
 </body>
 <script>
     var app = new Vue({
-    el: '#Login_page',
-    data: {
-        loginForm:{
-        username: '',
-        password: '',
-        type: [],},
-        rules:{
-            username:[
-            {required:true, message:'请输入用户名',trigger:'blur'}],
-            password:[
-            {required:true, message:'请输入密码',trigger:'blur'}],
-            type:[
-                {required:true, message:'请选择用户类型',trigger:'blur'}]
+        el: '#Login_page',
+        data: {
+            dialogFormVisible: {{ expert_activated|escapejs }},
+            modifyForm: {
+                old_password: '{{ expert_email}}',
+                new_password: '',
+                new_password2: '',
+            },
+            loginForm: {
+                username: '{{ expert_email}}',
+                password: '',
+                type: [],
+            },
+            rules: {
+                username: [
+                    {required: true, message: '请输入用户名', trigger: 'blur'}],
+                password: [
+                    {required: true, message: '请输入密码', trigger: 'blur'}],
+                type: [
+                    {required: true, message: '请选择用户类型', trigger: 'blur'}]
+            },
+            modifyRules: {
+                new_password: [
+                    {required: true, message: '请输入新密码', trigger: 'blur'},
+                    {min: 8, message: '密码最短为8位', trigger: 'blur'},
+                ],
+                new_password2: [
+                    {required: true, message: '请再次输入新密码', trigger: 'blur'},
+                    {min: 8, message: '密码最短为8位', trigger: 'blur'},
+                ],
+            },
         },
-    },
-    methods:{
-       onSubmit: function(formName) {
-       this.$refs[formName].validate((valid) => {
-          if (valid) {
-                axios
-                .post(
-                    '/login/',
-                    this.loginForm,
-                    {headers: {'X-CSRFtoken': document.getElementsByTagName('meta')['csrf-token'].getAttribute('content')}},
-                )
-                .then(res =>{
-                    console.log(res);
-                    if(res.status == 200){
-                        if(res.data['msg'] == true){
-                            this.$message({
-                                message:'登陆成功',
-                                type:'success',
+        methods: {
+            onSubmit: function (formName) {
+                this.$refs[formName].validate((valid) => {
+                    if (valid) {
+                        axios
+                            .post(
+                                '/login/',
+                                this.loginForm,
+                                {headers: {'X-CSRFtoken': document.getElementsByTagName('meta')['csrf-token'].getAttribute('content')}},
+                            )
+                            .then(res => {
+                                console.log(res);
+                                if (res.status == 200) {
+                                    if (res.data['msg'] == true) {
+                                        this.$message({
+                                            message: '登陆成功',
+                                            type: 'success',
+                                        });
+                                        window.location.href = '/competitionlist/?selected=0';
+                                    } else {
+                                        this.$message.error(
+                                            '登录失败：' + res.data['detail']
+                                        );
+                                    }
+                                } else {
+                                    this.$alert('登录失败');
+                                }
+                            })
+                            .catch(err => {
+                                console.log(err)
+                            })
+                    } else {
+                        console.log('error submit!!');
+                        return false;
+                    }
+                });
+            },
+            Modify: function (formName) {
+                this.$refs[formName].validate((valid) => {
+                    if (valid) {
+                        console.log(this.modifyForm);
+                        axios({
+                            url: '/expertpasswdinit/',
+                            method: 'post',
+                            data: this.modifyForm,
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFtoken': '{{ csrf_token }}',
+                            }
+                        })
+                            .then(res => {
+                                console.log(res);
+                                if (res.status == 200) {
+                                    if (res.data['msg'] == true) {
+                                        this.$message({
+                                            message: '密码修改成功',
+                                            type: 'success',
+                                        })
+                                        this.dialogFormVisible = false;
+                                    } else {
+                                        this.$message.error(res.data['detail'])
+                                    }
+                                } else {
+                                    this.$message.error('密码修改失败')
+                                }
+                            })
+                            .catch(err => {
+                                console.log(err);
                             });
-                            window.location.href='/competitionlist/?selected=0';
-                        }else {
-                            this.$message.error(
-                                '登录失败：'+res.data['detail']
-                            );
-                        }
+                    } else {
+                        console.log('error submit!!');
+                        return false;
                     }
-                    else {
-                        this.$alert('登录失败');
-                    }
-                })
-                .catch(err => {console.log(err)})
-          } else {
-            console.log('error submit!!');
-            return false;
-          }
-        });
+                });
+            },
         }
-    }
-})
+    })
 
 </script>
 </html>

@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="../static/css/NavName.css">
 
     <meta charset="UTF-8">
-    <title>添加竞赛</title>
+    <title>创建竞赛|TOPCUP</title>
 </head>
 <body style="margin: 0; background: #F5F7FA">
     {%include 'NavMenu.html'%}
@@ -114,8 +114,9 @@
                         </el-upload>
                     </el-form-item>
                     <div class="buttonArea">
-                        <el-button>暂存</el-button>
-                        <el-button type="primary" @click="dialogVisible = true">创建</el-button>
+                        <el-button type="primary" @click="dialogVisible = true"
+                                   style="float:right;width:150px;font-weight:bold">创建
+                        </el-button>
                     </div>
                 </el-form>
             </div>

@@ -13,7 +13,7 @@
         .background{
             width:500px;
             height:400px;
-            background: rgba(255, 255, 255,1);
+            background: rgba(255, 255, 255,0.8);
             box-shadow:0px 2px 12px 0px rgba(0,0,0,0.06);
             border-radius:4px;
             border:1px solid rgba(228,231,237,1);

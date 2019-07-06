@@ -1,6 +1,6 @@
 django
-mysql-python
 pillow
 python-docx
 convertapi
 xlrd
+
