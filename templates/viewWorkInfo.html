@@ -233,9 +233,13 @@
     {% if workInfo.check_status == -1 %}
     {% if nextid != -1 %}
 <el-button type="warning" @click="handlenext" style="margin-left: 50%">下一个</el-button>
+        <el-button type="primary" @click="dialogVisiblePass = true">通过</el-button>
+        <el-button type="danger" @click="dialogVisibleReject = true" style="margin-left: 10px">打回</el-button>
+    {% else %}
+        <el-button type="primary" @click="dialogVisiblePass = true" style="margin-left: 60%">通过</el-button>
+        <el-button type="danger" @click="dialogVisibleReject = true" style="margin-left: 10px">打回</el-button>
         {% endif %}
 
-<el-button type="primary" @click="dialogVisiblePass = true" >通过</el-button>
 <el-dialog title="确认" :visible.sync="dialogVisiblePass" width="30%">
     <span>确认通过？</span>
     <span slot="footer">
@@ -244,7 +248,6 @@
     </span>
 </el-dialog>
 
-<el-button type="danger" @click="dialogVisibleReject = true" style="margin-left: 10px">打回</el-button>
 <el-dialog title="确认" :visible.sync="dialogVisibleReject" width="30%">
     <span>确认打回？</span>
     <span slot="footer">
@@ -255,9 +258,12 @@
 {% else %}
 {% if nextid != -1 %}
 <el-button type="warning" @click="handlenext" style="margin-left: 50%">下一个</el-button>
+    <el-button type="primary" @click="dialogVisiblePass = true" disabled>通过</el-button>
+    <el-button type="danger" @click="dialogVisibleReject = true" disabled style="margin-left: 10px">打回</el-button>
+{% else %}
+    <el-button type="primary" @click="dialogVisiblePass = true" style="margin-left: 60%" disabled>通过</el-button>
+    <el-button type="danger" @click="dialogVisibleReject = true" disabled style="margin-left: 10px">打回</el-button>
         {% endif %}
-<el-button type="primary" @click="dialogVisiblePass = true"  disabled>通过</el-button>
-<el-button type="danger" @click="dialogVisibleReject = true" disabled style="margin-left: 10px">打回</el-button>
 
 {% endif %}
 
