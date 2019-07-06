@@ -268,27 +268,21 @@ class CompetitionFinalResult(View):
         #     return JsonResponse({'message':'找不到比赛'})
 
     def post(self, request):
-        competition_id = request.POST.get('id')
-        competition = Competition.objects.get(id=competition_id)
-        competition.result_details = request.POST.get('detail')
         try:
-            name = competition.end_appendix.name
-            competition.end_appendix.delete()
-            competition.save()
+            with transaction.atomic():
+                competition_id = request.POST.get('id')
+                competition = Competition.objects.get(id=competition_id)
+                competition.result_details = request.POST.get('detail')
+                try:
+                    name = competition.end_appendix.name
+                    competition.end_appendix.delete()
+                    competition.save()
+                except:
+                    name = ''
+                competition.end_appendix = request.FILES.get('end_appendix')
+                competition.save()
+            return JsonResponse({'message':'SUCCESS'})
         except:
-            name = ''
-        competition.end_appendix = request.FILES.get('end_appendix')
-        competition.save()
-        # try:
-        #     with transaction.atomic():
-        #         competition_id = request.POST.get('id')
-        #         competition = Competition.objects.get(id=competition_id)
-        #         competition.result_details = request.POST.get('detail')
-        #         competition.end_appendix = request.FILES.get('end_appendix')
-        #         print(competition.end_appendix.filename)
-        #         competition.save()
-        #     return JsonResponse({'message':'SUCCESS'})
-        # except:
-        return JsonResponse({'message':'ERROR'})
+            return JsonResponse({'message':'ERROR'})
 
 
