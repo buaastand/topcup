@@ -64,7 +64,7 @@ class CheckWorkListView(View):
 
 
         user_name,user_identity = GetUserIdentitiy(request)
-        return render(request,'check_worklist.html',{'worklist':worklist_ret , 'useridentity':user_identity,'username':user_name})
+        return render(request,'check_worklist.html',{'worklist':worklist_ret ,'cptid':cpt_id,'useridentity':user_identity,'username':user_name})
 
     def post(self,request):
 
@@ -123,14 +123,14 @@ def DownloadBatchZip(request):
     Archive = zipfile.ZipFile(Temp, 'w', zipfile.ZIP_DEFLATED)
     for work in work_list:
         appendix_list = Appendix.objects.filter(work__work_id=work.work_id)
-        temp = tempfile.TemporaryFile(dir=os.path.join(MEDIA_ROOT, 'compressed'), delete=False)
+        temp = tempfile.TemporaryFile(dir=os.path.join(MEDIA_ROOT, 'compressed'),delete=False)
         archive = zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED)
         for appendix in appendix_list:
             target_file = os.path.join(MEDIA_ROOT, str(appendix.file))
             archive.write(target_file, appendix.filename)
         archive.close()
         temp.seek(0)
-        target_file = os.path.join(MEDIA_ROOT, '/compressed', str(temp.name))
+        target_file = os.path.join(MEDIA_ROOT, 'compressed', str(temp.name))
         Archive.write(target_file, str(work.title)+'.zip')
 
     Archive.close()
@@ -434,7 +434,7 @@ class AssignExpertView(View):
             try:
                 s.sendmail(sender, receiver, msg.as_string())
             except:
-                return JsonResponse({'Message': 1})
+                # return JsonResponse({'Message': 1})
                 pass
         s.quit()
         return JsonResponse({'Message': 0})
@@ -720,7 +720,7 @@ class ReassignExpertView(View):
             try:
                 s.sendmail(sender, receiver, msg.as_string())
             except:
-                return JsonResponse({'Message': 1})
+                return JsonResponse({'Message': 0})
                 pass
         s.quit()
         return JsonResponse({'Message': 0})

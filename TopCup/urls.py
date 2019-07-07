@@ -32,6 +32,7 @@ urlpatterns = [
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root':settings.MEDIA_ROOT}),
     path('admin/', admin.site.urls),
     path('competitiondetail/', Cpt.CompetitionDetail),
+    path('', Cpt.CompetitionList),
     path('index/', Cpt.CompetitionList),
     path('competitionlist/', Cpt.CompetitionList),
     path('workdefensechange/',Cpt.WorkdefenseChange),
