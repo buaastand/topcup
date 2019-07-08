@@ -24,7 +24,7 @@
         </el-header>
 
         <el-main>
-        <template>
+        <template >
           <el-tabs v-model="Type" @tab-click="handleClick">
             <el-tab-pane label="科技发明制作" name="invention">
                 <template>
@@ -157,6 +157,7 @@
         dialogFormVisible: false,
         multipleSelection: [],
         fullscreenLoading: false,
+	    full:false,
     },
     methods: {
         opendialog(id, score,comment){
@@ -180,12 +181,15 @@
         },
         dowloadZip(id) {     // 下载附件
             // 调用函数查找合作者信息
+                    this.fullscreenLoading = true;
             axios.get('/downloadZip/', {params: {id: id, status:0} })
                 .then(response => {
                     window.open(response.request.responseURL);
+                    this.fullscreenLoading = false;
                     this.$message.success('打开附件压缩包');
                 })
                 .catch(error => {
+                    this.fullscreenLoading = false;
                     this.$message.error('该作品未上传附件');
                     console.log(error);
                 });
@@ -198,13 +202,16 @@
                     id_list.push(index.id);
                 });
                 console.log(id_list);
+                    this.fullscreenLoading = true;
                 axios.get('/downloadBatchZip/', {params: {id_list: JSON.stringify(id_list), status:0} })
                 .then(response => {
                     console.log(response);
+                    this.fullscreenLoading = false;
                     window.open(response.request.responseURL);
                     this.$message.success('下载成功');
                 })
                 .catch(error => {
+                    this.fullscreenLoading = false;
                     this.$message.error('选中项目不包含附件');
                     console.log(error);
                 });

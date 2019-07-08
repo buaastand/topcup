@@ -123,14 +123,14 @@ def DownloadBatchZip(request):
     Archive = zipfile.ZipFile(Temp, 'w', zipfile.ZIP_DEFLATED)
     for work in work_list:
         appendix_list = Appendix.objects.filter(work__work_id=work.work_id)
-        temp = tempfile.TemporaryFile(dir=os.path.join(MEDIA_ROOT, 'compressed'),delete=False)
+        # temp = tempfile.TemporaryFile(dir=os.path.join(MEDIA_ROOT, 'compressed'),delete=False)
+        temp = os.path.join(MEDIA_ROOT, 'compressed','tempxx')
         archive = zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED)
         for appendix in appendix_list:
             target_file = os.path.join(MEDIA_ROOT, str(appendix.file))
             archive.write(target_file, appendix.filename)
         archive.close()
-        temp.seek(0)
-        target_file = os.path.join(MEDIA_ROOT, 'compressed', str(temp.name))
+        target_file = os.path.join(MEDIA_ROOT, 'compressed', 'tempxx')
         Archive.write(target_file, str(work.title)+'.zip')
 
     Archive.close()
@@ -698,6 +698,7 @@ class ReassignExpertView(View):
         from email.mime.text import MIMEText
         # sender = 'topcup2019@163.com'
         # passwd = '123456zxcvbn'
+        
         host = request.get_host()
         # s = smtplib.SMTP_SSL('smtp.163.com', 465)
         s = smtplib.SMTP_SSL(smtp_server, 465)
