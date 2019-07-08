@@ -556,6 +556,8 @@ def checkWork(request):
     try:
         techwork = WorkInfo.objects.get(id = work_id)
         techwork.check_status = newStatus
+        if techwork.submitted == True and newStatus == 0:
+            techwork.submitted = False
         techwork.save()
     except:
         return JsonResponse({'Message': 0})
