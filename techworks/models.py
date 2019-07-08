@@ -1,4 +1,5 @@
 from django.db import models
+
 from competition.models import CompetitionRegistration
 
 
@@ -16,6 +17,11 @@ class WorkInfo(models.Model):
         (5, "E"),
         (6, "F"),
     )
+    CHECK_STATUS = (
+        (-1, "未初审"),
+        (1, "初审通过"),
+        (0, "初审未通过")
+    )
     work_id = models.IntegerField(verbose_name="作品编号")
     work_type = models.IntegerField(choices=WORK_TYPE, verbose_name="大类类别")
     title = models.CharField(max_length=255, verbose_name="作品名称")
@@ -25,10 +31,12 @@ class WorkInfo(models.Model):
     detail = models.TextField(verbose_name="作品总体情况说明")
     innovation = models.TextField(verbose_name="创新点")
     keywords = models.CharField(max_length=255, verbose_name="关键词")
-    check_status = models.BooleanField(default=False, verbose_name="初审结果")
+    check_status = models.IntegerField(choices=CHECK_STATUS, default=-1, verbose_name="初审结果")
+    review_status = models.BooleanField(default=False, verbose_name="是否评价完毕")
     avg_score = models.FloatField(verbose_name="平均分")
     if_defense = models.BooleanField(default=False, verbose_name="是否答辩")
     submitted = models.BooleanField(default=False,verbose_name="是否已提交")
+    labels = models.CharField(max_length=255, verbose_name="作品标签", default="{\"labels\":[]}")
 
     class Meta:
         verbose_name = "作品"

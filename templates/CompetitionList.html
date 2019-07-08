@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>科技竞赛平台</title>
+    <title>比赛列表|TOPCUP</title>
     <!-- 引入vue.js,axios.js -->
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
@@ -29,25 +29,21 @@
                         <el-radio-button label='0' onclick="window.open('/competitionlist?selected=0&order='+CptList.order, '_self')">全部比赛</el-radio-button>
                         <el-radio-button label='1' onclick="window.open('/competitionlist?selected=1&order='+CptList.order, '_self')">正在进行</el-radio-button>
                         <el-radio-button label='2' onclick="window.open('/competitionlist?selected=2&order='+CptList.order, '_self')">已结束</el-radio-button>
-                        {% if useridentity == 3 %}
                         <el-radio-button label='3' onclick="window.open('/competitionlist?selected=3&order='+CptList.order, '_self')">未开始</el-radio-button>
-                        {% endif %}
                     </el-radio-group>
                 </div>
                 <div style="float: right; margin-top: 14px">
-                    <span style="margin-right: 10px; color: #909399; font-size: 14px">按</span>
                     <el-dropdown @command="changeRank">
                         <span style="color: #409EFF; font-size: 16px; cursor: pointer">
-                            {[ RankWay ]}<i class="el-icon-arrow-down el-icon--right"></i>
+                            {[ RankWay ]}<i class="el-icon-sort"></i>
                         </span>
                         <el-dropdown-menu slot="dropdown">
-                            <el-dropdown-item command="最早开始时间" onclick="window.open('/competitionlist?order=0&selected='+CptList.selected, '_self')">最早开始时间</el-dropdown-item>
-                            <el-dropdown-item command="最晚开始时间" onclick="window.open('/competitionlist?order=1&selected='+CptList.selected, '_self')">最晚开始时间</el-dropdown-item>
-                            <el-dropdown-item command="最早结束时间" onclick="window.open('/competitionlist?order=2&selected='+CptList.selected, '_self')">最早结束时间</el-dropdown-item>
-                            <el-dropdown-item command="最晚结束时间" onclick="window.open('/competitionlist?order=3&selected='+CptList.selected, '_self')">最晚结束时间</el-dropdown-item>
+                            <el-dropdown-item command="开始时间升序" onclick="window.open('/competitionlist?order=0&selected='+CptList.selected, '_self')">开始时间升序</el-dropdown-item>
+                            <el-dropdown-item command="开始时间降序" onclick="window.open('/competitionlist?order=1&selected='+CptList.selected, '_self')">开始时间降序</el-dropdown-item>
+                            <el-dropdown-item command="结束时间升序" onclick="window.open('/competitionlist?order=2&selected='+CptList.selected, '_self')">结束时间升序</el-dropdown-item>
+                            <el-dropdown-item command="结束时间降序" onclick="window.open('/competitionlist?order=3&selected='+CptList.selected, '_self')">结束时间降序</el-dropdown-item>
                         </el-dropdown-menu>
                     </el-dropdown>
-                    <span style="margin-left: 10px; color: #909399; font-size: 14px">排序</span>
                 </div>
             </div>
 
@@ -56,7 +52,6 @@
                 {% for i in contacts %}
                 {% if i.status == 0 %}
                 {% if selected == '0' or selected == '3' %}
-                {% if useridentity == 3 %}
                 <el-card class="UpcomeCompetitionCard">
                     {#                        身份判断#}
                     {#                        删除#}
@@ -70,9 +65,8 @@
                     </div>
                     <div style="float: left; width: 108px">
                         <el-image style="width: 108px; height: 80px; margin: 0px auto 0px 10px"
-                            src="https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg" fit="cover">
+                            src="/media/{{ i.preview_img }}" fit="cover">
                             <div slot="error" class="image-slot">
-                                <i class="el-icon-picture-outline"></i>
                             </div>
                         </el-image>
                     </div>
@@ -92,27 +86,19 @@
                     </div>
                 </el-card>
                 {% endif %}
-                {% endif %}
                 {% elif i.status == 1 %}
                 {% if selected == '0' or selected == '1' %}
                     <el-card class="OngoingCompetitionCard">
 {#                        身份判断#}
-{#                        删除#}
-                        {% if useridentity == 3 %}
-                        <div class="CloseCompetitionCard">
-                            <i class="el-icon-close" @click="DeleteCpt({{i.id}})"></i>
-                        </div>
-                        {% endif %}
                         <div class="WordBorder">
                             <div class="ErectWord">正在进行</div>
                         </div>
                         <div style="float: left; width: 108px">
                             <el-image
                                 style="width: 108px; height: 80px; margin: 0px auto 0px 10px"
-                                src="https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg"
+                                src="/media/{{ i.preview_img }}"
                                 fit="cover">
                                 <div slot="error" class="image-slot">
-                                    <i class="el-icon-picture-outline"></i>
                                 </div>
                             </el-image>
                         </div>
@@ -136,21 +122,15 @@
 
                     <el-card class="OutdatedCompetitionCard">
 {#                        身份判断#}
-                        {% if useridentity == 3 %}
-                        <div class="CloseCompetitionCard">
-                            <i class="el-icon-close" @click="DeleteCpt({{i.id}})"></i>
-                        </div>
-                        {% endif %}
                         <div class="WordBorder">
                             <div class="ErectWord">已结束</div>
                         </div>
                         <div style="float: left; width: 108px">
                             <el-image
                                 style="width: 108px; height: 80px; margin: 0px auto 0px 10px"
-                                src="https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg"
+                                src="/media/{{ i.preview_img }}"
                                 fit="cover">
                                 <div slot="error" class="image-slot">
-                                    <i class="el-icon-picture-outline"></i>
                                 </div>
                             </el-image>
                         </div>
@@ -199,16 +179,16 @@
 
         function NUM_TO_TEXT(order) {
             if (order == 1) {
-                return '最晚开始时间';
+                return '开始时间降序';
             }
             else if (order == 2) {
-                return '最早结束时间';
+                return '结束时间升序';
             }
             else if (order == 3) {
-                return '最晚结束时间';
+                return '结束时间降序';
             }
             else {
-                return '最早开始时间';
+                return '开始时间升序';
             }
         } 
 
@@ -228,8 +208,12 @@
                 },
                 DeleteCpt(val)
                 {
-                    console.log(val);
-                    this.$http
+                    this.$confirm('此操作将永久删除该比赛, 是否继续?', '提示', {
+                      confirmButtonText: '确定',
+                      cancelButtonText: '取消',
+                      type: 'warning'
+                    }).then(() => {
+                        this.$http
                         .post('../deletecpt/',
                             {
                                 id:val,
@@ -252,6 +236,12 @@
                         .catch(err => {
                         console.error(err);
                         });
+                    }).catch(() => {
+                      this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                      });
+                    });
                 }
             },
             delimiters: ["{[", "]}"]

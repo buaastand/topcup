@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="../static/css/NavName.css">
 
     <meta charset="UTF-8">
-    <title>添加竞赛</title>
+    <title>创建竞赛|TOPCUP</title>
 </head>
 <body style="margin: 0; background: #F5F7FA">
     {%include 'NavMenu.html'%}
@@ -75,8 +75,10 @@
                             :on-change="handlePreviewPicSuccess"
                             :before-upload="beforePreviewPicUpload"
                             :auto-upload="false">
-                            <img v-if="form.previewPicUrl" :src="form.previewPicUrl" class="previewPic">
-                            <i v-else style="line-height: 80px" class="el-icon-plus previewPicUploaderIcon"></i>
+                            <el-tooltip content="大小应为180*80" placement="right">
+                                <img v-if="form.previewPicUrl" :src="form.previewPicUrl" class="previewPic">
+                                <i v-else style="line-height: 80px" class="el-icon-plus previewPicUploaderIcon"></i>
+                            </el-tooltip>
                         </el-upload>
                     </el-form-item>
                     <el-form-item label="上传详情图">
@@ -88,8 +90,10 @@
                             :on-change="handleDetailPicSuccess"
                             :before-upload="beforeDetailPicUpload"
                             :auto-upload="false">
-                            <img v-if="form.detailPicUrl" :src="form.detailPicUrl" class="detailPic">
-                            <i v-else style="line-height: 130px" class="el-icon-plus detailPicUploaderIcon"></i>
+                            <el-tooltip content="大小应为1000*260" placement="right">
+                                <img v-if="form.detailPicUrl" :src="form.detailPicUrl" class="detailPic">
+                                <i v-else style="line-height: 130px" class="el-icon-plus detailPicUploaderIcon"></i>
+                            </el-tooltip>
                         </el-upload>
                     </el-form-item>
                     <el-form-item label="上传附件">
@@ -110,12 +114,21 @@
                         </el-upload>
                     </el-form-item>
                     <div class="buttonArea">
-                        <el-button>暂存</el-button>
-                        <el-button type="primary" @click="onSubmit('form')">创建</el-button>
+                        <el-button type="primary" @click="dialogVisible = true"
+                                   style="float:right;width:150px;font-weight:bold">创建
+                        </el-button>
                     </div>
                 </el-form>
             </div>
         </el-card>
+
+        <el-dialog title="确认" :visible.sync="dialogVisible" width="30%">
+            <span>确认创建？</span>
+            <span slot="footer">
+                <el-button @click="dialogVisible = false">取消</el-button>
+                <el-button type="primary" @click.once="onSubmit('form')">确认</el-button>
+            </span>
+        </el-dialog>
     </div>
 
     <script>
@@ -209,7 +222,7 @@
                 };
                 return {
                     labelPosition: 'left',
-
+                    dialogVisible: false,
                     form: {
                         title: '',
                         abstract: '',
@@ -306,10 +319,11 @@
                     this.$message.warning('当前限制选择 1 个文件');
                 },
                 beforeRemove(file) {
-                    return this.$confirm('确定移除 ${ file.name } ？');
+                    return this.$confirm('确定移除？');
                 },
                 onSubmit(formName) {
-
+                    disable = true;
+                    dialogVisible = false;
                     this.$refs[formName].validate((valid) => {
                         if(valid) {
                             var formFile = new FormData();

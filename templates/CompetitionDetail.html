@@ -7,14 +7,14 @@
     <script src="https://unpkg.com/element-ui/lib/index.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 
-    <title>比赛详情</title>
+    <title>比赛详情|TOPCUP</title>
 </head>
 
 <body style="margin: 0">
 {% include "NavMenu.html" %}
 <div id="cptdetail" class="cptdetail">
 
-    <div class="cptdetailimg">
+    <div class="cptdetailimg" style="background-image:url('/media/{{ cptDetail.detail_img }}') ">
         {#            左右渐变#}
         <div class="beauty-left" style="float: left"></div>
         <div class="beauty-right" style="float: right"></div>
@@ -38,7 +38,11 @@
                 <el-tab-pane label="大赛首页">
                     <div class="cptdetailtext">
                         {{ cptDetail.detail }}<br>
-                        <a href="/media/{{ cptDetail.start_appendix }}">附件下载</a>
+                        <br>
+                        <el-divider></el-divider>
+                        <el-link type="primary" href="/media/{{ cptDetail.start_appendix }}"><i
+                                class="el-icon-download"></i>附件下载
+                        </el-link>
                     </div>
                 </el-tab-pane>
                 <el-tab-pane label="赛程安排">
@@ -54,26 +58,75 @@
                 <el-tab-pane label="赛事规则">
                     <div class="cptdetailtext">{{ cptDetail.rule }}</div>
                 </el-tab-pane>
-                <el-tab-pane label="初审名单">
-                    <div class="cptdetailtext">定时任务补偿</div>
-                </el-tab-pane>
                 <el-tab-pane label="答辩名单">
-                    <div class="cptdetailtext">定时任务补偿</div>
+                    <div class="cptdetailtext">
+                        <div style="width: 740px; margin:0 auto 0 auto">
+                            <el-table ref="multipleTable"
+                                      :data="defense_work_list"
+                                      tooltip-effect="light"
+                                      style="width: 740px"
+                                      max-height="100%">
+                                <el-table-column
+                                        label="作品ID"
+                                        prop="work_id"
+                                        width="120"
+                                        sortable>
+                                </el-table-column>
+                                <el-table-column
+                                        label="作品名称"
+                                        prop="title"
+                                        width="200">
+                                </el-table-column>
+                                <el-table-column
+                                        label="作品类别"
+                                        prop="work_type"
+                                        width="200">
+                                </el-table-column>
+                                <el-table-column
+                                        label="作品领域"
+                                        prop="field"
+                                        width="100">
+                                </el-table-column>
+                                <el-table-column>
+                                    <template slot-scope="scope">
+                                        <el-button
+                                                size="mini"
+                                                type="danger"
+                                                @click="handleDelete(scope.$index, scope.row)">删除
+                                        </el-button>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                        </div>
+                    </div>
                 </el-tab-pane>
                 <el-tab-pane label="比赛结果">
-                    <div class="cptdetailtext">{{ cptDetail.result_details }}</div>
+                    <div class="cptdetailtext">{{ cptDetail.result_details }}
+                        <br>
+                        <br>
+                        <el-divider></el-divider>
+                        {% if status_type == '4' %}
+                            <el-link type="primary" href="/media/{{ cptDetail.end_appendix }}"><i
+                                    class="el-icon-download"></i>比赛结果文件下载
+                            </el-link>
+                        {% endif %}
+                    </div>
+
                 </el-tab-pane>
             </el-tabs>
         </div>
         <div style="right:10px;position: absolute;margin-top:2px">
             {% if useridentity == 2 %}
-            <el-button type="text" style="text-decoration:underline" @click="techworksubmit({{ cptDetail.id }})">我要报名</el-button>
+                <el-button type="text" style="text-decoration:underline" @click="techworksubmit({{ cptDetail.id }})">
+                    我要报名
+                </el-button>
             {% endif %}
             {% if useridentity == 1 %}
-            <el-button type="text" style="text-decoration:underline" >评价作品</el-button>
+                <el-button type="text" style="text-decoration:underline">评价作品</el-button>
             {% endif %}
             {% if useridentity == 3 %}
-            <el-button type="text" style="text-decoration:underline" @click="CptChange({{ cptDetail.id }})">管理比赛</el-button>
+                <el-button type="text" style="text-decoration:underline" @click="CptChange({{ cptDetail.id }})">管理比赛
+                </el-button>
             {% endif %}
         </div>
     </div>
@@ -84,12 +137,44 @@
 <script>
     var CptDetail = new Vue({
         el: '#cptdetail',
-        methods:{
-            techworksubmit(val){
-                window.open('/techworksubmit/?cptid='+val,"_self")
+        data: {
+            defense_work_list:{{ defenseworklist|safe }},
+        },
+        methods: {
+            techworksubmit(val) {
+                if ({{ status_type }} ===
+                0
+            )
+                {
+                    window.open('/techworksubmit/?cptid=' + val, "_self")
+                }
+            else
+                {
+                    this.$message.error("不在报名时间内！")
+                }
             },
-            CptChange(val){
-                window.open('/cptchange/?cptid='+val,"_self")
+            CptChange(val) {
+                window.open('/cptchange/?cptid=' + val, "_self")
+            },
+            DefenseChoose(val) {
+                window.open('/defense_work/?cptid=' + val)
+            },
+            handleDelete(index, row) {
+                axios
+                    .post("/workdefensechange/", {workid: row.work_id}, {headers: {'X-CSRFtoken': '{{ csrf_token }}'}})
+                    .then(res => {
+                        if (res.status == 200 && res.data.Message == 1) {
+                            this.$message.success('删除成功！');
+                            this.defense_work_list.splice(index, 1);
+                        } else {
+                            this.$message.success('删除失败！');
+                        }
+                    })
+                    .catch()
+                window.open('/defense_work/?cptid=' + val)
+            },
+            FinalResult(val) {
+                window.open('/final_result/?id=' + val)
             }
         }
     })

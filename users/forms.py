@@ -23,5 +23,9 @@ class LoginForm(forms.Form):
     type = forms.IntegerField(required=True)
 
 class ModifyPwdForm(forms.Form):
+    #原密码
+    pwd0 = forms.CharField(required=True,min_length=8)
+    #新密码
     pwd1 = forms.CharField(required=True,min_length=8)
+    #再次确认新密码
     pwd2 = forms.CharField(required=True,min_length=8)

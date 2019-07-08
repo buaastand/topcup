@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" type="text/css" href="css/loader.css">
+    <link rel="stylesheet" href="../../static/css/NavName.css">
+    
+
+         <!-- 引入组件库 -->
+      <script src="https://unpkg.com/vue/dist/vue.js"></script>
+      <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+      <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+      <script src="https://cdn.staticfile.org/vue-resource/1.5.1/vue-resource.min.js"></script>
+    <meta charset="UTF-8">
+    <title>作品详情|TOPCUP</title>
+</head>
+<body style="margin: 0; background: #F5F7FA; font-size:14px; color: #606266;">
+{% include "NavMenu.html" %}
+
+<div id="app" style="margin-top: 0px; margin-left: 0px;">
+
+
+<div style=" background: #ffffff;width: 140vh;min-width:1000px;margin: auto;margin-top: 5vh; box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);padding: 2%;margin-bottom: 5vh;padding-bottom: 50px">
+
+  <div style="color:#303133;font-weight: bold;font-size: 24px;margin-left:5%;margin-right:5%;margin-bottom:5%;margin-top:3%"><i class="el-icon-tickets" style="margin-right: 5px;padding-right: 5px;padding-bottom: 2px"></i>作品详细信息</div>
+
+
+<el-collapse v-model="activeNames" @change="handleChange" style="margin: 5%">
+  <el-collapse-item name="1">
+      <div slot="title" style="font-size: 16px;font-weight: bold; color: #303133">
+          作品基本信息
+      </div>
+
+
+      <div id="form" style="width: 85%; margin-left:5%;margin-top: 20px">
+        <el-form  ref="receiveForm" :model="receiveForm" label-width="80px" label-position="left">
+          <el-form-item prop="name" label="作品全称" >
+            <div>{{ workInfo.title }}</div>
+          </el-form-item>
+
+          <el-form-item label="作品类别" prop="type">
+              <div v-if="{{ workInfo.work_type }}== '1'">
+                  科技发明制作
+                </div>
+
+                <div v-else>
+                  调查报告和学术论文
+                </div>
+          </el-form-item>
+
+          <el-form-item label="专业领域" prop="field">
+              <div v-if="{{ workInfo.field }} == '1'">
+                  A.机械与控制（包括机械、仪器仪表、自动化控制、工程、交通、建筑等）
+                </div>
+                <div v-else-if="{{ workInfo.field }} == '2'">
+                  B.信息技术（包括计算机、电信、通讯、电子等）
+                </div>
+                <div v-else-if="{{ workInfo.field }} == '3'">
+                  C.数理（包括数学、物理、地球与空间科学等）
+                </div>
+                <div v-else-if="{{ workInfo.field }} == '4'">
+                  D.生命科学(包括生物､农学､药学､医学､健康､卫生､食品等)
+                </div>
+                <div v-else-if="{{ workInfo.field }} == '5'">
+                  E.能源化工（包括能源、材料、石油、化学、化工、生态、环保等）
+                </div>
+                <div v-else>
+                  F.哲学社会科学（包括哲学、经济、社会、法律、教育、管理）
+                </div>
+          </el-form-item>
+
+          <el-form-item prop="detail" label="总体说明" >
+              {{ workInfo.detail }}
+          </el-form-item>
+          <el-form-item label="创新点" prop="innovation">
+              {{ workInfo.innovation }}
+          </el-form-item>
+          <el-form-item label="关键词" prop="keywords">
+              {{ workInfo.keywords }}
+          </el-form-item>
+            {% if workInfo.work_type == 1 %}
+                <el-form-item label="展示形式" prop="way">
+                {% for i in labellist %}
+                    <el-tag >{[ wayArray[ {{ i }} ] ]}</el-tag>
+                {% endfor %}
+                </el-form-item>
+            {% else %}
+                <el-form-item label="调查方式" prop="method">
+                {% for i in labellist %}
+                <el-tag style="margin-left: 5px">{[ methodArray[{{ i }}] ]}</el-tag>
+                {% endfor %}
+            {% endif %}
+                </el-form-item>
+            </el-form>
+
+
+      </div>
+
+  </el-collapse-item>
+
+  <el-collapse-item name="6">
+    <div slot="title" style="font-weight: bold;font-size: 16px">
+      第一作者信息
+    </div>
+    <div style="width: 85%; margin-left:5%; margin-top:20px; margin-bottom:20px">
+      <el-form ref="fistAuthor" :v-model="firstAuthor">
+        <el-form :inline="true" label-width="80px" label-position="left">
+          <el-form-item label="姓名"><div style="width: 170px">{{ firstAuthor.name }}</div></el-form-item>
+          <el-form-item label="学号"><div style="width: 170px">{{ firstAuthor.stu_id }}</div></el-form-item>
+          <el-form-item label="出生年月"><div style="width: 170px">{{ firstAuthor.birthdate }}</div></el-form-item>
+        </el-form>
+        <el-form label-width="80px" label-position="left">
+          <el-form-item label="现学历"><div style="width: 170px">{{ firstAuthor.degree }}</div></el-form-item>
+        </el-form>
+        <el-form :inline="true" label-width="80px" label-position="left">
+          <el-form-item label="专业"><div style="width: 170px">{{ firstAuthor.major }}</div></el-form-item>
+          <el-form-item label="入学时间"><div style="width: 170px">{{ firstAuthor.enroll_time }}</div></el-form-item>
+        </el-form>
+        <el-form :inline="true" label-width="80px" label-position="left">
+          <el-form-item label="联系电话"><div style="width: 170px">{{ firstAuthor.phone }}</div></el-form-item>
+          <el-form-item label="邮箱"><div style="width: 170px">{{ firstAuthor.email }}</div></el-form-item>
+          <el-form-item label="通讯地址"><div>{{ firstAuthor.address }}</div></el-form-item>
+        </el-form>
+      </el-form>
+    </div>
+  </el-collapse-item>
+
+  <el-collapse-item name="2">
+      <div slot="title" style="font-weight: bold;font-size: 16px">
+        合作者信息
+      </div>
+    <div style="width: 85%;margin-left:5%;margin-top:20px;margin-bottom:20px">
+      <el-table
+        :data="tableData"
+        border
+        style="width: 100%">
+        <el-table-column
+          prop="name"
+          label="姓名"
+          width="180">
+        </el-table-column>
+        <el-table-column
+          prop="stu_id"
+          label="学号"
+          width="180">
+        </el-table-column>
+        <el-table-column
+          prop="degree"
+          label="现学历">
+        </el-table-column>
+          <el-table-column
+          prop="phone"
+          label="联系电话">
+        </el-table-column>
+          <el-table-column
+          prop="email"
+          label="邮箱">
+        </el-table-column>
+      </el-table>
+  </div>
+  </el-collapse-item>
+
+  <el-collapse-item name="3">
+      <div slot="title" style="font-weight: bold;font-size: 16px">
+          作品文档
+      </div>
+  {% if not documentlist %}
+      <div  style="margin-left: 5%;margin-top: 1%">
+          暂无
+      </div>
+  {% endif %}
+      {% for i in documentlist %}
+          <div v-if="{{ i.appendix_type }} == '1'" style="margin-left: 5%"><a
+                  href={{ i.file.url }} target="_blank">{{ i.filename }}</a></div>
+      {% endfor %}
+  </el-collapse-item>
+
+  <el-collapse-item name="4">
+      <div slot="title" style="font-weight: bold;font-size: 16px">
+          作品图片
+      </div>
+
+<div >
+
+{% if not photolist %}
+      <div  style="margin-left: 5%;margin-top: 1%">
+          暂无
+      </div>
+  {% endif %}
+<div style="margin-left: 3%">
+    {% for i in photolist %}
+        <div v-if="{{ i.appendix_type }} == '2'" onclick="Ctor.handleClick('{{ i.file.url }}')"
+             style="float: left;margin-left:2%;margin-bottom:20px;margin-top:20px">
+      <el-image
+              style="width: 140px; height: 140px"
+              src={{ i.file.url }}
+      fit="cover" ></el-image>
+ </div>
+ <el-dialog
+  :visible.sync="dialogVisible1"
+  fullscreen
+  :before-close="handleClose">
+  <el-image
+    :src="temp_url"
+    fit="cover" ></el-image>
+</el-dialog>
+{% endfor %}
+</div>
+</div>
+  </el-collapse-item>
+  <el-collapse-item name="5">
+      <div slot="title" style="font-weight: bold;font-size: 16px">
+          作品视频
+      </div>
+
+  {% if not videolist %}
+      <div style="margin-left: 5%;margin-top: 1%">
+          暂无
+      </div>
+  {% endif %}
+
+      {% for i in videolist %}
+          <div v-if="{{ i.appendix_type }} == '3'" style="margin-left: 5%;margin-top: 3%;">
+              <video src="{{ i.file.url }}" id="video" controls width="90%"></video>
+          </div>
+  {% endfor %}
+  </el-collapse-item>
+</el-collapse>
+<el-button type="success" @click="downloadZip({{ workInfo.id }})" style="margin-left: 5%">打包下载附件</el-button>
+
+    {% if workInfo.check_status == -1 %}
+    {% if nextid != -1 %}
+<el-button type="warning" @click="handlenext" style="margin-left: 50%">下一个</el-button>
+        <el-button type="primary" @click="dialogVisiblePass = true">通过</el-button>
+        <el-button type="danger" @click="dialogVisibleReject = true" style="margin-left: 10px">打回</el-button>
+    {% else %}
+        <el-button type="primary" @click="dialogVisiblePass = true" style="margin-left: 60%">通过</el-button>
+        <el-button type="danger" @click="dialogVisibleReject = true" style="margin-left: 10px">打回</el-button>
+        {% endif %}
+
+<el-dialog title="确认" :visible.sync="dialogVisiblePass" width="30%">
+    <span>确认通过？</span>
+    <span slot="footer">
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="passWork(1)">确认</el-button>
+    </span>
+</el-dialog>
+
+<el-dialog title="确认" :visible.sync="dialogVisibleReject" width="30%">
+    <span>确认打回？</span>
+    <span slot="footer">
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="passWork(0)">确认</el-button>
+    </span>
+</el-dialog>
+{% else %}
+{% if nextid != -1 %}
+<el-button type="warning" @click="handlenext" style="margin-left: 50%">下一个</el-button>
+    <el-button type="primary" @click="dialogVisiblePass = true" disabled>通过</el-button>
+    <el-button type="danger" @click="dialogVisibleReject = true" disabled style="margin-left: 10px">打回</el-button>
+{% else %}
+    <el-button type="primary" @click="dialogVisiblePass = true" style="margin-left: 60%" disabled>通过</el-button>
+    <el-button type="danger" @click="dialogVisibleReject = true" disabled style="margin-left: 10px">打回</el-button>
+        {% endif %}
+
+{% endif %}
+
+
+
+</div>
+</div>
+
+</body>
+
+<script>
+
+  var Main ={
+    data() {
+      return {
+        dialogVisible1:false,
+        activeNames: ['1','2','3','4','5','6'],
+        tableData:{{ authorList|safe }},
+        wayArray: ['','实物、产品','模型','图纸','磁盘','现场演示','图片','录像','样品'],
+          methodArray:['','走访','问卷','现场采访','人员介绍','个别交谈','亲临实践','会议','图片、照片',
+                       '书报刊物','统计报表','影视资料','文件','集体组织','自发','其他'],
+        receiveForm: [
+         { name: '',
+           type: '',
+           field:'',
+           detail:'',
+           innovation:'',
+           keywords:'',}
+        ],
+          temp_url:'',
+          status: {{ workInfo.check_status|safe }},
+          dialogVisiblePass: false,
+          dialogVisibleReject: false,
+      };
+    },
+    methods: {
+      handleClick(click_url){
+        this.dialogVisible1=true;
+        this.temp_url=click_url;
+      },
+      handleChange(activeNames){
+        for( i in activeNames){
+          if(i == '5'){
+            return;
+          }
+        }
+        console.log(activeNames)
+        document.getElementById('video').pause();
+      },
+      handlenext(){
+        window.location.href="../../check_work/work_info/?work_id="+{{ nextid }};
+      },
+      passWork(newStatus) {
+        this.$http
+          .post('../../check_work/check_info/?work_id=' + {{workInfo.id}}, {'status': newStatus}, {emulateJSON: true})
+          .then((res=> {
+                    if(res.status == 200 && res.data.Message == 1){
+                        this.$message({
+                        type:'info',
+                        message:'初审成功！'
+                        });
+                        window.open("/check_work/?cptid=" + "{{ cptid }}", "_self")
+                    }
+                    else{
+                        console.log("post fail")
+                        this.$message({
+                        type:'info',
+                        message:'初审失败！'
+                        });
+                    }
+                })
+                
+          )},
+          downloadZip(id) {     // 下载附件
+            // 调用函数查找合作者信息
+            console.log(id)
+            axios.get('../../../downloadZip', {params: {id: id, status: 1}})
+                .then(response => {
+                    window.open(response.request.responseURL);
+                    this.$message.success('打开附件压缩包');
+                })
+                .catch(error => {
+                    this.$message.error('该作品未上传附件');
+                    console.log(error);
+                });
+        },
+      }, delimiters: ['{[',']}']
+  }
+
+var Ctor = Vue.extend(Main)
+Ctor = new Ctor().$mount('#app')
+</script>
+
+</html>
